@@ -62,7 +62,7 @@ type Props = {
     currentTeam?: Team | null;
     entregas: PaginatedData<ServiceOrder>;
     currentTab: 'listas' | 'entregadas' | 'cerradas' | 'todos';
-    search?: string;
+    search?: string | null;
     stats: {
         total: number;
         listas: number;
@@ -115,7 +115,7 @@ export default function EntregasIndex({
     stats,
 }: Props) {
     const teamSlug = currentTeam?.slug ?? '';
-    const [searchTerm, setSearchTerm] = useState(search);
+    const [searchTerm, setSearchTerm] = useState(search ?? '');
 
     const aplicarBusqueda = () => {
         router.get(
@@ -154,7 +154,7 @@ export default function EntregasIndex({
             <div className="mb-4 grid grid-cols-4 gap-2">
                 <button
                     onClick={() => handleTabChange('listas')}
-                    className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    className={`rounded-3xl border p-2.5 text-left transition-all ${
                         currentTab === 'listas'
                             ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
@@ -169,7 +169,7 @@ export default function EntregasIndex({
                 </button>
                 <button
                     onClick={() => handleTabChange('entregadas')}
-                    className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    className={`rounded-3xl border p-2.5 text-left transition-all ${
                         currentTab === 'entregadas'
                             ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
@@ -184,7 +184,7 @@ export default function EntregasIndex({
                 </button>
                 <button
                     onClick={() => handleTabChange('cerradas')}
-                    className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    className={`rounded-3xl border p-2.5 text-left transition-all ${
                         currentTab === 'cerradas'
                             ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
@@ -199,7 +199,7 @@ export default function EntregasIndex({
                 </button>
                 <button
                     onClick={() => handleTabChange('todos')}
-                    className={`rounded-2xl border p-2.5 text-left transition-all ${
+                    className={`rounded-3xl border p-2.5 text-left transition-all ${
                         currentTab === 'todos'
                             ? 'border-border bg-primary text-white shadow-sm [&_span]:text-white!'
                             : 'border-border bg-card text-foreground'
@@ -274,7 +274,7 @@ export default function EntregasIndex({
                                     current_team: teamSlug,
                                     service_order: order.id,
                                 })}
-                                className="border-border bg-card hover:border-border block rounded-2xl border p-4 shadow-xs transition-all active:scale-[0.99]"
+                                className="border-border bg-card hover:border-border block rounded-3xl border p-4 shadow-xs transition-all active:scale-[0.99]"
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div>

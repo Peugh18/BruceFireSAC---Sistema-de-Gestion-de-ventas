@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int $client_id
  * @property int|null $product_id
  * @property string $numero_serie
- * @property Carbon $fecha_venta
+ * @property Carbon|null $fecha_venta
  * @property string|null $ubicacion_actual
  * @property string $estado
  * @property Carbon|null $proxima_fecha_atencion
@@ -71,7 +71,7 @@ class Equipment extends Model
     public function serviceOrders(): BelongsToMany
     {
         return $this->belongsToMany(ServiceOrder::class, 'service_order_equipment')
-            ->withPivot(['recibido', 'observaciones'])
+            ->withPivot(['service_order_line_id', 'recibido', 'observaciones', 'posicion'])
             ->withTimestamps();
     }
 

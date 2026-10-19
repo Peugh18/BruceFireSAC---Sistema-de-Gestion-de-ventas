@@ -60,13 +60,12 @@ test('el gerente ve los firmantes y los certificados que firman', function () {
         ->assertInertia(fn ($page) => $page
             ->component('gerente/configuracion/firmas')
             ->has('firmantes', Signer::count())
-            ->has('tipos', CertificateType::count()));
+            ->has('firmantes.0.tipos'));
 });
 
-test('la foto de la firma queda sin fondo, recortada y se comparte con el mismo nombre', function () {
+test('la foto de la firma queda sin fondo y recortada; la misma persona firma con un cargo distinto en cada certificado', function () {
     $user = gerenteDeFirmas();
-    $administrador = Signer::where('nombre', 'Edgar Guevara Cabrera')->where('cargo', 'Administrador')->firstOrFail();
-    $instructor = Signer::where('nombre', 'Edgar Guevara Cabrera')->where('cargo', 'Instructor')->firstOrFail();
+    $administrador = Signer::where('nombre', 'Edgar Guevara Cabrera')->sole();
 
     $this->actingAs($user)
         ->post(rutaFirmas($user, $administrador), [
@@ -84,8 +83,13 @@ test('la foto de la firma queda sin fondo, recortada y se comparte con el mismo 
 
     expect($alfaEsquina)->toBe(127)
         ->and(imagesx($png))->toBeLessThan(400)
-        ->and(imagesy($png))->toBeLessThan(200)
-        ->and($instructor->fresh()->firma_path)->not->toBeNull();
+        ->and(imagesy($png))->toBeLessThan(200);
+
+    // Una sola ficha: firma la capacitación como instructor y las luces como administrador.
+    $capacitacion = CertificateType::where('codigo', 'capacitacion')->firstOrFail()->configuracionActual()['firmantes'][0];
+    $luces = CertificateType::where('codigo', 'luces_emergencia')->firstOrFail()->configuracionActual()['firmantes'][0];
+    expect($capacitacion)->toMatchArray(['id' => $administrador->id, 'cargo' => 'Instructor'])
+        ->and($luces)->toMatchArray(['id' => $administrador->id, 'cargo' => 'Administrador']);
 });
 
 test('una foto sin firma avisa en vez de guardar una imagen vacia', function () {

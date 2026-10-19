@@ -3,9 +3,11 @@
 namespace App\Services\Cobranzas;
 
 use App\Models\Installment;
+use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Models\SaleRefund;
 use App\Models\User;
+use App\Services\Billing\DetraccionCalculator;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,6 +22,23 @@ class CarteraDeCobranzas
 {
     /** Cuotas que todavía se deben (del todo o en parte). */
     public const DEBEN = ['pendiente', 'parcial', 'vencido'];
+
+    /**
+     * Saldos de la venta original, compartidos por todas sus cuotas. La reserva
+     * SPOT no es un cobro comercial y no se suma una vez por cada cuota.
+     *
+     * @return array{comercial:float,detraccion:float}
+     */
+    public static function saldosDelComprobante(Sale $sale): array
+    {
+        $sale->loadMissing(['installments.payments', 'payments']);
+        $saldo = (float) $sale->installments->filter(fn (Installment $cuota) => $cuota->esDelComprobante())->sum(fn (Installment $cuota) => $cuota->saldo());
+        $calculada = app(DetraccionCalculator::class)->paraVenta($sale);
+        $acreditado = (float) $sale->payments->where('es_detraccion', true)->sum('monto');
+        $detraccion = max(0, round($calculada['monto'] - $acreditado, 2));
+
+        return ['comercial' => max(0, round($saldo - $detraccion, 2)), 'detraccion' => $detraccion];
+    }
 
     /**
      * Lo que falta cobrar de las cuotas: su monto menos lo ya pagado.
@@ -81,6 +100,8 @@ class CarteraDeCobranzas
                 ->when($user->sedeRestringidaId(), fn ($sq, $sedeId) => $sq->where('sede_id', $sedeId)))
             ->with([
                 'sale.client',
+                'sale.installments.payments',
+                'sale.payments',
                 'payments' => fn ($query) => $query->latest('id'),
                 'paymentsAnulados' => fn ($query) => $query->with('anuladoPor:id,name')->latest('deleted_at'),
             ])
@@ -94,12 +115,15 @@ class CarteraDeCobranzas
                     : 0;
 
                 $saldo = $inst->saldo();
+                $saldos = self::saldosDelComprobante($inst->sale);
 
                 return [
                     'id' => $inst->id,
                     'sale_id' => $inst->sale_id,
                     'sale_numero' => $inst->sale->numero_interno,
-                    'con_detraccion' => (float) ($inst->sale->monto_detraccion_snapshot ?? 0) > 0,
+                    'con_detraccion' => $inst->esDelComprobante() && $saldos['detraccion'] > 0,
+                    'saldo_comercial_venta' => $saldos['comercial'],
+                    'saldo_detraccion_venta' => $saldos['detraccion'],
                     'numero_cuota' => $inst->numero_cuota,
                     'monto' => $inst->monto,
                     // V4/S11: lo rebajado por notas de crédito aceptadas.
@@ -115,6 +139,8 @@ class CarteraDeCobranzas
                         'forma_pago' => $payment->es_detraccion ? 'Detracción BN' : $payment->forma_pago,
                         'es_detraccion' => $payment->es_detraccion,
                         'fecha' => $payment->fecha->toDateString(),
+                        'numero_operacion' => $payment->numero_operacion,
+                        'evidencia_url' => $payment->es_detraccion && $payment->constancia_path !== null ? route('vendedor.ventas.detraccion.evidencia', ['current_team' => $user->currentTeam, 'sale' => $payment->sale_id, 'payment' => $payment->id]) : null,
                         'puede_anular' => $user->hasRole('Gerente') || $payment->fecha->isToday(),
                     ])->values(),
                     // Cobros anulados: quedan a la vista, tachados, con el motivo.

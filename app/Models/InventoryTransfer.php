@@ -7,13 +7,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
- * Traslado de stock entre sedes. Sale del origen al despacharse con GRE aceptada y entra al
+ * Traslado de stock entre sedes. Sale del origen al despacharse y entra al
  * destino solo cuando el almacén destino confirma la llegada: mientras
- * tanto está "en tránsito" (la guía motivo 04 sustenta el viaje).
+ * tanto está "en tránsito".
  *
  * @property int $id
  * @property int $origen_sede_id
@@ -28,12 +27,11 @@ use Illuminate\Support\Carbon;
  * @property-read Sede $origen
  * @property-read Sede $destino
  * @property-read Collection<int, InventoryTransferItem> $items
- * @property-read DispatchGuide|null $guia
  */
 #[Fillable(['origen_sede_id', 'destino_sede_id', 'user_id', 'estado', 'observacion', 'recibido_por', 'recibido_at'])]
 class InventoryTransfer extends Model
 {
-    public const PENDIENTE_GUIA = 'pendiente_guia';
+    public const PENDIENTE_DESPACHO = 'pendiente_despacho';
 
     public const EN_TRANSITO = 'en_transito';
 
@@ -66,14 +64,6 @@ class InventoryTransfer extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InventoryTransferItem::class);
-    }
-
-    /**
-     * @return HasOne<DispatchGuide, $this>
-     */
-    public function guia(): HasOne
-    {
-        return $this->hasOne(DispatchGuide::class)->latestOfMany();
     }
 
     public function estaEnTransito(): bool

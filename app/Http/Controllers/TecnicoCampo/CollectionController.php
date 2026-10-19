@@ -14,9 +14,12 @@ use App\Services\Reports\ServiceOrderReceiptPdfService;
 use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class CollectionController extends Controller
@@ -61,7 +64,7 @@ class CollectionController extends Controller
             });
         }
 
-        $recojos = $query->paginate(15)->through(function (ServiceOrder $order) {
+        $recojos = $query->paginate(15)->withQueryString()->through(function (ServiceOrder $order) {
             $custodyEvent = $order->events->sortByDesc('created_at')->first();
 
             return [
@@ -111,10 +114,17 @@ class CollectionController extends Controller
                 'payload' => $e->payload,
             ]);
 
+        $requiereFotoRecojo = $service_order->events()
+            ->where('tipo', 'creada')
+            ->where('payload->origen', 'campo')
+            ->exists();
+
         return Inertia::render('tecnico-campo/recojos/show', [
             'asignacion' => $service_order->asignacionPara(request()->user()),
             'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
             'evidencias' => $service_order->evidencias()->where('etapa', 'recojo')->get(['id', 'etapa', 'tipo', 'equipment_id']),
+            'requiereFotoRecojo' => $requiereFotoRecojo,
+            'cantidadEsperada' => (int) $service_order->lines()->where('adicional', false)->sum('cantidad'),
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -125,7 +135,7 @@ class CollectionController extends Controller
                     'telefono' => $service_order->client->telefono,
                 ],
                 'vehiculo' => $service_order->vehicle ? "{$service_order->vehicle->marca} {$service_order->vehicle->modelo} ({$service_order->vehicle->placa})" : null,
-                'tipo_servicio' => $service_order->service->nombre,
+                'tipo_servicio' => $service_order->resumenServicios(),
                 'fecha' => $service_order->fecha->toDateString(),
                 'prioridad' => $service_order->prioridad,
                 'estado' => $service_order->estado,
@@ -168,17 +178,40 @@ class CollectionController extends Controller
             'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
         ]);
 
-        $action->execute($service_order, $request->user(), [
-            'cantidad' => $service_order->equipments()->count(),
-            'contacto_nombre' => $validated['contacto_nombre'],
-            'contacto_telefono' => $validated['contacto_telefono'] ?? null,
-            'observaciones' => $validated['observaciones'] ?? null,
-            'conformidad_cliente' => true,
-            'foto_path' => $validated['foto_path'] ?? null,
-        ]);
+        $esRecojoEspontaneo = $service_order->events()
+            ->where('tipo', 'creada')
+            ->where('payload->origen', 'campo')
+            ->exists();
 
-        if (filled($validated['firma'] ?? null)) {
-            app(GuardarEvidencia::class)->firma($service_order, $validated['firma'], 'recojo', $request->user());
+        if ($esRecojoEspontaneo) {
+            $fotos = $service_order->evidencias()->where('etapa', 'recojo')->where('tipo', 'foto')->count();
+            if ($fotos === 0) {
+                throw ValidationException::withMessages(['recojo' => 'Agrega al menos una foto del recojo antes de confirmar.']);
+            }
+
+            $esperados = (int) $service_order->lines()->where('adicional', false)->sum('cantidad');
+            if ($esperados !== $service_order->equipments()->count()) {
+                throw ValidationException::withMessages(['recojo' => "Registra los {$esperados} extintores esperados antes de confirmar el recojo."]);
+            }
+        }
+
+        try {
+            DB::transaction(function () use ($service_order, $request, $validated, $action): void {
+                $action->execute($service_order, $request->user(), [
+                    'cantidad' => $service_order->equipments()->count(),
+                    'contacto_nombre' => $validated['contacto_nombre'],
+                    'contacto_telefono' => $validated['contacto_telefono'] ?? null,
+                    'observaciones' => $validated['observaciones'] ?? null,
+                    'conformidad_cliente' => true,
+                    'foto_path' => $validated['foto_path'] ?? null,
+                ]);
+
+                if (filled($validated['firma'] ?? null)) {
+                    app(GuardarEvidencia::class)->firma($service_order, $validated['firma'], 'recojo', $request->user());
+                }
+            });
+        } catch (InvalidArgumentException $exception) {
+            throw ValidationException::withMessages(['recojo' => $exception->getMessage()]);
         }
 
         return back()->with('success', 'Recojo y cadena de custodia registrados exitosamente.');
@@ -190,14 +223,22 @@ class CollectionController extends Controller
         ServiceOrder $service_order,
         QuickRegisterEquipment $action,
     ): RedirectResponse {
+        $esRecojoEspontaneo = $service_order->events()
+            ->where('tipo', 'creada')
+            ->where('payload->origen', 'campo')
+            ->exists();
+
         $data = $request->validate([
             'numero_serie' => ['nullable', 'string', 'max:100'],
-            'tipo_agente' => ['required_without:numero_serie', 'nullable', Rule::in(EquipmentType::etiquetas())],
-            'capacidad' => ['required_without:numero_serie', 'nullable', 'string', 'max:100'],
+            'tipo_agente' => [$esRecojoEspontaneo ? 'nullable' : 'required_without:numero_serie', Rule::in(EquipmentType::etiquetas())],
+            'capacidad' => [$esRecojoEspontaneo ? 'nullable' : 'required_without:numero_serie', 'string', 'max:100'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
             'observaciones_recepcion' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $data['datos_tecnicos_pendientes'] = $esRecojoEspontaneo
+            && (blank($data['tipo_agente'] ?? null) || blank($data['capacidad'] ?? null));
 
         $action->execute($service_order, [...$data, 'recibido' => false], $request->user());
 

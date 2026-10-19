@@ -2,17 +2,22 @@
 
 use App\Http\Controllers\Gerente\AuditController;
 use App\Http\Controllers\Gerente\CashRegisterConsolidatedController;
+use App\Http\Controllers\Gerente\CertificateTypeController;
 use App\Http\Controllers\Gerente\ChispaController;
 use App\Http\Controllers\Gerente\CollectionConsolidatedController;
 use App\Http\Controllers\Gerente\CompanyBankAccountController;
 use App\Http\Controllers\Gerente\CompanySettingController;
+use App\Http\Controllers\Gerente\ConsultaController;
 use App\Http\Controllers\Gerente\DashboardController;
+use App\Http\Controllers\Gerente\InteligenciaController;
 use App\Http\Controllers\Gerente\ProductCategoryController;
 use App\Http\Controllers\Gerente\ProductController;
 use App\Http\Controllers\Gerente\ReportController;
 use App\Http\Controllers\Gerente\SedeController;
 use App\Http\Controllers\Gerente\ServiceController;
 use App\Http\Controllers\Gerente\SignerController;
+use App\Http\Controllers\Gerente\SunatCodigoProductoController;
+use App\Http\Controllers\Gerente\TipoDeServicioController;
 use App\Http\Controllers\Gerente\TransporteController;
 use App\Http\Controllers\Gerente\UserController;
 use App\Http\Controllers\Vendedor\CollectionController as VendedorCollectionController;
@@ -26,13 +31,18 @@ Route::prefix('gerente')
     ->middleware('role:Gerente')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+        Route::get('inteligencia', InteligenciaController::class)->name('inteligencia');
+        Route::get('dashboard/detalle', [DashboardController::class, 'detalle'])->name('dashboard.detalle');
+        Route::get('consulta/ventas/{sale}', [ConsultaController::class, 'venta'])->middleware('can:sales.view')->name('consulta.venta');
+        Route::get('consulta/ordenes/{service_order}', [ConsultaController::class, 'orden'])->middleware('can:service_orders.view')->name('consulta.orden');
+        Route::get('consulta/clientes/{client}', [ConsultaController::class, 'cliente'])->middleware('can:clients.view')->name('consulta.cliente');
 
-        // Vehículos y conductores de las guías de remisión (Fase H)
-        Route::get('transporte', [TransporteController::class, 'index'])->name('transporte.index');
-        Route::post('transporte/vehiculos', [TransporteController::class, 'storeVehiculo'])->name('transporte.vehiculos.store');
-        Route::patch('transporte/vehiculos/{vehiculo}/toggle', [TransporteController::class, 'toggleVehiculo'])->name('transporte.vehiculos.toggle');
-        Route::post('transporte/conductores', [TransporteController::class, 'storeConductor'])->name('transporte.conductores.store');
-        Route::patch('transporte/conductores/{conductor}/toggle', [TransporteController::class, 'toggleConductor'])->name('transporte.conductores.toggle');
+        // Rutas antiguas bloqueadas: el vendedor agrega transporte dentro de la guía.
+        Route::get('transporte', [TransporteController::class, 'index'])->middleware('role:Vendedor')->name('transporte.index');
+        Route::post('transporte/vehiculos', [TransporteController::class, 'storeVehiculo'])->middleware('role:Vendedor')->name('transporte.vehiculos.store');
+        Route::patch('transporte/vehiculos/{vehiculo}/toggle', [TransporteController::class, 'toggleVehiculo'])->middleware('role:Vendedor')->name('transporte.vehiculos.toggle');
+        Route::post('transporte/conductores', [TransporteController::class, 'storeConductor'])->middleware('role:Vendedor')->name('transporte.conductores.store');
+        Route::patch('transporte/conductores/{conductor}/toggle', [TransporteController::class, 'toggleConductor'])->middleware('role:Vendedor')->name('transporte.conductores.toggle');
 
         // Catálogo de Productos y Servicios (§86.4.2)
         Route::resource('productos', ProductController::class)->except(['create', 'edit', 'show']);
@@ -45,6 +55,7 @@ Route::prefix('gerente')
 
         Route::resource('servicios', ServiceController::class)->except(['create', 'edit', 'show']);
         Route::patch('servicios/{servicio}/toggle-status', [ServiceController::class, 'toggleStatus'])->name('servicios.toggle-status');
+        Route::resource('tipos-de-servicio', TipoDeServicioController::class)->only(['store', 'update', 'destroy'])->parameters(['tipos-de-servicio' => 'tipo_de_servicio']);
 
         // Caja consolidada (§77.2 punto 4)
         Route::get('cajas', [CashRegisterConsolidatedController::class, 'index'])->name('cajas.index');
@@ -71,6 +82,8 @@ Route::prefix('gerente')
         // Usuarios y roles (§36, §86.4.8)
         Route::get('usuarios', [UserController::class, 'index'])->name('usuarios.index');
         Route::post('usuarios', [UserController::class, 'store'])->name('usuarios.store');
+        Route::patch('usuarios/{user}', [UserController::class, 'update'])->name('usuarios.update');
+        Route::patch('usuarios/{user}/estado', [UserController::class, 'updateStatus'])->name('usuarios.update-status');
         Route::patch('usuarios/{user}/rol', [UserController::class, 'updateRole'])->name('usuarios.update-role');
         Route::patch('usuarios/{user}/sede', [UserController::class, 'updateSede'])->name('usuarios.update-sede');
 
@@ -82,7 +95,16 @@ Route::prefix('gerente')
         Route::put('configuracion/empresa/cuentas-bancarias/{cuenta_bancaria}', [CompanyBankAccountController::class, 'update'])->name('configuracion.cuentas-bancarias.update');
         Route::delete('configuracion/empresa/cuentas-bancarias/{cuenta_bancaria}', [CompanyBankAccountController::class, 'destroy'])->name('configuracion.cuentas-bancarias.destroy');
 
+        // Catálogo 25 de SUNAT: se busca por nombre o código al crear productos y tipos de servicio.
+        Route::get('sunat/codigos-producto', SunatCodigoProductoController::class)->name('sunat.codigos-producto');
+
         // Firmas y sellos de quienes firman los certificados
+        // Certificados: textos de la plantilla general y certificados nuevos.
+        Route::get('configuracion/certificados', [CertificateTypeController::class, 'index'])->name('configuracion.certificados.index');
+        Route::get('configuracion/certificados/nuevo', [CertificateTypeController::class, 'create'])->name('configuracion.certificados.create');
+        Route::post('configuracion/certificados', [CertificateTypeController::class, 'store'])->name('configuracion.certificados.store');
+        Route::get('configuracion/certificados/{certificado}/editar', [CertificateTypeController::class, 'edit'])->name('configuracion.certificados.edit');
+        Route::put('configuracion/certificados/{certificado}', [CertificateTypeController::class, 'update'])->name('configuracion.certificados.update');
         Route::get('configuracion/firmas', [SignerController::class, 'index'])->name('configuracion.firmas.index');
         Route::post('configuracion/firmas', [SignerController::class, 'store'])->name('configuracion.firmas.store');
         Route::post('configuracion/firmas/{firmante}', [SignerController::class, 'update'])->name('configuracion.firmas.update');

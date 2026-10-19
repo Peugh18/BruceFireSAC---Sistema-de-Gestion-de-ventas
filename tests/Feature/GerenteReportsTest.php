@@ -1,11 +1,7 @@
 <?php
 
-use App\Models\Client;
-use App\Models\Product;
-use App\Models\Sale;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -19,50 +15,13 @@ function createGerenteUserForReportTest(): User
     return $user;
 }
 
-test('gerente puede acceder al centro de reportes y ver el reporte comercial', function () {
+test('la ruta vieja de reportes lleva al dashboard con el mes elegido', function () {
     $gerente = createGerenteUserForReportTest();
-    $client = Client::factory()->create();
-
-    Sale::factory()->create([
-        'client_id' => $client->id,
-        'vendedor_id' => $gerente->id,
-        'fecha' => today(),
-        'total' => 800.00,
-        'estado' => 'confirmada',
-    ]);
+    $equipo = $gerente->currentTeam;
 
     $this->actingAs($gerente)
-        ->get(route('gerente.reportes.index', ['current_team' => $gerente->currentTeam, 'tipo' => 'comercial']))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('gerente/reportes/index')
-            ->where('tipo', 'comercial')
-            ->has('reporteComercial')
-            ->where('reporteComercial.totalVentas', 800)
-            ->where('reporteComercial.cantidadVentas', 1)
-        );
-});
-
-test('gerente puede consultar el reporte de inventario', function () {
-    $gerente = createGerenteUserForReportTest();
-
-    Product::factory()->create([
-        'codigo' => 'PROD-REP-01',
-        'nombre' => 'Producto Reporte Test',
-        'precio_venta' => 100.00,
-        'stock_minimo' => 5,
-        'activo' => true,
-    ]);
-
-    $this->actingAs($gerente)
-        ->get(route('gerente.reportes.index', ['current_team' => $gerente->currentTeam, 'tipo' => 'inventario']))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('gerente/reportes/index')
-            ->where('tipo', 'inventario')
-            ->has('reporteInventario')
-            ->has('reporteInventario.productos', 1)
-        );
+        ->get(route('gerente.reportes.index', ['current_team' => $equipo, 'mes' => '2026-09']))
+        ->assertRedirect(route('gerente.dashboard', ['current_team' => $equipo, 'mes' => '2026-09']));
 });
 
 test('vendedor no puede acceder al centro de reportes de gerente', function () {

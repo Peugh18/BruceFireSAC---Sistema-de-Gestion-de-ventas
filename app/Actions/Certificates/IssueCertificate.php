@@ -53,6 +53,12 @@ class IssueCertificate
         ?int $serviceOrderId = null,
         array $extra = [],
     ): Certificate {
+        if (blank($client->numero_documento)) {
+            throw ValidationException::withMessages([
+                'client_id' => 'Completa el DNI/RUC del cliente antes de emitir el certificado.',
+            ]);
+        }
+
         $this->asegurarMismoCliente($client, $saleId, $serviceOrderId);
         $this->exigirAgente($tipo, $unidades);
 
@@ -296,6 +302,9 @@ class IssueCertificate
             ->get()
             ->keyBy('id');
 
+        // La prueba hidrostática se hace igual a todos: 600 PSI por 60 segundos.
+        $esPh = $certificate->certificateType->codigo === 'prueba_hidrostatica';
+
         foreach (array_values($unidades) as $indice => $u) {
             $equipo = $equipos->get($u['equipment_id'] ?? 0);
             $numeroCliente = $u['numero_cliente'] ?? $equipo?->numero_cliente;
@@ -317,8 +326,8 @@ class IssueCertificate
                 'anio_fabricacion' => self::anioNumerico($u['anio_fabricacion'] ?? $equipo?->anio_fabricacion),
                 'fecha_ultima_ph' => ! empty($u['fecha_ultima_ph']) ? Carbon::parse($u['fecha_ultima_ph']) : null,
                 'fecha_ultima_recarga' => ! empty($u['fecha_ultima_recarga']) ? Carbon::parse($u['fecha_ultima_recarga']) : null,
-                'presion_ph' => $u['presion_ph'] ?? null,
-                'tiempo_ph' => $u['tiempo_ph'] ?? null,
+                'presion_ph' => $u['presion_ph'] ?? ($esPh ? '600 PSI' : null),
+                'tiempo_ph' => $u['tiempo_ph'] ?? ($esPh ? '60 SEG' : null),
                 'presion_trabajo' => $u['presion_trabajo'] ?? null,
             ]);
         }

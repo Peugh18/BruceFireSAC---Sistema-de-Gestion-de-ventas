@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte Comercial - BRUCE FIRE S.A.C.</title>
+    <title>Reporte del mes - BRUCE FIRE S.A.C.</title>
     <style>
         body {
             font-family: Helvetica, Arial, sans-serif;
@@ -93,121 +93,120 @@
     </style>
 </head>
 <body>
+    @php
+        $formatear = function ($valor, string $formato): string {
+            if ($valor === null) {
+                return 'Sin datos';
+            }
+
+            return match ($formato) {
+                'moneda' => 'S/ '.number_format((float) $valor, 2),
+                'porcentaje' => $valor.' %',
+                default => $valor.' días',
+            };
+        };
+    @endphp
+
     <div class="header">
         <table>
             <tr>
                 <td>
                     <div class="title">BRUCE FIRE S.A.C.</div>
-                    <div class="subtitle">Reporte Comercial y Desempeño de Ventas</div>
+                    <div class="subtitle">Reporte del mes · {{ $periodo }} · {{ $sedeNombre }}</div>
                 </td>
                 <td class="text-right">
-                    <strong>Período:</strong> {{ $fechaDesde }} al {{ $fechaHasta }}<br>
+                    <strong>Período:</strong> {{ \Illuminate\Support\Carbon::parse($fechaDesde)->format('d/m/Y') }} al {{ \Illuminate\Support\Carbon::parse($fechaHasta)->format('d/m/Y') }}<br>
                     <strong>Emisión:</strong> {{ now()->format('d/m/Y H:i') }}
                 </td>
             </tr>
         </table>
     </div>
 
-    <!-- KPIs Principales -->
-    <table class="kpi-grid">
+    <h3>Métricas del mes</h3>
+    <table class="data-table">
         <tr>
-            <td class="kpi-cell" width="25%">
-                <div class="kpi-title">Ventas netas</div>
-                <div class="kpi-value">S/ {{ number_format($totalVentas, 2) }}</div>
-                <div class="kpi-title">Originales {{ number_format($ventasOriginales, 2) }} - NC {{ number_format($notasCredito, 2) }} + ND {{ number_format($notasDebito, 2) }}</div>
-            </td>
-            <td class="kpi-cell" width="25%">
-                <div class="kpi-title">Cantidad de Ventas</div>
-                <div class="kpi-value">{{ $cantidadVentas }}</div>
-            </td>
-            <td class="kpi-cell" width="25%">
-                <div class="kpi-title">Ticket Promedio</div>
-                <div class="kpi-value">S/ {{ number_format($ticketPromedio, 2) }}</div>
-            </td>
-            <td class="kpi-cell" width="25%">
-                <div class="kpi-title">Tasa Conversión Cotizaciones</div>
-                <div class="kpi-value">{{ $tasaConversion }}%</div>
-            </td>
+            <th>Métrica</th>
+            <th class="text-right">Este mes</th>
+            <th class="text-right">Mes anterior</th>
+            <th class="text-right">Variación</th>
+        </tr>
+        @foreach ($metricas as $metrica)
+            <tr>
+                <td>{{ $metrica['etiqueta'] }}</td>
+                <td class="text-right">{{ $formatear($metrica['valor'], $metrica['formato']) }}</td>
+                <td class="text-right">{{ $formatear($metrica['anterior'], $metrica['formato']) }}</td>
+                <td class="text-right">{{ $metrica['variacion'] === null ? '—' : $metrica['variacion'].' %' }}</td>
+            </tr>
+        @endforeach
+    </table>
+
+    <h3>Ventas por vendedor</h3>
+    <table class="data-table">
+        <tr><th>Vendedor</th><th class="text-right">Monto</th></tr>
+        @forelse ($ventasPorVendedor as $fila)
+            <tr><td>{{ $fila['vendedor'] }}</td><td class="text-right">S/ {{ number_format($fila['monto'], 2) }}</td></tr>
+        @empty
+            <tr><td colspan="2">Sin ventas en el mes.</td></tr>
+        @endforelse
+    </table>
+
+    <h3>Servicios más vendidos</h3>
+    <table class="data-table">
+        <tr><th>Servicio</th><th class="text-right">Cantidad</th><th class="text-right">Monto</th></tr>
+        @forelse ($serviciosMasVendidos as $fila)
+            <tr><td>{{ $fila['servicio'] }}</td><td class="text-right">{{ $fila['cantidad'] }}</td><td class="text-right">S/ {{ number_format($fila['monto'], 2) }}</td></tr>
+        @empty
+            <tr><td colspan="3">Sin servicios vendidos en el mes.</td></tr>
+        @endforelse
+    </table>
+
+    <h3>Cartera vencida (S/ {{ number_format($metrics['vencidoPorCobrar'], 2) }})</h3>
+    <table class="data-table">
+        <tr><th>Cliente</th><th>Debe desde</th><th class="text-right">Saldo</th></tr>
+        @forelse ($clientesConDeuda as $fila)
+            <tr><td>{{ $fila['cliente'] }}</td><td>{{ $fila['fecha_mas_antigua'] }}</td><td class="text-right">S/ {{ number_format($fila['saldo'], 2) }}</td></tr>
+        @empty
+            <tr><td colspan="3">Nadie tiene deuda vencida.</td></tr>
+        @endforelse
+    </table>
+
+    <h3>Recompra: extintores que vencen pronto</h3>
+    <table class="data-table">
+        <tr><th>Vencen en</th><th class="text-right">Extintores</th><th class="text-right">Clientes</th><th class="text-right">Monto estimado</th></tr>
+        @foreach ($recompra as $tramo)
+            <tr><td>{{ $tramo['dias'] }} días</td><td class="text-right">{{ $tramo['cantidad'] }}</td><td class="text-right">{{ $tramo['clientes'] }}</td><td class="text-right">S/ {{ number_format($tramo['monto_estimado'], 2) }}</td></tr>
+        @endforeach
+    </table>
+
+    <h3>IA de recompra: clientes a llamar primero</h3>
+    <p style="font-size: 9px; color: #6B6965; margin: 0 0 6px;">Situación actual de toda la empresa (no del período){{ $iaRecompra['calculado'] ? ', calculada el '.\Illuminate\Support\Carbon::parse($iaRecompra['calculado'])->format('d/m/Y') : '' }}.</p>
+    <table class="data-table">
+        <tr><th>Cliente</th><th>Por qué</th><th class="text-right">Probabilidad</th></tr>
+        @forelse ($iaRecompra['clientes'] as $fila)
+            <tr><td>{{ $fila['cliente'] }}</td><td>{{ $fila['resumen'] }}</td><td class="text-right">{{ $fila['porcentaje'] }} %</td></tr>
+        @empty
+            <tr><td colspan="3">La IA todavía no tiene clientes con probabilidad alta o media.</td></tr>
+        @endforelse
+    </table>
+
+    <div style="page-break-inside: avoid;">
+    <h3>Inventario valorizado</h3>
+    <table class="data-table">
+        <tr>
+            <td>Valor del inventario al costo</td><td class="text-right">S/ {{ number_format($reporteInventario['valorizacionTotal'], 2) }}</td>
+        </tr>
+        <tr>
+            <td>Productos / unidades</td><td class="text-right">{{ $reporteInventario['totalProductos'] }} / {{ $reporteInventario['totalUnidades'] }}</td>
+        </tr>
+        <tr>
+            <td>Productos bajo el mínimo</td><td class="text-right">{{ $reporteInventario['totalBajoMinimo'] }}</td>
+        </tr>
+        <tr>
+            <td>Productos sin costo registrado</td><td class="text-right">{{ $reporteInventario['productosSinCosto'] }}</td>
         </tr>
     </table>
-
-    <!-- Ventas por Vendedor -->
-    <h3>Ventas por Vendedor</h3>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Vendedor</th>
-                <th class="text-center">N° Operaciones</th>
-                <th class="text-right">Total Facturado (S/)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($porVendedor as $row)
-            <tr>
-                <td>{{ $row['nombre'] }}</td>
-                <td class="text-center">{{ $row['cantidad'] }}</td>
-                <td class="text-right">S/ {{ number_format($row['monto'], 2) }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="3" class="text-center">Sin registros en el período seleccionado.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <!-- Top Clientes -->
-    <h3>Top Clientes en el Período</h3>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Cliente / Razón Social</th>
-                <th class="text-center">N° Compras</th>
-                <th class="text-right">Total Acumulado (S/)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($topClientes as $c)
-            <tr>
-                <td>{{ $c['cliente'] }}</td>
-                <td class="text-center">{{ $c['cantidad'] }}</td>
-                <td class="text-right">S/ {{ number_format($c['total'], 2) }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="3" class="text-center">Sin registros de clientes.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <!-- Productos y Servicios más Vendidos -->
-    <h3>Top Ítems Vendidos (Productos & Servicios)</h3>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Ítem / Catálogo</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-right">Total Ventas (S/)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($topItems as $item)
-            <tr>
-                <td>{{ $item['nombre'] }}</td>
-                <td class="text-center">{{ $item['cantidad'] }}</td>
-                <td class="text-right">S/ {{ number_format($item['monto'], 2) }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="3" class="text-center">Sin registros de ítems vendidos.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <div class="footer">
-        BRUCE FIRE S.A.C. — Sistema Integrado de Gestión Empresarial — Documento generado confidencial para Gerencia General.
     </div>
+
+    <div class="footer">Generado por el sistema de BRUCE FIRE S.A.C. Las ventas netas descuentan notas de crédito y suman notas de débito aceptadas.</div>
 </body>
 </html>

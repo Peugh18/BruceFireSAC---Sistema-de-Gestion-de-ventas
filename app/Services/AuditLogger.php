@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -40,10 +41,14 @@ class AuditLogger
     ): ?AuditLog {
         try {
             $user = Auth::user();
+            $actor = $userId && $user?->id !== $userId
+                ? User::query()->find($userId)
+                : $user;
 
             return AuditLog::create([
                 'user_id' => $userId ?? $user?->id,
-                'team_id' => $user?->current_team_id ?? (property_exists($entity ?? (object) [], 'team_id') ? $entity->team_id : null),
+                'team_id' => $actor?->current_team_id ?? (property_exists($entity ?? (object) [], 'team_id') ? $entity->team_id : null),
+                'actor_role' => $actor instanceof User ? self::rolDelActor($actor) : null,
                 'action' => $action,
                 'auditable_type' => $entity ? get_class($entity) : null,
                 'auditable_id' => $entity?->getKey(),
@@ -88,5 +93,17 @@ class AuditLogger
     public static function detalleDeFallos(): array
     {
         return self::$detalleDeFallos;
+    }
+
+    private static function rolDelActor(User $user): ?string
+    {
+        $roles = $user->getRoleNames()
+            ->map(fn (string $rol) => [
+                'TecnicoCampo' => 'Técnico de Campo',
+                'TecnicoPlanta' => 'Técnico de Planta',
+            ][$rol] ?? $rol)
+            ->values();
+
+        return $roles->isEmpty() ? null : $roles->implode(', ');
     }
 }

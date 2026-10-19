@@ -16,6 +16,7 @@ declare module '@inertiajs/core' {
             currentTeam: Team | null;
             teams: Team[];
             agentesExtintor?: string[];
+            marcasExtintor?: string[];
             [key: string]: unknown;
         };
     }

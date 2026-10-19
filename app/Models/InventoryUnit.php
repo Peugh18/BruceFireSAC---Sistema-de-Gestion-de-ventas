@@ -87,6 +87,6 @@ class InventoryUnit extends Model
      */
     public function agenteParaEquipo(): ?string
     {
-        return EquipmentType::tryFrom((string) ($this->agente ?? $this->product->agente))?->etiqueta();
+        return EquipmentType::nombreDe($this->agente ?? $this->product->agente);
     }
 }

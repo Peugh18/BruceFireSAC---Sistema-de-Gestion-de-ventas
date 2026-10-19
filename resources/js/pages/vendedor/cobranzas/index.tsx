@@ -57,6 +57,12 @@ export type TurnoActual = {
     estado: string;
     abierto_mas_de_24_horas?: boolean;
     ventas_por_forma_pago?: Record<string, number>;
+    salidas?: {
+        id: number;
+        monto: number;
+        motivo: string;
+        hora: string | null;
+    }[];
 } | null;
 
 export type CierreItem = {
@@ -77,6 +83,8 @@ export type InstallmentItem = {
     sale_id: number;
     sale_numero: string;
     con_detraccion?: boolean;
+    saldo_comercial_venta?: number;
+    saldo_detraccion_venta?: number;
     numero_cuota: number;
     monto: number | string;
     saldo: number | string;
@@ -91,6 +99,8 @@ export type InstallmentItem = {
         es_detraccion?: boolean;
         fecha: string;
         puede_anular: boolean;
+        numero_operacion?: string | null;
+        evidencia_url?: string | null;
     }[];
     anulados: {
         id: number;
@@ -181,6 +191,32 @@ export default function CobranzasIndex({
         });
     };
 
+    // Form: Salida de dinero del turno (gasto con su motivo)
+    const [salidaDialogOpen, setSalidaDialogOpen] = useState(false);
+    const salidaForm = useForm({ monto: '', motivo: '' });
+    const submitSalida = (e: FormEvent) => {
+        e.preventDefault();
+        if (!turno_actual) return;
+        salidaForm.post(
+            CashRegisterController.salida.url({
+                current_team: teamSlug,
+                cash_register: turno_actual.id,
+            }),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    salidaForm.reset();
+                    setSalidaDialogOpen(false);
+                    toast.success('Salida de dinero registrada.');
+                },
+            },
+        );
+    };
+    const totalSalidas = (turno_actual?.salidas ?? []).reduce(
+        (total, salida) => total + Number(salida.monto),
+        0,
+    );
+
     // Form: Cerrar turno de caja (arqueo ciego)
     const closeForm = useForm({
         monto_contado_cierre: '',
@@ -216,15 +252,24 @@ export default function CobranzasIndex({
         monto: '',
         numero_operacion: '',
         es_detraccion: false,
+        fecha_deposito: '',
+        evidencia: null as File | null,
     });
 
     const handleOpenPaymentDialog = (inst: InstallmentItem) => {
         setSelectedInstallment(inst);
         paymentForm.setData({
             forma_pago: 'efectivo',
-            monto: String(inst.saldo),
+            monto: String(
+                Math.min(
+                    Number(inst.saldo),
+                    inst.saldo_comercial_venta ?? Number(inst.saldo),
+                ),
+            ),
             numero_operacion: '',
             es_detraccion: false,
+            fecha_deposito: '',
+            evidencia: null,
         });
     };
 
@@ -383,6 +428,37 @@ export default function CobranzasIndex({
                                                 {soles(ventasTarjetaYape)}
                                             </span>
                                         </div>
+                                        <div className="flex items-center justify-between py-2">
+                                            <span className="text-muted-foreground">
+                                                Salidas de dinero
+                                            </span>
+                                            <span className="text-foreground font-semibold">
+                                                − {soles(totalSalidas)}
+                                            </span>
+                                        </div>
+                                        {(turno_actual.salidas ?? []).length >
+                                            0 && (
+                                            <ul className="text-muted-foreground space-y-1 py-2 text-xs">
+                                                {(
+                                                    turno_actual.salidas ?? []
+                                                ).map((salida) => (
+                                                    <li
+                                                        key={salida.id}
+                                                        className="flex justify-between gap-3"
+                                                    >
+                                                        <span className="min-w-0 truncate">
+                                                            {salida.hora} ·{' '}
+                                                            {salida.motivo}
+                                                        </span>
+                                                        <span className="shrink-0">
+                                                            {soles(
+                                                                salida.monto,
+                                                            )}
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
                                         {/* Arqueo ciego: el efectivo esperado
                                         se ve recién al cerrar, después de
                                         contar lo que hay en el cajón. */}
@@ -393,13 +469,24 @@ export default function CobranzasIndex({
                                         </p>
                                     </div>
 
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() =>
+                                            setSalidaDialogOpen(true)
+                                        }
+                                        className="border-border mt-5 h-10 w-full rounded-lg text-[13px] font-semibold"
+                                    >
+                                        Registrar salida de dinero
+                                    </Button>
+
                                     {/* Botón Cerrar Turno */}
                                     <Button
                                         type="button"
                                         onClick={() =>
                                             setCloseTurnoDialogOpen(true)
                                         }
-                                        className="bg-primary hover:bg-primary/90 mt-5 h-10 w-full rounded-lg text-[13px] font-bold text-white shadow-none transition-colors"
+                                        className="bg-primary hover:bg-primary/90 mt-2 h-10 w-full rounded-lg text-[13px] font-bold text-white shadow-none transition-colors"
                                     >
                                         <Lock className="mr-1.5 size-4" />
                                         <span>Cerrar turno (arqueo ciego)</span>
@@ -689,6 +776,26 @@ export default function CobranzasIndex({
                                                             {inst.pagos
                                                                 .filter(
                                                                     (pago) =>
+                                                                        pago.evidencia_url,
+                                                                )
+                                                                .map((pago) => (
+                                                                    <a
+                                                                        key={`evidencia-${pago.id}`}
+                                                                        href={
+                                                                            pago.evidencia_url ??
+                                                                            undefined
+                                                                        }
+                                                                        className="text-primary mb-1 block text-xs underline"
+                                                                    >
+                                                                        Constancia{' '}
+                                                                        {
+                                                                            pago.numero_operacion
+                                                                        }
+                                                                    </a>
+                                                                ))}
+                                                            {inst.pagos
+                                                                .filter(
+                                                                    (pago) =>
                                                                         pago.puede_anular,
                                                                 )
                                                                 .map((pago) => (
@@ -959,7 +1066,8 @@ export default function CobranzasIndex({
 
                         <div>
                             <Label className="text-foreground text-sm font-medium">
-                                Observaciones (opcional)
+                                Observación (obligatoria si falta o sobra
+                                dinero)
                             </Label>
                             <Input
                                 aria-label="Observación"
@@ -971,9 +1079,15 @@ export default function CobranzasIndex({
                                         e.target.value,
                                     )
                                 }
-                                placeholder="Ej. Billetes deteriorados, diferencias..."
+                                placeholder="Ej. Di vuelto de más a un cliente"
                                 className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
+                                aria-invalid={!!closeForm.errors.observacion}
                             />
+                            {closeForm.errors.observacion && (
+                                <p className="text-destructive-strong mt-1 text-xs font-medium">
+                                    {closeForm.errors.observacion}
+                                </p>
+                            )}
                         </div>
 
                         <DialogFooter className="pt-2">
@@ -991,6 +1105,80 @@ export default function CobranzasIndex({
                                 className="bg-primary hover:bg-primary/90 rounded-lg text-xs font-bold text-white"
                             >
                                 Confirmar y cerrar turno
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog: Salida de dinero */}
+            <Dialog open={salidaDialogOpen} onOpenChange={setSalidaDialogOpen}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Registrar salida de dinero</DialogTitle>
+                        <DialogDescription>
+                            Efectivo que sacas del cajón para un gasto. Se
+                            descuenta al cerrar la caja.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={submitSalida} className="space-y-3">
+                        <div>
+                            <Label htmlFor="salida-monto">Monto (S/)</Label>
+                            <Input
+                                id="salida-monto"
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min="0.01"
+                                required
+                                value={salidaForm.data.monto}
+                                onChange={(e) =>
+                                    salidaForm.setData('monto', e.target.value)
+                                }
+                                aria-invalid={!!salidaForm.errors.monto}
+                                className="mt-1"
+                            />
+                            {salidaForm.errors.monto && (
+                                <p className="text-destructive-strong mt-1 text-xs font-medium">
+                                    {salidaForm.errors.monto}
+                                </p>
+                            )}
+                        </div>
+                        <div>
+                            <Label htmlFor="salida-motivo">
+                                ¿Para qué sale?
+                            </Label>
+                            <Input
+                                id="salida-motivo"
+                                required
+                                maxLength={255}
+                                value={salidaForm.data.motivo}
+                                onChange={(e) =>
+                                    salidaForm.setData('motivo', e.target.value)
+                                }
+                                placeholder="Ej. Compra de útiles de limpieza"
+                                aria-invalid={!!salidaForm.errors.motivo}
+                                className="mt-1"
+                            />
+                            {salidaForm.errors.motivo && (
+                                <p className="text-destructive-strong mt-1 text-xs font-medium">
+                                    {salidaForm.errors.motivo}
+                                </p>
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setSalidaDialogOpen(false)}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                type="submit"
+                                loading={salidaForm.processing}
+                            >
+                                Guardar salida
                             </Button>
                         </DialogFooter>
                     </form>
@@ -1026,6 +1214,24 @@ export default function CobranzasIndex({
                         onSubmit={submitRegisterPayment}
                         className="mt-3 space-y-3.5"
                     >
+                        {Number(
+                            selectedInstallment?.saldo_detraccion_venta ?? 0,
+                        ) > 0 && (
+                            <p className="border-border text-muted-foreground rounded-lg border p-3 text-xs">
+                                Pendiente de la venta: pago comercial{' '}
+                                {soles(
+                                    selectedInstallment?.saldo_comercial_venta ??
+                                        0,
+                                )}{' '}
+                                · detracción BN{' '}
+                                {soles(
+                                    selectedInstallment?.saldo_detraccion_venta ??
+                                        0,
+                                )}
+                                . Estos importes corresponden a toda la venta;
+                                el abono se aplica a esta cuota.
+                            </p>
+                        )}
                         {selectedInstallment?.con_detraccion && (
                             <label className="flex items-center gap-2 text-sm">
                                 <input
@@ -1038,6 +1244,24 @@ export default function CobranzasIndex({
                                             forma_pago: e.target.checked
                                                 ? 'deposito'
                                                 : 'efectivo',
+                                            monto: String(
+                                                Math.min(
+                                                    Number(
+                                                        selectedInstallment?.saldo ??
+                                                            0,
+                                                    ),
+                                                    e.target.checked
+                                                        ? (selectedInstallment?.saldo_detraccion_venta ??
+                                                              0)
+                                                        : (selectedInstallment?.saldo_comercial_venta ??
+                                                              Number(
+                                                                  selectedInstallment?.saldo ??
+                                                                      0,
+                                                              )),
+                                                ),
+                                            ),
+                                            fecha_deposito: '',
+                                            evidencia: null,
                                         })
                                     }
                                 />
@@ -1049,9 +1273,64 @@ export default function CobranzasIndex({
                             <p className="text-muted-foreground text-xs">
                                 Registra únicamente el depósito verificado.
                                 Reduce la deuda y se conserva fuera de los
-                                ingresos de caja. Comparte la captura al gerente
-                                por WhatsApp de forma manual.
+                                ingresos de caja. Ingresa la fecha de la
+                                constancia; no se verifica automáticamente con
+                                el banco.
                             </p>
+                        )}
+                        {paymentForm.data.es_detraccion && (
+                            <>
+                                <div>
+                                    <Label htmlFor="fecha-deposito-cuota">
+                                        Fecha real del depósito *
+                                    </Label>
+                                    <Input
+                                        id="fecha-deposito-cuota"
+                                        type="date"
+                                        required
+                                        value={paymentForm.data.fecha_deposito}
+                                        onChange={(event) =>
+                                            paymentForm.setData(
+                                                'fecha_deposito',
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+                                    {paymentForm.errors.fecha_deposito && (
+                                        <p
+                                            role="alert"
+                                            className="text-destructive-strong text-xs"
+                                        >
+                                            {paymentForm.errors.fecha_deposito}
+                                        </p>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label htmlFor="evidencia-cuota">
+                                        Constancia PDF o foto (opcional, hasta 5
+                                        MB)
+                                    </Label>
+                                    <Input
+                                        id="evidencia-cuota"
+                                        type="file"
+                                        accept="application/pdf,image/jpeg,image/png"
+                                        onChange={(event) =>
+                                            paymentForm.setData(
+                                                'evidencia',
+                                                event.target.files?.[0] ?? null,
+                                            )
+                                        }
+                                    />
+                                    {paymentForm.errors.evidencia && (
+                                        <p
+                                            role="alert"
+                                            className="text-destructive-strong text-xs"
+                                        >
+                                            {paymentForm.errors.evidencia}
+                                        </p>
+                                    )}
+                                </div>
+                            </>
                         )}
                         <div>
                             <Label className="text-foreground text-sm font-medium">
@@ -1092,7 +1371,17 @@ export default function CobranzasIndex({
                                 type="number"
                                 step="0.01"
                                 min="0.01"
-                                max={selectedInstallment?.saldo}
+                                max={Math.min(
+                                    Number(selectedInstallment?.saldo ?? 0),
+                                    paymentForm.data.es_detraccion
+                                        ? (selectedInstallment?.saldo_detraccion_venta ??
+                                              0)
+                                        : (selectedInstallment?.saldo_comercial_venta ??
+                                              Number(
+                                                  selectedInstallment?.saldo ??
+                                                      0,
+                                              )),
+                                )}
                                 required
                                 value={paymentForm.data.monto}
                                 onChange={(e) =>
@@ -1125,6 +1414,14 @@ export default function CobranzasIndex({
                                     placeholder="Ej. OP-983412"
                                     className="border-border bg-card mt-1 h-9 rounded-lg font-mono text-[13px]"
                                 />
+                                {paymentForm.errors.numero_operacion && (
+                                    <p
+                                        role="alert"
+                                        className="text-destructive-strong text-xs"
+                                    >
+                                        {paymentForm.errors.numero_operacion}
+                                    </p>
+                                )}
                             </div>
                         )}
 

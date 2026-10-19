@@ -61,6 +61,15 @@ class ConversacionOrdenController extends Controller
         return back();
     }
 
+    /** Abrir el chat de la orden lo deja leído para esta persona. */
+    public function leido(Request $request, Team $current_team, ServiceOrder $service_order, ConversacionDeLaOrden $conversacion): RedirectResponse
+    {
+        $this->autorizar($request, $service_order);
+        $conversacion->marcarLeida($request->user(), $service_order);
+
+        return back();
+    }
+
     /**
      * Sube una foto, un audio o un archivo suelto de la orden (antes, después,
      * deficiencia…), con su equipo opcional.

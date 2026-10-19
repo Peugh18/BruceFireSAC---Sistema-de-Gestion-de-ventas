@@ -12,6 +12,7 @@ use App\Models\Sede;
 use App\Models\ServiceOrder;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Inertia\Testing\AssertableInertia;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -72,6 +73,12 @@ test('ventas_hoy solo suma las ventas de HOY del vendedor autenticado', function
         ->get(route('vendedor.dashboard', ['current_team' => $vendedor->currentTeam]));
 
     $response->assertOk();
+
+    $response->assertInertia(fn (AssertableInertia $page) => $page
+        ->has('graficos.ventas', 2)
+        ->where('graficos.ventas.1.valor', 450)
+        ->has('graficos.cotizaciones', 3)
+        ->has('graficos.cobranza', 2));
 
     $ventasHoy = $response->viewData('page')['props']['ventas_hoy'];
     expect($ventasHoy['total'])->toEqual(300.00)

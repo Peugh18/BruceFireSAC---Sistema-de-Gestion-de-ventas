@@ -2,18 +2,49 @@
 
 namespace App\Services\Billing;
 
+use App\Models\CompanySetting;
 use App\Models\Deficiency;
 use App\Models\InventoryMovement;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Service;
+use App\Support\CatalogosSunat;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class DetraccionCalculator
 {
-    /** @return array{aplica:bool,monto:float,codigo_bien:string} */
+    /**
+     * Metadatos para el aviso previo; la decisión definitiva sigue en paraVenta.
+     *
+     * @return array{monto_minimo:float,porcentaje:float,cuenta_bn:string,servicios:list<array{id:int,codigo:?string,nombre:string,afectacion:?string,porcentaje:?float,estado:?string}>}
+     */
+    public function reglasParaFormulario(): array
+    {
+        return [
+            'monto_minimo' => (float) config('billing.detraccion.monto_minimo'),
+            'porcentaje' => CatalogosSunat::porcentajeDeDetraccion('022') ?? 12.0,
+            'cuenta_bn' => (string) CompanySetting::current()->cuenta_detraccion,
+            'servicios' => array_values(Service::query()->get()->map(function (Service $servicio): array {
+                $codigo = $servicio->codigoDetraccion();
+
+                return [
+                    'id' => $servicio->id,
+                    'codigo' => in_array($codigo, CatalogosSunat::codigosDeDetraccion(), true) ? $codigo : null,
+                    'nombre' => CatalogosSunat::detraccionConNombre($codigo),
+                    'afectacion' => AfectacionIgv::requiereRevision($servicio) ? null : $servicio->tipo_afectacion_igv,
+                    'porcentaje' => CatalogosSunat::porcentajeDeDetraccion($codigo),
+                    'estado' => $servicio->estado_detraccion,
+                ];
+            })->all()),
+        ];
+    }
+
+    /** @return array{aplica:bool,monto:float,codigo_bien:string,porcentaje:float} */
     public function paraVenta(Sale $sale, ?string $tipoComprobante = null): array
     {
-        $sinDetraccion = ['aplica' => false, 'monto' => 0.0, 'codigo_bien' => ''];
+        $sinDetraccion = ['aplica' => false, 'monto' => 0.0, 'codigo_bien' => '', 'porcentaje' => 0.0];
         if (($tipoComprobante ?? $sale->comprobante_tipo) !== 'factura') {
             return $sinDetraccion;
         }
@@ -23,6 +54,7 @@ class DetraccionCalculator
                 'aplica' => (float) $sale->monto_detraccion_snapshot > 0,
                 'monto' => (float) $sale->monto_detraccion_snapshot,
                 'codigo_bien' => $sale->codigo_detraccion_snapshot,
+                'porcentaje' => (float) $sale->total > 0 ? round((float) $sale->monto_detraccion_snapshot / (float) $sale->total * 100, 2) : 0.0,
             ];
         }
 
@@ -36,13 +68,24 @@ class DetraccionCalculator
             return $sinDetraccion;
         }
 
-        $codigos = $servicios->map(function (SaleItem $item): string {
+        $pendiente = $servicios->first(fn (SaleItem $item) => $item->service?->estado_detraccion === 'pendiente');
+        if ($pendiente !== null) {
+            throw ValidationException::withMessages(['items' => 'Falta revisar la clasificación de detracción del servicio '.$pendiente->service->nombre.'. Pide al gerente que la confirme en Servicios antes de facturar.']);
+        }
+
+        $servicios = $servicios->reject(fn (SaleItem $item) => $item->service?->estado_detraccion === 'no_sujeto');
+        if ($servicios->isEmpty()) {
+            return $sinDetraccion;
+        }
+
+        $habilitados = CatalogosSunat::codigosDeDetraccion();
+        $codigos = $servicios->map(function (SaleItem $item) use ($habilitados): string {
             $codigo = $item->service?->codigoDetraccion();
-            if (! in_array($codigo, ['020', '022', '037'], true)) {
+            if (! in_array($codigo, $habilitados, true)) {
                 throw ValidationException::withMessages(['items' => 'Revisa la clasificación de detracción del servicio '.($item->service->nombre ?? 'sin catálogo').' en el catálogo antes de emitir esta factura.']);
             }
 
-            return $codigo;
+            return (string) $codigo;
         })->unique()->values();
 
         if ($codigos->count() > 1) {
@@ -77,7 +120,7 @@ class DetraccionCalculator
             }
         }
 
-        return $this->calcular((float) $sale->total, true, (string) $codigos->first());
+        return $this->calcular((float) $sale->total, true, (string) $codigos->first(), $sale->fecha);
     }
 
     /**
@@ -117,15 +160,22 @@ class DetraccionCalculator
             ->all();
     }
 
-    /** @return array{aplica:bool,monto:float,codigo_bien:string} */
-    public function calcular(float $total, bool $esServicio, ?string $codigoBien = null): array
+    /**
+     * El porcentaje sale del catálogo 54 según el código y la fecha de la venta.
+     *
+     * @return array{aplica:bool,monto:float,codigo_bien:string,porcentaje:float}
+     */
+    public function calcular(float $total, bool $esServicio, ?string $codigoBien = null, ?CarbonInterface $fecha = null): array
     {
-        $aplica = $esServicio && $total > (float) config('billing.detraccion.monto_minimo');
+        $codigoBien ??= (string) config('billing.detraccion.codigo_bien');
+        $porcentaje = CatalogosSunat::porcentajeDeDetraccion($codigoBien, $fecha ? Carbon::instance($fecha) : null) ?? 0.0;
+        $aplica = $esServicio && $porcentaje > 0 && $total > (float) config('billing.detraccion.monto_minimo');
 
         return [
             'aplica' => $aplica,
-            'monto' => $aplica ? round($total * (float) config('billing.detraccion.tasa'), 2) : 0.0,
-            'codigo_bien' => $codigoBien ?? (string) config('billing.detraccion.codigo_bien'),
+            'monto' => $aplica ? round($total * $porcentaje / 100, 2) : 0.0,
+            'codigo_bien' => $codigoBien,
+            'porcentaje' => $porcentaje,
         ];
     }
 }

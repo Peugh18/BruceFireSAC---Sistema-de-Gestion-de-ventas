@@ -148,7 +148,8 @@ test('Dashboard del Gerente maneja estado vacío si no hay scores de retención'
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
         ->component('gerente/dashboard')
-        ->where('aiRetention', null)
+        ->where('iaRecompra.alta', 0)
+        ->where('iaRecompra.clientes', [])
     );
 });
 
@@ -158,6 +159,7 @@ test('Dashboard del Gerente renderiza la sección de IA con scores activos', fun
 
     $client = Client::factory()->create([
         'razon_social' => 'GRUPO GLORIA S.A.',
+        'nombre_comercial' => null,
         'numero_documento' => '20100190797',
     ]);
 
@@ -187,12 +189,12 @@ test('Dashboard del Gerente renderiza la sección de IA con scores activos', fun
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
         ->component('gerente/dashboard')
-        ->has('aiRetention', fn (Assert $ai) => $ai
-            ->where('totalEvaluados', 1)
-            ->where('distribucion.alta.cantidad', 1)
-            ->where('modelo.disponible', true)
-            ->has('topClientes', 1)
-            ->where('topClientes.0.cliente', 'GRUPO GLORIA S.A.')
+        ->has('iaRecompra', fn (Assert $ai) => $ai
+            ->where('alta', 1)
+            ->where('media', 0)
+            ->has('clientes', 1)
+            ->where('clientes.0.cliente', 'GRUPO GLORIA S.A.')
+            ->where('clientes.0.porcentaje', 85)
             ->etc()
         )
     );

@@ -18,7 +18,6 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
-import { useAppearance } from '@/hooks/use-appearance';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
 import { confirm } from '@/routes/two-factor';
@@ -62,7 +61,6 @@ function TwoFactorSetupStep({
     onNextStep: () => void;
     errors: string[];
 }) {
-    const { resolvedAppearance } = useAppearance();
     const [copiedText, copy] = useClipboard();
     const IconComponent = copiedText === manualSetupKey ? Check : Copy;
 
@@ -77,15 +75,9 @@ function TwoFactorSetupStep({
                             <div className="z-10 flex h-full w-full items-center justify-center p-5">
                                 {qrCodeSvg ? (
                                     <div
-                                        className="bg-card aspect-square w-full rounded-lg p-2 [&_svg]:size-full"
+                                        className="aspect-square w-full rounded-lg bg-white p-5 [&_svg]:size-full"
                                         dangerouslySetInnerHTML={{
                                             __html: qrCodeSvg,
-                                        }}
-                                        style={{
-                                            filter:
-                                                resolvedAppearance === 'dark'
-                                                    ? 'invert(1) brightness(1.5)'
-                                                    : undefined,
                                         }}
                                     />
                                 ) : (
@@ -96,7 +88,11 @@ function TwoFactorSetupStep({
                     </div>
 
                     <div className="flex w-full space-x-5">
-                        <Button className="w-full" onClick={onNextStep}>
+                        <Button
+                            className="w-full"
+                            onClick={onNextStep}
+                            disabled={!qrCodeSvg || !manualSetupKey}
+                        >
                             {buttonText}
                         </Button>
                     </div>
@@ -104,7 +100,7 @@ function TwoFactorSetupStep({
                     <div className="relative flex w-full items-center justify-center">
                         <div className="bg-border absolute inset-0 top-1/2 h-px w-full" />
                         <span className="bg-card relative px-2 py-1">
-                            o ingresa el código manualmente
+                            ¿No se escanea? Copia esta clave
                         </span>
                     </div>
 
@@ -124,6 +120,8 @@ function TwoFactorSetupStep({
                                         className="bg-background text-foreground h-full w-full p-3 outline-none"
                                     />
                                     <button
+                                        type="button"
+                                        aria-label="Copiar clave de configuración"
                                         onClick={() => copy(manualSetupKey)}
                                         className="border-border hover:bg-muted border-l px-3"
                                     >
@@ -133,6 +131,13 @@ function TwoFactorSetupStep({
                             )}
                         </div>
                     </div>
+
+                    <p className="text-muted-foreground text-center text-xs">
+                        En Google Authenticator pulsa +, elige introducir una
+                        clave de configuración, escribe Bruce Fire como nombre y
+                        pega esta clave. Elige Basada en tiempo. Después usa su
+                        código de 6 dígitos para confirmar aquí.
+                    </p>
                 </>
             )}
         </>
@@ -282,17 +287,15 @@ export default function TwoFactorSetupModal({
             title: 'Activar autenticación en dos pasos',
             description:
                 'Para terminar de activar la autenticación en dos pasos, escanea el código QR o ingresa la clave de configuración en tu app de autenticación',
-            buttonText: 'Continue',
+            buttonText: 'Ya lo añadí a mi aplicación',
         };
     }, [twoFactorEnabled, showVerificationStep]);
 
     const resetModalState = useCallback(() => {
-        if (twoFactorEnabled) {
-            clearSetupData();
-        }
+        clearSetupData();
 
         setShowVerificationStep(false);
-    }, [clearSetupData, twoFactorEnabled]);
+    }, [clearSetupData]);
 
     const handleClose = useCallback(() => {
         resetModalState();
@@ -324,7 +327,7 @@ export default function TwoFactorSetupModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
                 <DialogHeader className="flex items-center justify-center">
                     <GridScanIcon />
                     <DialogTitle>{modalConfig.title}</DialogTitle>

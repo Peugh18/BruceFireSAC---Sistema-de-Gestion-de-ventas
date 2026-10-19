@@ -2,6 +2,9 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Barcode, Building2, FileText, Printer } from 'lucide-react';
 import { useState } from 'react';
 
+import SelectorFormatoStickers, {
+    type FormatoStickers,
+} from '@/components/formato-stickers';
 import { Card } from '@/components/ui/card';
 import { Empty } from '@/components/ui/empty';
 import {
@@ -23,6 +26,7 @@ export type StickerReceptionRow = {
     fecha: string;
     sede_almacen: { id: number; nombre: string } | null;
     unidades_count: number;
+    productos_count: number;
 };
 
 export type PaginationLink = {
@@ -47,14 +51,13 @@ function formatDate(dateStr: string): string {
 }
 
 export default function StickersIndex({ recepciones: receptions }: Props) {
+    const [formato, setFormato] = useState<FormatoStickers>('rollo');
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
         currentTeam?.slug ||
         (typeof window !== 'undefined'
             ? window.location.pathname.split('/')[1]
             : '');
-
-    const [inicio, setInicio] = useState('1');
 
     return (
         <AlmacenLayout title="Stickers de Barras">
@@ -66,36 +69,54 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                         Stickers de Código de Barras
                     </h1>
                     <p className="text-muted-foreground text-xs">
-                        Recepciones con unidades serializadas listas para
-                        imprimir su hoja de stickers. El PDF se genera por
-                        recepción, con las unidades conformes que ingresaron en
-                        ese lote.
+                        Imprime una etiqueta por extintor y una por producto
+                        distinto recibido por cantidad. El código PRD identifica
+                        el producto, sin reemplazar su código de fábrica.
+                    </p>
+                    <p className="text-muted-foreground mt-2 text-xs">
+                        Etiquetas de 80 × 50 mm: una por corte en rollo o diez
+                        por hoja A4. Imprime el PDF a tamaño real (100 %).
                     </p>
                 </div>
 
+                <SelectorFormatoStickers
+                    value={formato}
+                    onChange={setFormato}
+                />
+
                 <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                    <div className="grid gap-4 text-xs sm:grid-cols-2">
-                        <div>
-                            <label
-                                htmlFor="sticker-inicio"
-                                className="text-foreground/80 block font-semibold"
-                            >
-                                Empezar en la posición (1 a 20)
-                            </label>
+                    <form
+                        method="get"
+                        action={stickersRutas.producto.url({
+                            current_team: teamSlug,
+                        })}
+                        target="_blank"
+                        className="mb-5 space-y-2"
+                    >
+                        <input type="hidden" name="formato" value={formato} />
+                        <label
+                            htmlFor="sticker-producto"
+                            className="text-sm font-semibold"
+                        >
+                            Reimprimir etiqueta de producto sin serie
+                        </label>
+                        <div className="flex flex-wrap gap-2">
                             <input
-                                id="sticker-inicio"
-                                type="number"
-                                min={1}
-                                max={20}
-                                value={inicio}
-                                onChange={(e) => setInicio(e.target.value)}
-                                className="border-border mt-1 w-24 rounded-lg border px-3 py-1.5"
+                                id="sticker-producto"
+                                name="codigo"
+                                required
+                                placeholder="PRD-000001"
+                                className="border-border bg-background min-h-11 rounded-lg border px-3 font-mono text-sm"
                             />
-                            <p className="text-muted-foreground mt-1">
-                                La hoja A4 trae 20 stickers de 5 × 5 cm. Si ya
-                                usaste los primeros, indica desde cuál seguir.
-                            </p>
+                            <button
+                                type="submit"
+                                className="bg-foreground text-background min-h-11 rounded-lg px-3 text-sm"
+                            >
+                                Imprimir producto
+                            </button>
                         </div>
+                    </form>
+                    <div className="max-w-xl text-xs">
                         <form
                             method="get"
                             action={stickersRutas.unidad.url({
@@ -103,6 +124,11 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                             })}
                             target="_blank"
                         >
+                            <input
+                                type="hidden"
+                                name="formato"
+                                value={formato}
+                            />
                             <label
                                 htmlFor="sticker-serie"
                                 className="text-foreground/80 block font-semibold"
@@ -117,11 +143,6 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                     placeholder="BF-EQ-000001"
                                     className="border-border rounded-lg border px-3 py-1.5 font-mono"
                                 />
-                                <input
-                                    type="hidden"
-                                    name="inicio"
-                                    value={inicio}
-                                />
                                 <button
                                     type="submit"
                                     className="bg-foreground text-background rounded-md px-3 py-1.5 font-bold transition hover:brightness-95"
@@ -135,7 +156,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                     {receptions.data.length === 0 ? (
                         <Empty
                             icon={<Barcode />}
-                            title="Aún no hay recepciones con unidades serializadas para imprimir stickers."
+                            title="Aún no hay recepciones para imprimir stickers."
                         />
                     ) : (
                         <div className="overflow-x-auto">
@@ -147,7 +168,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                         <TableHead>Proveedor</TableHead>
                                         <TableHead>Sede Almacén</TableHead>
                                         <TableHead className="text-center">
-                                            Unidades Serializadas
+                                            Etiquetas
                                         </TableHead>
                                         <TableHead className="text-right">
                                             Acción
@@ -179,7 +200,8 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-foreground px-3 py-3 text-center font-mono font-bold">
-                                                {rec.unidades_count}
+                                                {rec.unidades_count +
+                                                    rec.productos_count}
                                             </TableCell>
                                             <TableCell className="py-3 pl-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
@@ -207,7 +229,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                             },
                                                             {
                                                                 query: {
-                                                                    inicio,
+                                                                    formato,
                                                                 },
                                                             },
                                                         )}

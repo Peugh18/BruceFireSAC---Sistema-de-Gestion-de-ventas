@@ -5,13 +5,19 @@ interface FotoProps {
     onFoto: (archivo: File | null) => void;
     archivo?: File | null;
     etiqueta?: string;
+    /** Solo el ícono redondo, para la barra del chat. */
+    compacto?: boolean;
 }
+
+const redondo =
+    'flex size-11 shrink-0 items-center justify-center rounded-full text-[#54656f] hover:bg-black/5 dark:text-[#aebac1] dark:hover:bg-white/10';
 
 /** Abre la cámara trasera del celular; en escritorio abre el selector de archivos. */
 export function BotonFoto({
     onFoto,
     archivo,
     etiqueta = 'Tomar foto',
+    compacto = false,
 }: FotoProps) {
     const entrada = useRef<HTMLInputElement>(null);
 
@@ -32,10 +38,15 @@ export function BotonFoto({
             <button
                 type="button"
                 onClick={() => entrada.current?.click()}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-neutral-300 px-3 text-xs font-bold text-neutral-800 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-100"
+                aria-label={compacto ? etiqueta : undefined}
+                className={
+                    compacto
+                        ? redondo
+                        : 'inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-neutral-300 px-3 text-xs font-bold text-neutral-800 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-100 dark:hover:bg-neutral-800'
+                }
             >
-                <Camera className="h-4 w-4" />
-                {archivo ? 'Cambiar foto' : etiqueta}
+                <Camera className={compacto ? 'size-5' : 'h-4 w-4'} />
+                {compacto ? null : archivo ? 'Cambiar foto' : etiqueta}
             </button>
         </>
     );
@@ -44,10 +55,15 @@ export function BotonFoto({
 interface AudioProps {
     onAudio: (archivo: File | null) => void;
     archivo?: File | null;
+    compacto?: boolean;
 }
 
 /** Graba una nota de voz con MediaRecorder, sin librerías. */
-export function GrabadoraAudio({ onAudio, archivo }: AudioProps) {
+export function GrabadoraAudio({
+    onAudio,
+    archivo,
+    compacto = false,
+}: AudioProps) {
     const grabador = useRef<MediaRecorder | null>(null);
     const [grabando, setGrabando] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -97,22 +113,35 @@ export function GrabadoraAudio({ onAudio, archivo }: AudioProps) {
             <button
                 type="button"
                 onClick={grabando ? parar : empezar}
-                className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3 text-xs font-bold ${
-                    grabando
-                        ? 'border-red-600 bg-red-600 text-white'
-                        : 'border-neutral-300 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-100'
-                }`}
+                aria-label={
+                    compacto
+                        ? grabando
+                            ? 'Detener grabación'
+                            : 'Grabar nota de voz'
+                        : undefined
+                }
+                className={
+                    compacto
+                        ? `flex size-11 shrink-0 items-center justify-center rounded-full text-white ${grabando ? 'animate-pulse bg-red-600' : 'bg-[#00a884]'}`
+                        : `inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3 text-xs font-bold ${
+                              grabando
+                                  ? 'border-red-600 bg-red-600 text-white'
+                                  : 'border-neutral-300 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-100 dark:hover:bg-neutral-800'
+                          }`
+                }
             >
                 {grabando ? (
                     <Square className="h-4 w-4" />
                 ) : (
                     <Mic className="h-4 w-4" />
                 )}
-                {grabando
-                    ? 'Detener grabación'
-                    : archivo
-                      ? 'Grabar de nuevo'
-                      : 'Grabar nota de voz'}
+                {compacto
+                    ? null
+                    : grabando
+                      ? 'Detener grabación'
+                      : archivo
+                        ? 'Grabar de nuevo'
+                        : 'Grabar nota de voz'}
             </button>
             {error && (
                 <span

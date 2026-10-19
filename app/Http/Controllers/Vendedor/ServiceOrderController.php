@@ -12,7 +12,10 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\ServiceOrders\CasillerosDeLaOrden;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
+use App\Services\Tecnico\ConversacionDeLaOrden;
+use App\Services\Tecnico\PasoDelTaller;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,7 +41,7 @@ class ServiceOrderController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         $orders = ServiceOrder::query()
-            ->with(['client', 'service', 'tecnico'])
+            ->with(['client', 'service', 'lines.service', 'tecnico'])
             ->visiblePara($request->user())
             ->when(isset($estadoMap[$estado]), fn ($query) => $query->whereIn('estado', $estadoMap[$estado]))
             ->orderByDesc('created_at')
@@ -49,7 +52,7 @@ class ServiceOrderController extends Controller
                 'codigo' => $order->codigo,
                 'cliente' => $order->client->razon_social,
                 'tecnico' => $order->tecnico?->name,
-                'tipo_servicio' => $order->service->nombre,
+                'tipo_servicio' => $order->resumenServicios(),
                 'fecha' => $order->fecha->toDateString(),
                 'estado' => $order->estado,
                 'coarse_label' => $order->coarseLabel(),
@@ -99,6 +102,10 @@ class ServiceOrderController extends Controller
             'prioridad' => $request->input('prioridad', 'normal'),
             'estado' => 'pendiente_recepcion',
         ]);
+        $order->lines()->create([
+            'service_id' => $order->service_id,
+            'cantidad' => 1,
+        ]);
 
         $order->events()->create([
             'tipo' => 'creada',
@@ -119,8 +126,8 @@ class ServiceOrderController extends Controller
             'client',
             'sede',
             'tecnico',
-            'events' => fn ($query) => $query->with('user')->orderBy('created_at'),
             'equipments',
+            'lines.service',
             'sale',
             'service',
             'quote:id,numero,estado',
@@ -129,11 +136,14 @@ class ServiceOrderController extends Controller
 
         return Inertia::render('vendedor/ordenes-servicio/show', [
             'serviceOrder' => $service_order,
+            'casilleros' => CasillerosDeLaOrden::paraPagina($service_order),
+            // El mismo avance que ve el taller, y el chat de la orden.
+            'paso' => PasoDelTaller::de($service_order),
+            'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
             'tecnicos' => $this->tecnicosQueAtienden($service_order)->get(['id', 'name']),
             'tecnicosEntrega' => in_array($service_order->estado, ServiceOrder::ESTADOS_LISTOS, true)
                 ? $this->tecnicosDeEntrega($service_order)->get(['id', 'name'])
                 : [],
-            'services' => Service::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
             // Los hallazgos de la orden, para decidir el adicional sin salir de aquí.
             'deficiencias' => $service_order->deficiencies()->latest('id')->get()
                 ->map(fn (Deficiency $deficiency) => DeficiencyController::paraPantalla($deficiency, $current_team))
@@ -304,6 +314,11 @@ class ServiceOrderController extends Controller
 
         $service_order->tecnico_id = $tecnico?->id;
         $service_order->save();
+        if ((int) $datos['service_id'] !== (int) ($antes['service_id'] ?? 0) && $service_order->estado === 'pendiente_recepcion') {
+            $service_order->lines()->where('adicional', false)->whereNull('quote_item_id')->oldest('id')->first()?->update([
+                'service_id' => $service_order->service_id,
+            ]);
+        }
 
         $cambios = collect([
             'fecha' => 'fecha',

@@ -112,7 +112,7 @@ test('la diferencia se calcula como monto_contado_cierre menos el esperado con s
     ]);
 
     // Esperado = 100. Contado = 120. Diferencia = +20 (sobrante)
-    $closedSobrante = app(CloseCashRegister::class)->handle($cashRegisterSobrante, 120.00);
+    $closedSobrante = app(CloseCashRegister::class)->handle($cashRegisterSobrante, 120.00, 'Sobró el vuelto de un cliente');
     expect((float) $closedSobrante->diferencia)->toEqual(20.00);
 
     // Faltante: Esperado = 100. Contado = 80. Diferencia = -20 (faltante)
@@ -123,7 +123,7 @@ test('la diferencia se calcula como monto_contado_cierre menos el esperado con s
         'estado' => 'abierto',
     ]);
 
-    $closedFaltante = app(CloseCashRegister::class)->handle($cashRegisterFaltante, 80.00);
+    $closedFaltante = app(CloseCashRegister::class)->handle($cashRegisterFaltante, 80.00, 'Faltó vuelto');
     expect((float) $closedFaltante->diferencia)->toEqual(-20.00);
 });
 

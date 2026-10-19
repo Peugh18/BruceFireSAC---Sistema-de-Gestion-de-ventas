@@ -334,7 +334,7 @@ class CertificateDocumentData
     }
 
     /**
-     * @param  list<array{id: int}>  $firmantes
+     * @param  list<array{id: int, nombre?: string, cargo?: string, cip?: string|null, firma?: string|null}>  $firmantes
      * @return list<array{nombre: string, cargo: string, cip: string|null, firma: string|null}>
      */
     protected function firmantes(array $firmantes): array
@@ -345,10 +345,11 @@ class CertificateDocumentData
             $signer = $modelos->get($firmante['id']);
 
             return [
-                'nombre' => $signer?->nombre ?? $firmante['nombre'] ?? '',
-                'cargo' => $signer?->cargo ?? $firmante['cargo'] ?? '',
-                'cip' => $signer?->cip ?? $firmante['cip'] ?? null,
-                'firma' => $this->firmaConSello($signer?->firma_path, $signer?->sello_path),
+                'nombre' => $firmante['nombre'] ?? $signer?->nombre ?? '',
+                // El cargo es el del certificado cuando se emitió (la misma persona firma con distintos cargos).
+                'cargo' => $firmante['cargo'] ?? $signer?->cargo ?? '',
+                'cip' => array_key_exists('cip', $firmante) ? $firmante['cip'] : $signer?->cip,
+                'firma' => array_key_exists('firma', $firmante) ? $firmante['firma'] : $this->firmaConSello($signer?->firma_path, $signer?->sello_path),
             ];
         })->values()->all();
     }
@@ -358,6 +359,11 @@ class CertificateDocumentData
      * CIP), se pega a la derecha de la firma montándose un poco sobre ella:
      * una sola imagen que sirve igual para el PDF y el Word.
      */
+    public function imagenDelFirmante(Signer $signer): ?string
+    {
+        return $this->firmaConSello($signer->firma_path, $signer->sello_path);
+    }
+
     protected function firmaConSello(?string $firmaPath, ?string $selloPath): ?string
     {
         $disco = Storage::disk('local');

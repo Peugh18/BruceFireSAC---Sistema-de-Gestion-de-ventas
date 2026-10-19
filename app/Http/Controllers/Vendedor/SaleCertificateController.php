@@ -9,6 +9,7 @@ use App\Http\Requests\Sales\EmitirCertificadosRequest;
 use App\Models\Certificate;
 use App\Models\CertificateUnit;
 use App\Models\CompanySetting;
+use App\Models\Equipment;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Team;
@@ -17,6 +18,7 @@ use App\Services\Certificates\PruebasHidrostaticas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -135,6 +137,7 @@ class SaleCertificateController extends Controller
     public function store(Team $current_team, Sale $sale, EmitirCertificadosRequest $request, EmitirCertificadosDeVenta $emitir): RedirectResponse
     {
         $this->assertSedeAccess($request, $sale);
+        $this->completarDatos($sale, $request->validated('grupos'));
 
         $certificados = $emitir->handle(
             $sale,
@@ -149,6 +152,41 @@ class SaleCertificateController extends Controller
             'current_team' => $current_team,
             'sale' => $sale,
         ]);
+    }
+
+    /**
+     * El certificado sale completo: cada extintor con su serie de fábrica y la
+     * dirección del cliente. Lo que se llenó en la pantalla se guarda; si aún
+     * falta algo, no se emite y se dice qué falta.
+     *
+     * @param  array<int, array<string, mixed>>  $grupos
+     */
+    protected function completarDatos(Sale $sale, array $grupos): void
+    {
+        $faltan = [];
+
+        foreach ($grupos as $index => $grupo) {
+            if (array_diff($grupo['tipos'], ['capacitacion']) === []) {
+                continue;
+            }
+
+            foreach ($grupo['unidades'] as $unidad) {
+                $equipo = Equipment::query()->whereKey((int) $unidad['equipment_id'])->first();
+                if (filled($unidad['serie_fabricante'] ?? null)) {
+                    $equipo?->update(['serie_fabricante' => trim($unidad['serie_fabricante'])]);
+                } elseif ($equipo && (blank($equipo->serie_fabricante) || str_starts_with((string) $equipo->serie_fabricante, 'No legible'))) {
+                    $faltan["grupos.{$index}.unidades"][] = "Falta la serie de fábrica de {$equipo->numero_serie}.";
+                }
+            }
+
+            if (blank($grupo['direccion'] ?? null) && blank($sale->client->direccion_fiscal)) {
+                $faltan["grupos.{$index}.direccion"][] = 'Falta la dirección del cliente.';
+            }
+        }
+
+        if ($faltan !== []) {
+            throw ValidationException::withMessages(array_map(fn (array $mensajes) => implode(' ', $mensajes), $faltan));
+        }
     }
 
     protected function assertSedeAccess(Request $request, Sale $sale): void

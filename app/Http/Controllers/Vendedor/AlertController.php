@@ -95,7 +95,7 @@ class AlertController extends Controller
         foreach ($equipments as $equipment) {
             $agente = EquipmentType::fromDescription($equipment->tipo_agente ?: $equipment->product->agente);
             $capacidad = Service::normalizarCapacidad($equipment->capacidad ?: $equipment->product->capacidad);
-            $service = $servicios->first(fn (Service $service) => $service->agente === $agente->value
+            $service = $servicios->first(fn (Service $service) => EquipmentType::deAgente($service->agente) === $agente
                 && Service::normalizarCapacidad($service->capacidad) === $capacidad);
 
             if ($agente === EquipmentType::Otro || $capacidad === null || ! $service) {

@@ -1,32 +1,26 @@
 import { usePage } from '@inertiajs/react';
 import {
-    BarChart3,
+    Wrench,
+    BrainCircuit,
     Boxes,
     Building2,
     CircleDollarSign,
     LayoutDashboard,
     MapPin,
-    MessageCircleQuestion,
     ShieldCheck,
-    Truck,
     Users,
     Wallet,
-    Wrench,
     type LucideIcon,
 } from 'lucide-react';
 
 import { AppNavSidebar } from '@/components/app-nav-sidebar';
-import guias from '@/routes/guias';
-import transporte from '@/routes/gerente/transporte';
 import type { Auth } from '@/types';
 import GerenteRoutes from '@/routes/gerente';
 import ProductosRoutes from '@/routes/gerente/productos';
-import ServiciosRoutes from '@/routes/gerente/servicios';
 import CajasRoutes from '@/routes/gerente/cajas';
 import CobranzasRoutes from '@/routes/gerente/cobranzas';
-import ReportesRoutes from '@/routes/gerente/reportes';
+import ServiciosRoutes from '@/routes/gerente/servicios';
 import AuditoriaRoutes from '@/routes/gerente/auditoria';
-import ChispaRoutes from '@/routes/gerente/chispa';
 import SedesRoutes from '@/routes/gerente/sedes';
 import UsuariosRoutes from '@/routes/gerente/usuarios';
 import EmpresaRoutes from '@/routes/gerente/configuracion/empresa';
@@ -72,6 +66,13 @@ function buildNavGroups(
                     }),
                     icon: LayoutDashboard,
                 },
+                {
+                    title: 'Recompra e IA',
+                    href: GerenteRoutes.inteligencia.url({
+                        current_team: teamSlug,
+                    }),
+                    icon: BrainCircuit,
+                },
             ],
         },
         {
@@ -107,16 +108,6 @@ function buildNavGroups(
             ],
         },
         {
-            label: 'Información',
-            items: [
-                {
-                    title: 'Reportes',
-                    href: ReportesRoutes.index.url({ current_team: teamSlug }),
-                    icon: BarChart3,
-                },
-            ],
-        },
-        {
             label: 'Administración',
             items: [
                 {
@@ -125,24 +116,9 @@ function buildNavGroups(
                     icon: ShieldCheck,
                 },
                 {
-                    title: 'Preguntas a Chispa',
-                    href: ChispaRoutes.index.url({ current_team: teamSlug }),
-                    icon: MessageCircleQuestion,
-                },
-                {
                     title: 'Sedes',
                     href: SedesRoutes.index.url({ current_team: teamSlug }),
                     icon: MapPin,
-                },
-                {
-                    title: 'Guías de remisión',
-                    href: guias.index.url(teamSlug),
-                    icon: Truck,
-                },
-                {
-                    title: 'Vehículos y conductores',
-                    href: transporte.index.url(teamSlug),
-                    icon: Truck,
                 },
                 {
                     title: 'Usuarios y Roles',

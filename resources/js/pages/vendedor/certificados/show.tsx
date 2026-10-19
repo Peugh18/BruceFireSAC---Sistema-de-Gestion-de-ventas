@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     ExternalLink,
@@ -9,12 +9,24 @@ import {
     Printer,
     Receipt,
     User,
+    Wrench,
 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import certificados from '@/routes/vendedor/certificados';
 import clientes from '@/routes/vendedor/clientes';
@@ -44,6 +56,8 @@ type Certificate = {
     estado: string;
     verificar_url: string;
     corregir_url: string | null;
+    corregir_datos_url: string | null;
+    direccion: string | null;
     unidades: {
         id: number;
         numero_cliente: string | null;
@@ -51,6 +65,7 @@ type Certificate = {
         marca: string | null;
         capacidad: string | null;
         agente: string | null;
+        anio_fabricacion: string | number | null;
     }[];
     participants: {
         id: number;
@@ -68,6 +83,11 @@ type Certificate = {
 };
 
 type Props = { certificate: Certificate };
+
+type ErroresCorreccion = {
+    motivo?: string;
+    certificado?: string;
+};
 
 function badgeClass(estado: string) {
     return estado?.toLowerCase() === 'vigente'
@@ -90,6 +110,203 @@ function Dato({
     );
 }
 
+function FormularioCorreccion({
+    certificate,
+    onGuardado,
+}: {
+    certificate: Certificate;
+    onGuardado: () => void;
+}) {
+    const form = useForm({
+        direccion: certificate.direccion ?? '',
+        motivo: '',
+        unidades: certificate.unidades.map((unidad) => ({
+            id: unidad.id,
+            numero_serie: unidad.serie ?? '',
+            marca: unidad.marca ?? '',
+            capacidad: unidad.capacidad ?? '',
+            tipo_agente: unidad.agente ?? '',
+            anio_fabricacion: unidad.anio_fabricacion ?? '',
+        })),
+    });
+    const errores = form.errors as ErroresCorreccion;
+
+    const actualizarUnidad = (
+        id: number,
+        campo: keyof (typeof form.data.unidades)[number],
+        valor: string,
+    ) => {
+        form.setData(
+            'unidades',
+            form.data.unidades.map((unidad) =>
+                unidad.id === id ? { ...unidad, [campo]: valor } : unidad,
+            ),
+        );
+    };
+
+    const guardar = (evento: React.FormEvent<HTMLFormElement>) => {
+        evento.preventDefault();
+
+        form.patch(certificate.corregir_datos_url!, {
+            preserveScroll: true,
+            onSuccess: onGuardado,
+        });
+    };
+
+    return (
+        <form onSubmit={guardar} className="flex flex-col gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="correccion-direccion">Dirección</Label>
+                <Input
+                    id="correccion-direccion"
+                    value={form.data.direccion}
+                    onChange={(evento) =>
+                        form.setData('direccion', evento.target.value)
+                    }
+                />
+            </div>
+
+            <fieldset className="flex flex-col gap-3">
+                <legend className="text-sm font-semibold">Extintores</legend>
+                {form.data.unidades.map((unidad, indice) => (
+                    <div
+                        key={unidad.id}
+                        className="bg-muted/40 grid gap-3 rounded-xl border p-3 sm:grid-cols-2 lg:grid-cols-3"
+                    >
+                        <div className="sm:col-span-2 lg:col-span-3">
+                            <p className="text-sm font-semibold">
+                                Extintor {indice + 1}
+                            </p>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor={`unidad-${unidad.id}-serie`}>
+                                Serie
+                            </Label>
+                            <Input
+                                id={`unidad-${unidad.id}-serie`}
+                                value={unidad.numero_serie}
+                                onChange={(evento) =>
+                                    actualizarUnidad(
+                                        unidad.id,
+                                        'numero_serie',
+                                        evento.target.value,
+                                    )
+                                }
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor={`unidad-${unidad.id}-marca`}>
+                                Marca
+                            </Label>
+                            <Input
+                                id={`unidad-${unidad.id}-marca`}
+                                value={unidad.marca}
+                                onChange={(evento) =>
+                                    actualizarUnidad(
+                                        unidad.id,
+                                        'marca',
+                                        evento.target.value,
+                                    )
+                                }
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor={`unidad-${unidad.id}-capacidad`}>
+                                Capacidad
+                            </Label>
+                            <Input
+                                id={`unidad-${unidad.id}-capacidad`}
+                                value={unidad.capacidad}
+                                onChange={(evento) =>
+                                    actualizarUnidad(
+                                        unidad.id,
+                                        'capacidad',
+                                        evento.target.value,
+                                    )
+                                }
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor={`unidad-${unidad.id}-agente`}>
+                                Agente
+                            </Label>
+                            <Input
+                                id={`unidad-${unidad.id}-agente`}
+                                value={unidad.tipo_agente}
+                                onChange={(evento) =>
+                                    actualizarUnidad(
+                                        unidad.id,
+                                        'tipo_agente',
+                                        evento.target.value,
+                                    )
+                                }
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label
+                                htmlFor={`unidad-${unidad.id}-anio-fabricacion`}
+                            >
+                                Año de fabricación
+                            </Label>
+                            <Input
+                                id={`unidad-${unidad.id}-anio-fabricacion`}
+                                inputMode="numeric"
+                                value={unidad.anio_fabricacion}
+                                onChange={(evento) =>
+                                    actualizarUnidad(
+                                        unidad.id,
+                                        'anio_fabricacion',
+                                        evento.target.value,
+                                    )
+                                }
+                            />
+                        </div>
+                    </div>
+                ))}
+            </fieldset>
+
+            {errores.certificado ? (
+                <p role="alert" className="text-destructive text-sm">
+                    {errores.certificado}
+                </p>
+            ) : null}
+
+            <div className="grid gap-2">
+                <Label htmlFor="correccion-motivo">
+                    ¿Qué se corrige? <span aria-hidden="true">*</span>
+                </Label>
+                <Textarea
+                    id="correccion-motivo"
+                    value={form.data.motivo}
+                    onChange={(evento) =>
+                        form.setData('motivo', evento.target.value)
+                    }
+                    required
+                    aria-invalid={Boolean(errores.motivo)}
+                    aria-describedby={
+                        errores.motivo ? 'correccion-motivo-error' : undefined
+                    }
+                />
+                {errores.motivo ? (
+                    <p
+                        id="correccion-motivo-error"
+                        role="alert"
+                        className="text-destructive text-sm"
+                    >
+                        {errores.motivo}
+                    </p>
+                ) : null}
+            </div>
+
+            <DialogFooter>
+                <Button type="submit" disabled={form.processing}>
+                    {form.processing ? 'Guardando…' : 'Guardar cambios'}
+                </Button>
+            </DialogFooter>
+        </form>
+    );
+}
+
 export default function CertificadosShow({ certificate }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -98,6 +315,7 @@ export default function CertificadosShow({ certificate }: Props) {
             ? window.location.pathname.split('/')[1]
             : '');
     const [participante, setParticipante] = useState<number | null>(null);
+    const [corrigiendoDatos, setCorrigiendoDatos] = useState(false);
 
     const ruta = { current_team: teamSlug, certificate: certificate.id };
     const conParticipante = participante
@@ -239,6 +457,16 @@ export default function CertificadosShow({ certificate }: Props) {
                                     </Link>
                                 </Button>
                             ) : null}
+                            {certificate.corregir_datos_url ? (
+                                <Button
+                                    variant="outline"
+                                    className="h-9 rounded-lg shadow-none"
+                                    onClick={() => setCorrigiendoDatos(true)}
+                                >
+                                    <Wrench className="size-4" />
+                                    Corregir datos
+                                </Button>
+                            ) : null}
                             {certificate.corregir_url ? (
                                 <p className="text-muted-foreground text-xs">
                                     Al corregir se mantiene el mismo número y
@@ -361,6 +589,29 @@ export default function CertificadosShow({ certificate }: Props) {
                     </div>
                 </div>
             </div>
+
+            {certificate.corregir_datos_url ? (
+                <Dialog
+                    open={corrigiendoDatos}
+                    onOpenChange={setCorrigiendoDatos}
+                >
+                    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+                        <DialogHeader>
+                            <DialogTitle>
+                                Corregir datos del certificado
+                            </DialogTitle>
+                            <DialogDescription>
+                                El certificado mantiene su número. Queda
+                                guardado quién lo corrigió y por qué.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <FormularioCorreccion
+                            certificate={certificate}
+                            onGuardado={() => setCorrigiendoDatos(false)}
+                        />
+                    </DialogContent>
+                </Dialog>
+            ) : null}
         </VendedorLayout>
     );
 }

@@ -26,6 +26,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { NativeSelect } from '@/components/ui/native-select';
+import {
     Table,
     TableBody,
     TableCell,
@@ -68,6 +77,7 @@ type SalePayment = {
     forma_pago?: string;
     es_detraccion?: boolean;
     numero_operacion?: string | null;
+    tiene_constancia?: boolean;
     fecha?: string;
     monto?: number | string;
     fecha_pago?: string;
@@ -191,8 +201,15 @@ export default function VentasShow({
     const constanciaForm = useForm({
         monto: String(detraccion?.pendiente ?? 0),
         numero_operacion: '',
+        fecha_deposito: '',
+        evidencia: null as File | null,
     });
     const [confirmando, setConfirmando] = useState(false);
+    const [formalizando, setFormalizando] = useState(false);
+    const formalizacionForm = useForm({
+        comprobante_tipo:
+            sale.client.tipo_documento === 'ruc' ? 'factura' : 'boleta',
+    });
     const [lineaACambiar, setLineaACambiar] = useState<LineaConSerie | null>(
         null,
     );
@@ -329,6 +346,143 @@ export default function VentasShow({
 
             <div className="flex flex-col gap-4">
                 {dialogoConfirmacion}
+                {sale.comprobante_tipo === 'nota_venta' &&
+                    sale.estado === 'confirmada' && (
+                        <Card className="border-border gap-3 p-4">
+                            <div>
+                                <p className="font-medium">
+                                    Pendiente de comprobante SUNAT
+                                </p>
+                                <p className="text-muted-foreground text-sm">
+                                    La nota de venta es interna. Emite el
+                                    comprobante que corresponde a esta
+                                    operación; se conservarán sus cobros,
+                                    cuotas, equipos y certificados.
+                                </p>
+                            </div>
+                            <Button
+                                variant="outline"
+                                className="w-fit"
+                                onClick={() => setFormalizando(true)}
+                            >
+                                <ReceiptText className="size-4" /> Emitir
+                                factura o boleta
+                            </Button>
+                            <Dialog
+                                open={formalizando}
+                                onOpenChange={setFormalizando}
+                            >
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>
+                                            Formalizar nota de venta
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                            Se emitirá un comprobante para esta
+                                            misma venta. La fecha de emisión
+                                            será la actual; las fechas
+                                            originales de atención y de cuotas
+                                            se conservan. Revisa los datos
+                                            fiscales del cliente antes de
+                                            continuar.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <form
+                                        onSubmit={(event) => {
+                                            event.preventDefault();
+                                            formalizacionForm.post(
+                                                ventas.formalizarNv.url({
+                                                    current_team: teamSlug,
+                                                    sale: sale.id,
+                                                }),
+                                                {
+                                                    preserveScroll: true,
+                                                    onSuccess: () =>
+                                                        setFormalizando(false),
+                                                },
+                                            );
+                                        }}
+                                        className="space-y-4"
+                                    >
+                                        <label className="grid gap-2 text-sm font-medium">
+                                            Comprobante
+                                            <NativeSelect
+                                                value={
+                                                    formalizacionForm.data
+                                                        .comprobante_tipo
+                                                }
+                                                onChange={(event) =>
+                                                    formalizacionForm.setData(
+                                                        'comprobante_tipo',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                disabled={
+                                                    formalizacionForm.processing
+                                                }
+                                            >
+                                                <option
+                                                    value="factura"
+                                                    disabled={
+                                                        sale.client
+                                                            .tipo_documento !==
+                                                        'ruc'
+                                                    }
+                                                >
+                                                    Factura · requiere RUC
+                                                </option>
+                                                <option value="boleta">
+                                                    Boleta
+                                                </option>
+                                            </NativeSelect>
+                                        </label>
+                                        {Object.entries(
+                                            formalizacionForm.errors,
+                                        ).map(([campo, mensaje]) => (
+                                            <p
+                                                role="alert"
+                                                key={campo}
+                                                className="text-destructive text-sm"
+                                            >
+                                                {mensaje}
+                                            </p>
+                                        ))}
+                                        <p className="text-muted-foreground text-sm">
+                                            Si corresponde detracción, se
+                                            validará la clasificación, la cuenta
+                                            BN y los cobros ya registrados. Este
+                                            proceso no acredita depósitos
+                                            bancarios.
+                                        </p>
+                                        <DialogFooter>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    setFormalizando(false)
+                                                }
+                                                disabled={
+                                                    formalizacionForm.processing
+                                                }
+                                            >
+                                                Cancelar
+                                            </Button>
+                                            <Button
+                                                type="submit"
+                                                disabled={
+                                                    formalizacionForm.processing
+                                                }
+                                            >
+                                                {formalizacionForm.processing
+                                                    ? 'Emitiendo…'
+                                                    : 'Emitir comprobante'}
+                                            </Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        </Card>
+                    )}
                 <div className="flex flex-wrap items-center gap-3">
                     <Button
                         asChild
@@ -366,22 +520,35 @@ export default function VentasShow({
                                 : 'Anular nota de venta'}
                         </Button>
                     ) : null}
-                    {sale.estado === 'confirmada' && (
-                        <Button
-                            asChild
-                            variant="outline"
-                            className="border-border bg-card text-foreground h-9 rounded-lg shadow-none"
-                        >
-                            <Link
-                                href={guias.create.url(teamSlug, {
-                                    query: { origen: 'venta', id: sale.id },
-                                })}
+                    {sale.estado === 'confirmada' &&
+                        sale.items?.some((item) => item.product_id) &&
+                        sale.electronic_documents?.some(
+                            (doc) =>
+                                ['factura', 'boleta'].includes(
+                                    doc.tipo ?? '',
+                                ) &&
+                                [
+                                    'por_enviar',
+                                    'pendiente',
+                                    'aceptado',
+                                    'observado',
+                                ].includes(doc.sunat_estado ?? ''),
+                        ) && (
+                            <Button
+                                asChild
+                                variant="outline"
+                                className="border-border bg-card text-foreground h-9 rounded-lg shadow-none"
                             >
-                                <FileText className="size-4" />
-                                Emitir guía
-                            </Link>
-                        </Button>
-                    )}
+                                <Link
+                                    href={guias.create.url(teamSlug, {
+                                        query: { origen: 'venta', id: sale.id },
+                                    })}
+                                >
+                                    <FileText className="size-4" />
+                                    Emitir guía
+                                </Link>
+                            </Button>
+                        )}
                     {editable && (
                         <Button
                             asChild
@@ -620,6 +787,8 @@ export default function VentasShow({
                                                         onSuccess: () =>
                                                             constanciaForm.reset(
                                                                 'numero_operacion',
+                                                                'fecha_deposito',
+                                                                'evidencia',
                                                             ),
                                                     },
                                                 );
@@ -664,6 +833,41 @@ export default function VentasShow({
                                                     }
                                                 />
                                             </label>
+                                            <label className="flex flex-col gap-1">
+                                                Fecha real del depósito
+                                                <input
+                                                    className="border-border rounded border p-2"
+                                                    type="date"
+                                                    required
+                                                    value={
+                                                        constanciaForm.data
+                                                            .fecha_deposito
+                                                    }
+                                                    onChange={(event) =>
+                                                        constanciaForm.setData(
+                                                            'fecha_deposito',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                            </label>
+                                            <label className="flex flex-col gap-1">
+                                                Constancia PDF o foto (opcional,
+                                                hasta 5 MB)
+                                                <input
+                                                    className="border-border rounded border p-2"
+                                                    type="file"
+                                                    accept="application/pdf,image/jpeg,image/png"
+                                                    onChange={(event) =>
+                                                        constanciaForm.setData(
+                                                            'evidencia',
+                                                            event.target
+                                                                .files?.[0] ??
+                                                                null,
+                                                        )
+                                                    }
+                                                />
+                                            </label>
                                             <Button
                                                 type="submit"
                                                 loading={
@@ -674,9 +878,11 @@ export default function VentasShow({
                                             </Button>
                                             <p className="text-muted-foreground w-full text-xs">
                                                 El depósito reduce la deuda y
-                                                queda fuera de caja. Comparte la
-                                                captura al gerente por WhatsApp
-                                                de forma manual.
+                                                queda fuera de caja. La fecha
+                                                debe coincidir con la
+                                                constancia. El sistema registra
+                                                tu verificación; no consulta
+                                                automáticamente al banco.
                                             </p>
                                             {Object.entries(
                                                 constanciaForm.errors,
@@ -691,6 +897,26 @@ export default function VentasShow({
                                             ))}
                                         </form>
                                     )}
+                                {(sale.payments ?? [])
+                                    .filter(
+                                        (payment) =>
+                                            payment.es_detraccion &&
+                                            payment.tiene_constancia,
+                                    )
+                                    .map((payment) => (
+                                        <a
+                                            key={payment.id}
+                                            className="text-primary mt-2 block text-xs underline"
+                                            href={detracciones.evidencia.url({
+                                                current_team: teamSlug,
+                                                sale: sale.id,
+                                                payment: payment.id,
+                                            })}
+                                        >
+                                            Descargar constancia{' '}
+                                            {payment.numero_operacion}
+                                        </a>
+                                    ))}
                             </div>
                         )}
                         <Table className="w-full border-collapse text-[12.5px]">

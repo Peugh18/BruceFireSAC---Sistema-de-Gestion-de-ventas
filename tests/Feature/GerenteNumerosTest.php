@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Gerente\ReportController;
 use App\Models\Installment;
 use App\Models\InventoryMovement;
 use App\Models\Product;
@@ -35,16 +36,18 @@ test('el inicio del gerente cuenta solo ventas emitidas, cotizaciones ofrecidas 
     $deBorrador = Sale::factory()->create(['estado' => 'borrador']);
     Installment::factory()->create(['sale_id' => $deBorrador->id, 'monto' => 999, 'estado' => 'pendiente', 'fecha_vencimiento' => today()->addDays(5)]);
 
-    Quote::factory()->create(['estado' => 'emitida']);
-    Quote::factory()->create(['estado' => 'enviada']);
-    Quote::factory()->create(['estado' => 'borrador']);
+    // Cuenta las ofrecidas que llevan más de 7 días sin respuesta.
+    Quote::factory()->create(['estado' => 'emitida', 'fecha' => today()->subDays(10)]);
+    Quote::factory()->create(['estado' => 'enviada', 'fecha' => today()->subDays(8)]);
+    Quote::factory()->create(['estado' => 'enviada', 'fecha' => today()]);
+    Quote::factory()->create(['estado' => 'borrador', 'fecha' => today()->subDays(10)]);
 
     $this->actingAs($this->gerente)
         ->get(route('gerente.dashboard', $this->team))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('metrics.ventasDia', 100)
-            ->where('metrics.cuentasPorCobrar', 230)
+            ->where('metricas.0.clave', 'ventasNetas')
+            ->where('metricas.0.valor', 100)
             ->where('metrics.vencidoPorCobrar', 230)
             ->where('metrics.cotizacionesPendientes', 2));
 
@@ -65,21 +68,20 @@ test('el stock de productos sin serie sale del kardex en productos, inventario e
         ->assertInertia(fn (Assert $page) => $page
             ->where('productos.data.0.stock_disponible', 15));
 
-    $this->actingAs($this->gerente)
-        ->get(route('gerente.reportes.index', [...$this->team, 'tipo' => 'inventario', 'sede_id' => $otro->id]))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('reporteInventario.productos.0.stock_disponible', 3)
-            ->where('reporteInventario.productos.0.bajo_minimo', true));
+    $inventario = ReportController::inventarioResumen($otro->id);
+    expect($inventario['productos'][0]['stock_disponible'])->toBe(3)
+        ->and($inventario['productos'][0]['bajo_minimo'])->toBeTrue();
 
     $this->actingAs($this->gerente)
         ->get(route('gerente.dashboard', $this->team))
         ->assertInertia(fn (Assert $page) => $page->where('metrics.stockCritico', 0));
 });
 
-test('una fecha mal escrita en el reporte comercial no rompe la pantalla', function () {
+test('un mes mal escrito en el dashboard no rompe la pantalla ni el PDF', function () {
     $this->actingAs($this->gerente)
-        ->get(route('gerente.reportes.index', [...$this->team, 'fecha_desde' => '2026-13-45', 'fecha_hasta' => 'ayer']))
+        ->get(route('gerente.dashboard', [...$this->team, 'mes' => '2026-13']))
+        ->assertOk();
+    $this->get(route('gerente.reportes.comercial.pdf', [...$this->team, 'mes' => 'ayer']))
         ->assertOk();
 });
 

@@ -15,8 +15,8 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property string $codigo_interno
- * @property string $tipo_documento
- * @property string $numero_documento
+ * @property string|null $tipo_documento
+ * @property string|null $numero_documento
  * @property string $razon_social
  * @property string|null $nombre_comercial
  * @property string|null $telefono

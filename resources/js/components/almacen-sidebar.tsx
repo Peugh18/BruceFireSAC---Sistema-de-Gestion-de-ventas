@@ -14,7 +14,6 @@ import { dashboard } from '@/routes/almacen';
 import recepciones from '@/routes/almacen/recepciones';
 import stickers from '@/routes/almacen/stickers';
 import stock from '@/routes/almacen/stock';
-import guias from '@/routes/guias';
 import type { Auth } from '@/types';
 import AjustesRoutes from '@/routes/almacen/ajustes';
 import TrasladosRoutes from '@/routes/almacen/traslados';
@@ -31,6 +30,7 @@ type AlmacenPageProps = {
     };
     currentTeam?: { slug: string } | null;
     sidebarCounts?: SidebarCounts | null;
+    puedeTrasladar?: boolean;
     [key: string]: unknown;
 };
 
@@ -50,6 +50,7 @@ type AlmacenNavGroup = {
 function buildNavGroups(
     teamSlug: string,
     counts: SidebarCounts | null | undefined,
+    puedeTrasladar: boolean,
 ): AlmacenNavGroup[] {
     return [
         {
@@ -86,16 +87,17 @@ function buildNavGroups(
                     href: AjustesRoutes.index.url({ current_team: teamSlug }),
                     icon: ArrowLeftRight,
                 },
-                {
-                    title: 'Guías de remisión',
-                    href: guias.index.url(teamSlug),
-                    icon: Truck,
-                },
-                {
-                    title: 'Traslados',
-                    href: TrasladosRoutes.index.url({ current_team: teamSlug }),
-                    icon: ArrowLeftRight,
-                },
+                ...(puedeTrasladar
+                    ? [
+                          {
+                              title: 'Traslados',
+                              href: TrasladosRoutes.index.url({
+                                  current_team: teamSlug,
+                              }),
+                              icon: ArrowLeftRight,
+                          },
+                      ]
+                    : []),
             ],
         },
         {
@@ -146,11 +148,15 @@ export function AlmacenSidebar({
     onClose,
     collapsed = false,
 }: AlmacenSidebarProps) {
-    const { auth, currentTeam, sidebarCounts } =
-        usePage<AlmacenPageProps>().props;
+    const {
+        auth,
+        currentTeam,
+        sidebarCounts,
+        puedeTrasladar = false,
+    } = usePage<AlmacenPageProps>().props;
     const userRole = auth.roles?.[0] ?? 'Almacen';
     const almacenNavGroups = currentTeam?.slug
-        ? buildNavGroups(currentTeam.slug, sidebarCounts)
+        ? buildNavGroups(currentTeam.slug, sidebarCounts, puedeTrasladar)
         : [];
 
     return (

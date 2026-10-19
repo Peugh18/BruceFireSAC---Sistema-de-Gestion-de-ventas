@@ -47,16 +47,58 @@ test('tecnico planta can view workshop execution view', function () {
     ]);
 
     $this->actingAs($this->tecnicoPlanta)
-        ->get(route('tecnico-planta.ejecucion.show', [
+        ->get(route('tecnico-planta.ordenes.show', [
             'current_team' => $this->team,
             'service_order' => $order,
         ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('tecnico-planta/ejecucion/show')
+            ->component('tecnico-planta/orden/show')
             ->where('order.codigo', 'OS-EJEC-0001')
             ->where('order.estado', 'en_proceso')
         );
+});
+
+test('planta puede recibir y clasificar los equipos de un recojo sin servicio previo', function () {
+    $sede = Sede::factory()->create();
+    $this->tecnicoPlanta->update(['sede_id' => $sede->id]);
+    $order = ServiceOrder::factory()->create([
+        'sede_id' => $sede->id,
+        'tecnico_id' => $this->tecnicoPlanta->id,
+        'service_id' => null,
+        'departamento_tecnico' => 'planta',
+        'estado' => 'pendiente_recepcion',
+    ]);
+    $order->events()->create(['tipo' => 'creada', 'payload' => ['cantidad_esperada' => 2]]);
+    $ruta = ['current_team' => $this->team, 'service_order' => $order];
+
+    $this->actingAs($this->tecnicoPlanta)
+        ->get(route('tecnico-planta.ordenes.show', $ruta))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('order.tipo_servicio', 'Recojo de extintores')
+            ->where('casilleros.esperados', 2)
+            ->where('casilleros.identificados', 0));
+
+    $equipos = collect([
+        ['numero_serie' => 'CO2-LOCAL-0001', 'tipo_agente' => 'CO2', 'capacidad' => '5 lb'],
+        ['numero_serie' => 'PQS-LOCAL-0002', 'tipo_agente' => 'PQS ABC', 'capacidad' => '6 kg'],
+    ])->map(function (array $equipo) use ($ruta) {
+        $this->post(route('tecnico-planta.recepciones.equipos.store', $ruta), $equipo)->assertRedirect();
+
+        return Equipment::query()->where('serie_fabricante', $equipo['numero_serie'])->sole();
+    });
+
+    expect($order->equipments()->count())->toBe(2)
+        ->and($order->equipments()->wherePivotNull('service_order_line_id')->count())->toBe(2);
+
+    $this->post(route('tecnico-planta.recepciones.confirm', $ruta), [
+        'equipos_recibidos' => $equipos->pluck('id')->all(),
+        'equipos_recibidos_count' => 2,
+    ])->assertRedirect();
+
+    expect($order->fresh()->estado)->toBe('recibido_planta')
+        ->and($order->equipments()->wherePivot('recibido', true)->count())->toBe(2);
 });
 
 test('consuming spare part generates real InventoryMovement in Kardex and resolves deficiency', function () {
@@ -251,7 +293,7 @@ test('advancing order to listo_certificado automatically triggers certificates g
     $certOperatividad = $certificates->firstWhere('certificateType.codigo', 'operatividad_garantia');
     expect($certOperatividad)->not->toBeNull()
         ->and($certOperatividad->certificateUnits)->toHaveCount(1)
-        ->and($certOperatividad->certificateUnits->first()->numero_serie_snapshot)->toBe('')
+        ->and($certOperatividad->certificateUnits->first()->numero_serie_snapshot)->toBe($equipment->serie_fabricante)
         ->and($certOperatividad->certificateUnits->first()->codigo_interno)->toBe('BF-EQ-000333');
 
     $certPH = $certificates->firstWhere('certificateType.codigo', 'prueba_hidrostatica');

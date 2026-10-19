@@ -15,9 +15,8 @@ import {
     MessageSquare,
 } from 'lucide-react';
 import React from 'react';
-import ConversacionOrden, {
-    type ConversacionProps,
-} from '@/components/conversacion-orden';
+import BarraOrdenCampo from '@/components/barra-orden-campo';
+import type { ConversacionProps } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
 import { Pasos, pasosEntrega } from '@/components/progreso';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
@@ -25,7 +24,6 @@ import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
 import equiposRoutes from '@/routes/equipos';
-import guias from '@/routes/guias';
 import entregas from '@/routes/tecnico-campo/entregas';
 import { toast } from 'sonner';
 
@@ -187,23 +185,20 @@ export default function EntregaShow({
     return (
         <TecnicoCampoLayout title={`Entrega ${order.codigo}`}>
             <Head title={`Entrega ${order.codigo} - Técnico de Campo`} />
+            <BarraOrdenCampo
+                ordenId={order.id}
+                codigo={order.codigo}
+                conversacion={conversacion}
+            />
 
             {/* Back Bar */}
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <Link
                     href={entregas.index.url({ current_team: teamSlug })}
                     className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver a entregas</span>
-                </Link>
-                <Link
-                    href={guias.create.url(teamSlug, {
-                        query: { origen: 'entrega', id: order.id },
-                    })}
-                    className="bg-primary inline-flex h-10 items-center rounded-xl px-4 text-xs font-bold text-white transition hover:brightness-95"
-                >
-                    Guía de remisión
                 </Link>
                 <span className="text-foreground font-mono text-xs font-black">
                     {order.codigo}
@@ -217,7 +212,7 @@ export default function EntregaShow({
             )}
 
             {/* Header Data Card (§22.3) */}
-            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
                 <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
                     <div>
                         <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
@@ -314,19 +309,25 @@ export default function EntregaShow({
 
             {/* Indicaciones de Ventas / Notas de Coordinación */}
             {(() => {
-                const notasVendedor = (order.events || []).filter(
-                    (ev) =>
-                        ev.payload?.origen === 'vendedor' ||
-                        ev.tipo === 'notificacion_vendedor' ||
-                        (ev.tipo === 'otro' && ev.payload?.mensaje),
-                );
+                const notasVendedor = (order.events || [])
+                    .filter(
+                        (ev) =>
+                            ev.payload?.origen === 'vendedor' ||
+                            ev.tipo === 'notificacion_vendedor' ||
+                            (ev.tipo === 'otro' && ev.payload?.mensaje),
+                    )
+                    .filter((ev) => {
+                        const texto =
+                            ev.payload?.mensaje || ev.payload?.descripcion;
+                        return typeof texto === 'string' && texto.trim() !== '';
+                    });
 
                 if (!order.observaciones && notasVendedor.length === 0) {
                     return null;
                 }
 
                 return (
-                    <div className="border-border bg-muted mb-5 rounded-2xl border p-4">
+                    <div className="border-border bg-muted mb-5 rounded-3xl border p-4">
                         <div className="text-foreground flex items-center gap-2 text-xs font-bold">
                             <MessageSquare className="text-foreground size-4" />
                             <span>Indicaciones de Ventas y Coordinación</span>
@@ -354,9 +355,9 @@ export default function EntregaShow({
                                         <p className="font-medium">
                                             {n.payload?.mensaje ||
                                                 n.payload?.descripcion ||
-                                                JSON.stringify(n.payload)}
+                                                ''}
                                         </p>
-                                        <span className="mt-1 block text-xs text-neutral-400">
+                                        <span className="text-muted-foreground mt-1 block text-xs">
                                             {n.created_at
                                                 ? new Date(
                                                       n.created_at,
@@ -372,7 +373,7 @@ export default function EntregaShow({
             })()}
 
             {/* Custody Chain Trail (§22.4, §85.6.3) */}
-            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
                 <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                     <Truck className="text-foreground size-4" />
                     Cadena de Custodia del Servicio
@@ -430,7 +431,7 @@ export default function EntregaShow({
             </div>
 
             {/* Equipments Table/Cards (§23) */}
-            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
                 <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                     <Flame className="text-warning-strong size-4" />
                     {entregaRealizada
@@ -535,7 +536,7 @@ export default function EntregaShow({
 
             {/* Delivery Confirmation Form (§22.3, §85.6.2) */}
             {!isCerrada && !entregaRealizada && (
-                <div className="bg-card border-border rounded-2xl border p-4 shadow-sm">
+                <div className="bg-card border-border rounded-3xl border p-4 shadow-sm">
                     <h2 className="text-foreground mb-1 flex items-center gap-2 text-sm font-black">
                         <UserCheck className="text-foreground size-4" />
                         Confirmar Entrega y Acta de Conformidad
@@ -575,11 +576,14 @@ export default function EntregaShow({
 
                             <div>
                                 <label className="text-foreground mb-1 block text-xs font-bold">
-                                    DNI / Cargo del Receptor
+                                    DNI del receptor (opcional)
                                 </label>
                                 <input
-                                    aria-label="DNI / Cargo del Receptor"
+                                    aria-label="DNI del receptor (opcional)"
                                     type="text"
+                                    inputMode="numeric"
+                                    maxLength={8}
+                                    pattern="[0-9]{8}"
                                     value={form.data.receptor_dni}
                                     onChange={(e) =>
                                         form.setData(
@@ -587,9 +591,17 @@ export default function EntregaShow({
                                             e.target.value,
                                         )
                                     }
-                                    placeholder="ej. DNI 45892147 / Jefe de Almacén"
+                                    placeholder="8 números, por ejemplo 45892147"
                                     className="border-border bg-card w-full rounded-lg border p-2 text-xs"
                                 />
+                                {form.errors.receptor_dni && (
+                                    <p
+                                        role="alert"
+                                        className="text-destructive-strong mt-1 text-xs"
+                                    >
+                                        {form.errors.receptor_dni}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -696,13 +708,6 @@ export default function EntregaShow({
                     </form>
                 </div>
             )}
-
-            <div className="mt-5">
-                <ConversacionOrden
-                    ordenId={order.id}
-                    conversacion={conversacion}
-                />
-            </div>
         </TecnicoCampoLayout>
     );
 }

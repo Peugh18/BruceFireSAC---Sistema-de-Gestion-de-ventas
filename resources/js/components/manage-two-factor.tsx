@@ -81,9 +81,10 @@ export default function ManageTwoFactor(props: Props) {
             ) : (
                 <div className="flex flex-col items-start justify-start space-y-4">
                     <p className="text-muted-foreground text-sm">
-                        Al activar la autenticación en dos pasos, te pediremos
-                        un código seguro al iniciar sesión. Lo obtendrás de la
-                        aplicación TOTP de tu teléfono.
+                        Añade esta cuenta a una aplicación de autenticación de
+                        tu teléfono: escanea el QR o copia la clave si estás
+                        usando el mismo celular. Después escribe su código de 6
+                        dígitos. Se activa solo cuando confirmas ese código.
                     </p>
 
                     <div>
@@ -99,7 +100,7 @@ export default function ManageTwoFactor(props: Props) {
                             >
                                 {({ processing }) => (
                                     <Button type="submit" loading={processing}>
-                                        Activar 2FA
+                                        Configurar dos pasos
                                     </Button>
                                 )}
                             </Form>

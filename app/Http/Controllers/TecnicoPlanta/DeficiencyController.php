@@ -6,9 +6,11 @@ use App\Actions\Tecnico\GuardarEvidencia;
 use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Http\Controllers\Controller;
 use App\Models\Deficiency;
+use App\Models\Evidencia;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\Team;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,7 +23,8 @@ class DeficiencyController extends Controller
      */
     public function index(Request $request, Team $current_team): Response
     {
-        $estado = $request->string('estado', 'todas')->toString();
+        // Por defecto, lo que el técnico ya puede reparar.
+        $estado = $request->string('estado', 'para_reparar')->toString();
         $search = trim((string) $request->input('search', ''));
 
         $query = Deficiency::query()
@@ -40,9 +43,11 @@ class DeficiencyController extends Controller
 
         $baseCountsQuery = clone $query;
 
-        if ($estado !== 'todas' && $estado !== '') {
-            $query->where('estado', $estado);
-        }
+        match ($estado) {
+            'todas', '' => null,
+            'para_reparar' => $query->whereIn('estado', ['detectada', 'autorizada']),
+            default => $query->where('estado', $estado),
+        };
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -54,7 +59,7 @@ class DeficiencyController extends Controller
             });
         }
 
-        $deficiencies = $query->paginate(15)->withQueryString()->through(function (Deficiency $d) {
+        $deficiencies = $query->paginate(15)->withQueryString()->through(function (Deficiency $d) use ($current_team) {
             return [
                 'id' => $d->id,
                 'orden_id' => $d->service_order_id,
@@ -78,13 +83,18 @@ class DeficiencyController extends Controller
                     'observacion' => $d->authorization->observacion,
                     'vendedor' => $d->authorization->vendedor?->name,
                 ] : null,
-                'created_at' => $d->created_at?->toDateString(),
+                'created_at' => $d->created_at?->toIso8601String(),
+                // ponytail: una consulta por fila; la página trae 15 como máximo.
+                'foto_url' => ($evidenciaId = $d->foto_path ? Evidencia::query()->where('path', $d->foto_path)->value('id') : null)
+                    ? route('evidencias.show', [$current_team, $evidenciaId])
+                    : null,
             ];
         });
 
         // Contadores por estado
         $counts = [
             'todas' => (clone $baseCountsQuery)->count(),
+            'para_reparar' => (clone $baseCountsQuery)->whereIn('estado', ['detectada', 'autorizada'])->count(),
             'esperando_autorizacion' => (clone $baseCountsQuery)->where('estado', 'esperando_autorizacion')->count(),
             'autorizada' => (clone $baseCountsQuery)->where('estado', 'autorizada')->count(),
             'rechazada' => (clone $baseCountsQuery)->where('estado', 'rechazada')->count(),
@@ -149,6 +159,17 @@ class DeficiencyController extends Controller
 
         $evidencia = $guardarEvidencia->archivo($service_order, $request->file('foto'), 'deficiencia', $request->user(), $equipmentId, null, $deficiency);
         $deficiency->update(['foto_path' => $evidencia->path]);
+
+        AuditLogger::log(
+            action: 'deficiencia.detectada',
+            entity: $deficiency,
+            newValues: [
+                'orden_id' => $service_order->id,
+                'componente' => $deficiency->componente,
+                'requiere_autorizacion' => $requiereAuth,
+            ],
+            userId: $request->user()->id,
+        );
 
         if ($requiereAuth) {
             $service_order->update(['estado' => 'esperando_autorizacion']);
@@ -224,10 +245,19 @@ class DeficiencyController extends Controller
 
         ExecuteAndCloseServiceOrder::asegurarQueSePuedeReparar($deficiency);
 
+        $estadoAnterior = $deficiency->estado;
         $deficiency->update([
             'estado' => 'resuelta',
             'resolucion' => $validated['resolucion'],
         ]);
+
+        AuditLogger::log(
+            action: 'deficiencia.reparada',
+            entity: $deficiency,
+            oldValues: ['estado' => $estadoAnterior],
+            newValues: ['estado' => 'resuelta', 'resolucion' => $validated['resolucion']],
+            userId: $request->user()->id,
+        );
 
         ServiceOrderEvent::create([
             'service_order_id' => $deficiency->service_order_id,

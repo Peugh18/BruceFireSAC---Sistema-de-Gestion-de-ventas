@@ -14,6 +14,7 @@ import {
     RotateCcw,
 } from 'lucide-react';
 import RecepcionesRoutes from '@/routes/tecnico-planta/recepciones';
+import OrdenesRoutes from '@/routes/tecnico-planta/ordenes';
 import { Empty } from '@/components/ui/empty';
 
 interface OrderItem {
@@ -173,7 +174,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                         orders.data.map((order) => {
                             const isPendiente =
                                 order.estado === 'pendiente_recepcion';
-                            const url = RecepcionesRoutes.show.url({
+                            const url = OrdenesRoutes.show.url({
                                 current_team: String(
                                     currentTeam?.slug ?? currentTeam?.id ?? '',
                                 ),

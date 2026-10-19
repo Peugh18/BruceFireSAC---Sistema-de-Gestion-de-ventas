@@ -10,6 +10,7 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\TechnicalChecklist;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -169,6 +170,33 @@ class ProcessChecklist
                 'resultado_general' => $resultadoGeneral,
                 'observaciones' => $data['observaciones'] ?? null,
             ]);
+
+            AuditLogger::log(
+                action: 'checklist.completado',
+                entity: $serviceOrder,
+                newValues: [
+                    'checklist_id' => $checklist->id,
+                    'equipo' => $equipment->numero_serie,
+                    'origen' => $origen,
+                    'resultado' => $resultadoGeneral,
+                    'deficiencias_detectadas' => count($deficienciesCreated),
+                ],
+                userId: $user->id,
+            );
+
+            foreach ($deficienciesCreated as $deficiency) {
+                AuditLogger::log(
+                    action: 'deficiencia.detectada',
+                    entity: $deficiency,
+                    newValues: [
+                        'orden_id' => $serviceOrder->id,
+                        'equipo' => $equipment->numero_serie,
+                        'componente' => $deficiency->componente,
+                        'requiere_autorizacion' => $deficiency->requiere_autorizacion,
+                    ],
+                    userId: $user->id,
+                );
+            }
 
             // Transición de la Orden de Servicio según el resultado (M7): se
             // decide sobre el estado RELEÍDO bajo la orden bloqueada y solo

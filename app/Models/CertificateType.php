@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Certificates\CertificateDocumentData;
 use Database\Factories\CertificateTypeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $codigo
  * @property string $nombre
  * @property string $familia operatividad | diploma | instalacion | externo
+ * @property string $orientacion vertical | horizontal (hoja A4)
  * @property string|null $titulo
  * @property string|null $subtitulo
  * @property string|null $norma
@@ -35,18 +37,20 @@ use Illuminate\Support\Carbon;
  * @property bool $requiere_cip
  * @property bool $activo
  * @property int $version
+ * @property array<string, array{x: int|float, y: int|float}>|null $diseno
  * @property int $vigencia_meses
  * @property string $generado_por_rol
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Certificate> $certificates
  * @property-read Collection<int, Signer> $signers
+ * @property-read CertificateTypeSigner $pivot cuando se carga desde una persona
  */
 #[Fillable([
     'codigo', 'nombre', 'vigencia_meses', 'generado_por_rol',
-    'familia', 'titulo', 'subtitulo', 'norma', 'declaracion', 'responsabilidad',
+    'familia', 'orientacion', 'titulo', 'subtitulo', 'norma', 'declaracion', 'responsabilidad',
     'prefijo', 'digitos', 'incluye_anio', 'columnas', 'checklist', 'bloques', 'logos',
-    'fotos_minimas', 'requiere_cip', 'activo', 'version',
+    'fotos_minimas', 'requiere_cip', 'activo', 'version', 'diseno',
 ])]
 class CertificateType extends Model
 {
@@ -57,14 +61,15 @@ class CertificateType extends Model
      * Campos que forman parte de la plantilla (se guardan en cada versión).
      */
     public const CAMPOS_PLANTILLA = [
-        'nombre', 'familia', 'titulo', 'subtitulo', 'norma', 'declaracion', 'responsabilidad',
+        'nombre', 'familia', 'orientacion', 'titulo', 'subtitulo', 'norma', 'declaracion', 'responsabilidad',
         'prefijo', 'digitos', 'incluye_anio', 'columnas', 'checklist', 'bloques', 'logos',
-        'fotos_minimas', 'requiere_cip', 'vigencia_meses',
+        'fotos_minimas', 'requiere_cip', 'vigencia_meses', 'diseno',
     ];
 
     protected function casts(): array
     {
         return [
+            'diseno' => 'array',
             'vigencia_meses' => 'integer',
             'digitos' => 'integer',
             'incluye_anio' => 'boolean',
@@ -88,11 +93,11 @@ class CertificateType extends Model
     }
 
     /**
-     * @return BelongsToMany<Signer, $this>
+     * @return BelongsToMany<Signer, $this, CertificateTypeSigner>
      */
     public function signers(): BelongsToMany
     {
-        return $this->belongsToMany(Signer::class)->withPivot('orden')->withTimestamps()->orderByPivot('orden');
+        return $this->belongsToMany(Signer::class)->using(CertificateTypeSigner::class)->withPivot('orden', 'cargo')->withTimestamps()->orderByPivot('orden');
     }
 
     /**
@@ -123,8 +128,10 @@ class CertificateType extends Model
             'firmantes' => $this->signers->map(fn (Signer $signer) => [
                 'id' => $signer->id,
                 'nombre' => $signer->nombre,
-                'cargo' => $signer->cargo,
+                // El cargo con que firma este certificado; si no se eligió, el habitual.
+                'cargo' => $signer->pivot->cargo ?: $signer->cargo,
                 'cip' => $signer->cip,
+                'firma' => app(CertificateDocumentData::class)->imagenDelFirmante($signer),
             ])->values()->all(),
         ];
     }

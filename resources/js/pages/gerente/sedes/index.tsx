@@ -28,9 +28,8 @@ import { toast } from 'sonner';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import GerenteLayout from '@/layouts/gerente-layout';
 import SedesRoutes from '@/routes/gerente/sedes';
-import { NativeSelect } from '@/components/ui/native-select';
 
-type SedeTipo = 'tienda' | 'almacen' | 'mixta';
+type SedeTipo = 'tienda' | 'almacen' | 'mixta' | 'taller';
 
 type SedeItem = {
     id: number;
@@ -71,13 +70,8 @@ type PageProps = {
 const TIPO_LABELS: Record<SedeTipo, string> = {
     tienda: 'Tienda',
     almacen: 'Almacén',
-    mixta: 'Mixta',
-};
-
-const TIPO_DESCRIPCION: Record<SedeTipo, string> = {
-    tienda: 'Vende y saca stock de un almacén.',
-    almacen: 'Guarda stock y abastece a las tiendas.',
-    mixta: 'Vende y guarda su propio stock.',
+    mixta: 'Tienda y almacén',
+    taller: 'Taller',
 };
 
 type SedeFormData = {
@@ -102,15 +96,12 @@ const EMPTY_FORM: SedeFormData = {
 
 export default function SedesIndex() {
     const modalTrigger = useRef<HTMLElement | null>(null);
-    const { currentTeam, sedes, almacenes, kpis, flash } =
-        usePage<PageProps>().props;
+    const { currentTeam, sedes, kpis, flash } = usePage<PageProps>().props;
 
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState<SedeItem | null>(null);
     const [ubicacion, setUbicacion] = useState<UbigeoOption | null>(null);
     const form = useForm<SedeFormData>(EMPTY_FORM);
-
-    const almacenesElegibles = almacenes.filter((a) => a.id !== editing?.id);
 
     const openCreate = () => {
         setEditing(null);
@@ -217,8 +208,8 @@ export default function SedesIndex() {
                             Sedes
                         </h1>
                         <p className="text-muted-foreground mt-1 text-sm">
-                            Tiendas, almacenes y sedes mixtas de la empresa.
-                            Cada tienda indica de qué almacén saca su stock.
+                            Puntos de venta con su almacén y el Taller que
+                            atiende a todas las tiendas.
                         </p>
                     </div>
                     <button
@@ -430,14 +421,61 @@ export default function SedesIndex() {
                                 {editing ? 'Editar Sede' : 'Nueva Sede'}
                             </DialogTitle>
                             <DialogDescription>
-                                Registra la ubicación y el tipo de sede. Los
-                                campos con * son obligatorios.
+                                El punto de venta vende y guarda stock. En el
+                                Taller trabajan los técnicos. Los campos con *
+                                son obligatorios.
                             </DialogDescription>
                         </DialogHeader>
                         <form
                             onSubmit={handleSubmit}
                             className="mt-4 space-y-4 text-xs"
                         >
+                            <div>
+                                <label
+                                    htmlFor="sede-tipo"
+                                    className="text-foreground/80 block font-semibold"
+                                >
+                                    Tipo de lugar *
+                                </label>
+                                <select
+                                    id="sede-tipo"
+                                    value={form.data.tipo}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'tipo',
+                                            event.target.value as SedeTipo,
+                                        )
+                                    }
+                                    className="border-border bg-card mt-1 w-full rounded-lg border px-3 py-2"
+                                    aria-invalid={!!form.errors.tipo}
+                                    aria-describedby={
+                                        form.errors.tipo
+                                            ? 'sede-tipo-error'
+                                            : undefined
+                                    }
+                                >
+                                    <option value="mixta">
+                                        Punto de venta (tienda y almacén)
+                                    </option>
+                                    <option value="taller">Taller</option>
+                                    {editing?.tipo === 'tienda' && (
+                                        <option value="tienda">
+                                            Tienda con almacén asignado
+                                        </option>
+                                    )}
+                                    {editing?.tipo === 'almacen' && (
+                                        <option value="almacen">Almacén</option>
+                                    )}
+                                </select>
+                                {form.errors.tipo && (
+                                    <p
+                                        id="sede-tipo-error"
+                                        className="text-destructive-strong mt-1"
+                                    >
+                                        {form.errors.tipo}
+                                    </p>
+                                )}
+                            </div>
                             <div>
                                 <label className="text-foreground/80 block font-semibold">
                                     Nombre *
@@ -458,73 +496,6 @@ export default function SedesIndex() {
                                     </p>
                                 )}
                             </div>
-
-                            <div>
-                                <label className="text-foreground/80 block font-semibold">
-                                    Tipo *
-                                </label>
-                                <NativeSelect
-                                    aria-label="Tipo *"
-                                    value={form.data.tipo}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'tipo',
-                                            e.target.value as SedeTipo,
-                                        )
-                                    }
-                                    className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                >
-                                    {(
-                                        Object.keys(TIPO_LABELS) as SedeTipo[]
-                                    ).map((tipo) => (
-                                        <option key={tipo} value={tipo}>
-                                            {TIPO_LABELS[tipo]}
-                                        </option>
-                                    ))}
-                                </NativeSelect>
-                                <p className="text-muted-foreground mt-1">
-                                    {TIPO_DESCRIPCION[form.data.tipo]}
-                                </p>
-                                {form.errors.tipo && (
-                                    <p className="text-destructive-strong mt-1">
-                                        {form.errors.tipo}
-                                    </p>
-                                )}
-                            </div>
-
-                            {form.data.tipo === 'tienda' && (
-                                <div>
-                                    <label className="text-foreground/80 block font-semibold">
-                                        Almacén del que saca stock *
-                                    </label>
-                                    <NativeSelect
-                                        aria-label="Almacén del que saca stock *"
-                                        required
-                                        value={form.data.almacen_id}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'almacen_id',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                    >
-                                        <option value="" disabled>
-                                            Seleccionar almacén
-                                        </option>
-                                        {almacenesElegibles.map((a) => (
-                                            <option key={a.id} value={a.id}>
-                                                {a.nombre}
-                                            </option>
-                                        ))}
-                                    </NativeSelect>
-                                    {form.errors.almacen_id && (
-                                        <p className="text-destructive-strong mt-1">
-                                            {form.errors.almacen_id}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
 
                             <div>
                                 <label className="text-foreground/80 block font-semibold">
@@ -592,7 +563,8 @@ export default function SedesIndex() {
                                     className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 />
                                 <p className="text-muted-foreground mt-1 text-xs">
-                                    0000 es la sede principal.
+                                    Lo asigna la SUNAT a cada local (figura en
+                                    tu ficha RUC). La sede principal es 0000.
                                 </p>
                                 {form.errors.cod_establecimiento_anexo && (
                                     <p className="text-destructive-strong mt-1">

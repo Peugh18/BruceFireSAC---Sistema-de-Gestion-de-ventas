@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Almacen\DashboardController;
+use App\Http\Controllers\Almacen\ProductBarcodeController;
 use App\Http\Controllers\Almacen\ReceptionController;
 use App\Http\Controllers\Almacen\ReceptionStickerController;
 use App\Http\Controllers\Almacen\StockAdjustmentController;
 use App\Http\Controllers\Almacen\StockController;
 use App\Http\Controllers\Almacen\StockLookupController;
 use App\Http\Controllers\Almacen\TransferController;
+use App\Http\Middleware\EnsureHayVariosAlmacenes;
 use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
 
@@ -19,21 +21,25 @@ Route::prefix('almacen')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('stock', [StockController::class, 'index'])->name('stock.index');
-        Route::get('traslados', [TransferController::class, 'index'])->name('traslados.index');
-        Route::post('traslados', [TransferController::class, 'store'])->name('traslados.store');
-        Route::post('traslados/{traslado}/despachar', [TransferController::class, 'dispatch'])->name('traslados.despachar');
-        Route::post('traslados/{traslado}/confirmar', [TransferController::class, 'confirm'])->name('traslados.confirmar');
+        Route::middleware(EnsureHayVariosAlmacenes::class)->group(function () {
+            Route::get('traslados', [TransferController::class, 'index'])->name('traslados.index');
+            Route::post('traslados', [TransferController::class, 'store'])->name('traslados.store');
+            Route::post('traslados/{traslado}/despachar', [TransferController::class, 'dispatch'])->name('traslados.despachar');
+            Route::post('traslados/{traslado}/confirmar', [TransferController::class, 'confirm'])->name('traslados.confirmar');
+        });
 
         // Recepciones de proveedor (§84.8)
         Route::get('recepciones', [ReceptionController::class, 'index'])->name('recepciones.index');
         Route::get('recepciones/nueva', [ReceptionController::class, 'create'])->name('recepciones.create');
         Route::post('recepciones', [ReceptionController::class, 'store'])->name('recepciones.store');
+        Route::post('productos/{producto}/codigo-barras', ProductBarcodeController::class)->name('productos.codigo-barras');
         Route::get('recepciones/{reception}', [ReceptionController::class, 'show'])->name('recepciones.show');
         Route::put('recepciones/{reception}', [ReceptionController::class, 'update'])->name('recepciones.update');
 
         // Stickers de código de barras (§84.9)
         Route::get('stickers', [ReceptionStickerController::class, 'index'])->name('stickers.index');
         Route::get('stickers/unidad', [ReceptionStickerController::class, 'unidad'])->name('stickers.unidad');
+        Route::get('stickers/producto', [ReceptionStickerController::class, 'producto'])->name('stickers.producto');
         Route::get('recepciones/{reception}/stickers', [ReceptionStickerController::class, 'show'])->name('recepciones.stickers');
 
         // Ajustes de stock autorizados (§84.10)

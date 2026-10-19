@@ -59,7 +59,7 @@ test('el adicional autorizado con deficiency_id va en la misma factura y la detr
 
     $resultado = app(DetraccionCalculator::class)->paraVenta($sale);
 
-    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022']);
+    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022', 'porcentaje' => 12.0]);
 });
 
 test('el repuesto consumido en una orden de esa misma venta va en la misma factura', function () {
@@ -80,7 +80,7 @@ test('el repuesto consumido en una orden de esa misma venta va en la misma factu
 
     $resultado = app(DetraccionCalculator::class)->paraVenta($sale);
 
-    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022']);
+    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022', 'porcentaje' => 12.0]);
 });
 
 test('producto suelto que no se instala pide factura aparte cuando hay detraccion', function () {
@@ -145,7 +145,7 @@ test('la factura emitida conserva su snapshot aunque cambie el codigo del servic
 
     $resultado = app(DetraccionCalculator::class)->paraVenta($sale);
 
-    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022']);
+    expect($resultado)->toBe(['aplica' => true, 'monto' => 96.0, 'codigo_bien' => '022', 'porcentaje' => 12.0]);
 });
 
 test('la nota de venta nunca lleva detraccion aunque mezcle servicio y producto', function () {

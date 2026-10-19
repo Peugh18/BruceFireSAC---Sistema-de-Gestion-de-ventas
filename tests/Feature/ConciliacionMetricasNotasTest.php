@@ -17,14 +17,10 @@ test('reporte y dashboard concilian originales menos NC mas ND aceptadas', funct
         ElectronicDocument::factory()->create(['sale_id' => $venta->id, 'tipo' => $tipo, 'importe' => $importe, 'sunat_estado' => $estado, 'fecha_emision' => now()]);
     }
     $ruta = ['current_team' => $this->gerente->currentTeam];
-    $reporte = $this->actingAs($this->gerente)->get(route('gerente.reportes.index', $ruta))->assertOk()->viewData('page')['props']['reporteComercial'];
-    $dashboard = $this->get(route('gerente.dashboard', $ruta))->assertOk()->viewData('page')['props']['metrics'];
-    expect($reporte['totalVentas'])->toEqual(85)
-        ->and($dashboard['ventasDia'])->toEqual(85)
-        ->and($dashboard['ventasMes'])->toEqual(85)
-        ->and($reporte['ventasOriginales'])->toEqual(100)
-        ->and($reporte['notasCredito'])->toEqual(20)
-        ->and($reporte['notasDebito'])->toEqual(5)
+    $props = $this->actingAs($this->gerente)->get(route('gerente.dashboard', $ruta))->assertOk()->viewData('page')['props'];
+    // Ventas netas = 100 original - 20 NC aceptada + 5 ND observada; las pendientes y rechazadas no cuentan.
+    expect($props['metricas'][0]['valor'])->toEqual(85)
+        ->and($props['metrics']['ventasMes'])->toEqual(85)
         ->and($venta->fresh()->total)->toBe('100.00');
 });
 
@@ -32,22 +28,20 @@ test('NC de venta anterior se imputa a fecha de nota sin borrar original ni dupl
     $venta = Sale::factory()->create(['estado' => 'anulada', 'comprobante_tipo' => 'factura', 'fecha' => today()->subMonths(2), 'total' => 100]);
     ElectronicDocument::factory()->create(['sale_id' => $venta->id, 'tipo' => 'nota_credito', 'importe' => 100, 'sunat_estado' => 'aceptado', 'fecha_emision' => now()]);
     $ruta = ['current_team' => $this->gerente->currentTeam];
-    $reporte = $this->actingAs($this->gerente)->get(route('gerente.reportes.index', $ruta))->assertOk()->viewData('page')['props']['reporteComercial'];
-    $dashboard = $this->get(route('gerente.dashboard', $ruta))->assertOk()->viewData('page')['props']['metrics'];
-    expect($reporte['totalVentas'])->toEqual(-100)
-        ->and($dashboard['ventasMes'])->toEqual(-100)
-        ->and($reporte['ventasOriginales'])->toEqual(0)
-        ->and($reporte['notasCredito'])->toEqual(100)
-        ->and($reporte['cantidadVentas'])->toEqual(0);
+    $props = $this->actingAs($this->gerente)->get(route('gerente.dashboard', $ruta))->assertOk()->viewData('page')['props'];
+    expect($props['metricas'][0]['valor'])->toEqual(-100)
+        ->and($props['metrics']['ventasMes'])->toEqual(-100)
+        ->and($venta->fresh()->total)->toBe('100.00');
 });
 
-test('filtro de vendedor acota originales y notas del periodo', function () {
+test('las ventas por vendedor descuentan sus notas de credito del periodo', function () {
     $vendedor = User::factory()->create();
     $propia = Sale::factory()->create(['vendedor_id' => $vendedor->id, 'estado' => 'confirmada', 'fecha' => today(), 'total' => 100]);
     $otra = Sale::factory()->create(['estado' => 'confirmada', 'fecha' => today(), 'total' => 200]);
     foreach ([$propia, $otra] as $venta) {
         ElectronicDocument::factory()->create(['sale_id' => $venta->id, 'tipo' => 'nota_credito', 'importe' => 20, 'sunat_estado' => 'aceptado', 'fecha_emision' => now()]);
     }
-    $data = $this->actingAs($this->gerente)->get(route('gerente.reportes.index', ['current_team' => $this->gerente->currentTeam, 'vendedor_id' => $vendedor->id]))->assertOk()->viewData('page')['props']['reporteComercial'];
-    expect($data['totalVentas'])->toEqual(80)->and($data['notasCredito'])->toEqual(20)->and($data['ventasOriginales'])->toEqual(100);
+    $porVendedor = collect($this->actingAs($this->gerente)->get(route('gerente.dashboard', ['current_team' => $this->gerente->currentTeam]))->assertOk()->viewData('page')['props']['ventasPorVendedor'])->keyBy('vendedor');
+    expect($porVendedor[$vendedor->name]['monto'])->toEqual(80)
+        ->and($porVendedor[$otra->vendedor->name]['monto'])->toEqual(180);
 });

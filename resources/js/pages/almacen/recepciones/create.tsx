@@ -1,4 +1,6 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { codigoBarras } from '@/routes/almacen/productos';
+import CampoMarca from '@/components/campo-marca';
 import {
     AlertCircle,
     AlertTriangle,
@@ -164,13 +166,46 @@ export default function RecepcionesCreate({
         setEscaneo('');
 
         if (!prod) {
-            setAvisoEscaneo(
-                `El código ${codigo} no está registrado en ningún producto: pídele al Gerente que lo agregue en Productos.`,
-            );
+            // Código del fabricante nuevo: almacén elige a qué producto pertenece.
+            setCodigoSinProducto(codigo);
+            setProductoParaCodigo('');
+            setAvisoEscaneo(null);
             return;
         }
 
         setAvisoEscaneo(null);
+        sumarUnidad(prod);
+    };
+
+    const [codigoSinProducto, setCodigoSinProducto] = useState<string | null>(
+        null,
+    );
+    const [productoParaCodigo, setProductoParaCodigo] = useState('');
+    const ligarCodigo = () => {
+        const prod = products.find((p) => String(p.id) === productoParaCodigo);
+        if (!prod || !codigoSinProducto) return;
+        router.post(
+            codigoBarras.url({
+                current_team: currentTeam?.slug ?? '',
+                producto: prod.id,
+            }),
+            { codigo_barras: codigoSinProducto },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setCodigoSinProducto(null);
+                    sumarUnidad(prod);
+                },
+                onError: (e) =>
+                    setAvisoEscaneo(
+                        e.codigo_barras ?? 'No se pudo ligar el código.',
+                    ),
+            },
+        );
+    };
+
+    const sumarUnidad = (prod: (typeof products)[number]) => {
         const index = data.items.findIndex((i) => i.product_id === prod.id);
 
         if (index === -1) {
@@ -520,6 +555,60 @@ export default function RecepcionesCreate({
                             <Plus className="size-3.5" />
                             <span>Agregar Ítem</span>
                         </Button>
+                        {codigoSinProducto ? (
+                            <div className="border-border bg-muted/40 flex w-full flex-wrap items-end gap-2 rounded-lg border p-3 text-xs">
+                                <div className="min-w-0 flex-1">
+                                    <label
+                                        htmlFor="producto-del-codigo"
+                                        className="mb-1 block font-semibold"
+                                    >
+                                        El código {codigoSinProducto} es nuevo.
+                                        ¿A qué producto pertenece?
+                                    </label>
+                                    <select
+                                        id="producto-del-codigo"
+                                        value={productoParaCodigo}
+                                        onChange={(e) =>
+                                            setProductoParaCodigo(
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="border-border bg-card h-9 w-full rounded-lg border px-2"
+                                    >
+                                        <option value="">
+                                            Elige el producto
+                                        </option>
+                                        {products
+                                            .filter((p) => !p.codigo_barras)
+                                            .map((p) => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.nombre}
+                                                </option>
+                                            ))}
+                                    </select>
+                                </div>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    disabled={!productoParaCodigo}
+                                    onClick={ligarCodigo}
+                                >
+                                    Ligar y agregar
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setCodigoSinProducto(null)}
+                                >
+                                    Cancelar
+                                </Button>
+                                <p className="text-muted-foreground w-full">
+                                    ¿No está en la lista? Pide al gerente que lo
+                                    registre en Productos.
+                                </p>
+                            </div>
+                        ) : null}
                         {avisoEscaneo ? (
                             <p
                                 className="text-destructive-strong text-xs font-semibold"
@@ -620,6 +709,11 @@ export default function RecepcionesCreate({
                                                         </option>
                                                     ))}
                                                 </NativeSelect>
+                                                <p className="text-muted-foreground mt-1 text-xs">
+                                                    {
+                                                        '¿No está en la lista? Pide al gerente que lo registre en Productos.'
+                                                    }
+                                                </p>
                                             </div>
 
                                             <div>
@@ -1035,25 +1129,22 @@ export default function RecepcionesCreate({
                                                                                 />
                                                                             </TableCell>
                                                                             <TableCell className="px-2 py-1.5">
-                                                                                <Input
-                                                                                    aria-label="Marca"
-                                                                                    placeholder="Ej. BADGER"
+                                                                                <CampoMarca
                                                                                     value={
                                                                                         unit.marca
                                                                                     }
                                                                                     onChange={(
-                                                                                        e,
+                                                                                        marca,
                                                                                     ) =>
                                                                                         updateLineUnidad(
                                                                                             index,
                                                                                             uIdx,
                                                                                             'marca',
-                                                                                            e
-                                                                                                .target
-                                                                                                .value,
+                                                                                            marca,
                                                                                         )
                                                                                     }
-                                                                                    className="h-7 text-xs"
+                                                                                    vacia="Elige la marca"
+                                                                                    className="h-9 min-w-0 flex-1 text-xs"
                                                                                     required
                                                                                 />
                                                                             </TableCell>

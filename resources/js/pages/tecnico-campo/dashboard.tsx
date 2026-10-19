@@ -1,9 +1,23 @@
-﻿import React, { useState } from 'react';
+import GraficosDashboard, {
+    type DatosGraficos,
+} from '@/components/graficos-dashboard';
+import React, { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import type { Team } from '@/types';
-import { Search, MapPin, Phone, Truck, ArrowRight, Car } from 'lucide-react';
+import {
+    Search,
+    MapPin,
+    Phone,
+    Truck,
+    ArrowRight,
+    Car,
+    Clock,
+    Wrench,
+    CheckCircle2,
+    CalendarDays,
+} from 'lucide-react';
 import TecnicoCampoRoutes from '@/routes/tecnico-campo';
 import RecojosRoutes from '@/routes/tecnico-campo/recojos';
 import EntregasRoutes from '@/routes/tecnico-campo/entregas';
@@ -14,6 +28,7 @@ import FiltroSelect from '@/components/filtro-select';
 import { KpiFiltro } from '@/components/kpi-filtro';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 import { Empty } from '@/components/ui/empty';
+import PaginacionOrdenes from '@/components/paginacion-ordenes';
 
 interface OrderItem {
     id: number;
@@ -41,11 +56,14 @@ interface OrderItem {
 }
 
 interface Props {
+    graficos: DatosGraficos;
     orders: {
         data: OrderItem[];
         current_page: number;
         last_page: number;
         total: number;
+        prev_page_url: string | null;
+        next_page_url: string | null;
     };
     kpis: {
         total_servicios: number;
@@ -55,6 +73,7 @@ interface Props {
     };
     filters: {
         fecha: string;
+        hoy: string;
         tab: string;
         tipo: string;
         search: string;
@@ -62,6 +81,7 @@ interface Props {
 }
 
 export default function TecnicoCampoDashboard({
+    graficos,
     orders,
     kpis,
     filters,
@@ -132,6 +152,11 @@ export default function TecnicoCampoDashboard({
     };
 
     const getActionLabel = (order: OrderItem) => {
+        if (
+            ['trabajo_terminado', 'entregado', 'cerrado'].includes(order.estado)
+        ) {
+            return 'Ver servicio';
+        }
         switch (order.accion_sugerida) {
             case 'recojo':
                 return 'Iniciar Recojo';
@@ -152,25 +177,83 @@ export default function TecnicoCampoDashboard({
         <TecnicoCampoLayout>
             <Head title="Ruta y Servicios de Campo" />
 
-            <div className="space-y-4 pb-16">
+            <div className="space-y-4">
+                <GraficosDashboard rol="campo" datos={graficos} />
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+                        <p className="text-primary-strong mb-1 text-xs font-bold tracking-wider uppercase">
+                            Campo
+                        </p>
+                        <h1 className="text-foreground text-2xl font-bold tracking-tight">
                             Servicios de Campo
                         </h1>
-                        <p className="text-xs text-neutral-500">
-                            Ruta diaria, recojos, entregas e inspecciones
+                        <p className="text-muted-foreground text-sm">
+                            Pendientes de hoy y anteriores. Urgentes primero.
                         </p>
                     </div>
+                    <Link
+                        href={RecojosRoutes.create.url(teamSlug)}
+                        className="bg-primary text-primary-foreground ml-2 flex min-h-11 shrink-0 items-center gap-2 rounded-2xl px-3 text-sm font-semibold"
+                    >
+                        <Truck className="size-4" />
+                        Iniciar recojo
+                    </Link>
                 </div>
 
                 {/* KPIs Grid (2x2) (§5.5) */}
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label
+                        htmlFor="fecha-campo"
+                        className="text-sm font-semibold"
+                    >
+                        {filters.fecha === filters.hoy
+                            ? 'Hoy y atrasadas'
+                            : 'Consultar día'}
+                    </label>
+                    <input
+                        id="fecha-campo"
+                        type="date"
+                        value={filters.fecha}
+                        aria-label="Fecha de los servicios de Campo"
+                        onChange={(event) =>
+                            router.get(
+                                TecnicoCampoRoutes.dashboard.url(teamSlug),
+                                {
+                                    ...filters,
+                                    fecha: event.target.value || filters.hoy,
+                                    search,
+                                },
+                                { preserveState: true },
+                            )
+                        }
+                        className="border-input bg-card min-h-11 min-w-0 rounded-xl border px-3 text-base"
+                    />
+                    {filters.fecha !== filters.hoy && (
+                        <button
+                            type="button"
+                            className="border-border bg-card min-h-11 rounded-xl border px-3 text-sm"
+                            onClick={() =>
+                                router.get(
+                                    TecnicoCampoRoutes.dashboard.url(teamSlug),
+                                    { ...filters, fecha: filters.hoy, search },
+                                    { preserveState: true },
+                                )
+                            }
+                        >
+                            Hoy
+                        </button>
+                    )}
+                </div>
+                <div
+                    className="border-border bg-card grid grid-cols-2 overflow-hidden rounded-3xl border shadow-xs sm:grid-cols-4 [&>button]:rounded-none [&>button]:border-0 [&>button]:p-4 [&>button]:ring-inset [&>button:nth-child(-n+2)]:border-b [&>button:nth-child(odd)]:border-r"
+                    aria-label="Filtrar servicios por estado"
+                >
                     <KpiFiltro
                         titulo="Total"
                         valor={kpis.total_servicios}
                         detalle="Servicios"
+                        icono={<CalendarDays className="size-5" />}
                         activo={filters.tab === 'todos' || !filters.tab}
                         onClick={() => handleStatusTab('todos')}
                     />
@@ -178,6 +261,7 @@ export default function TecnicoCampoDashboard({
                         titulo="Pendientes"
                         valor={kpis.pendientes}
                         detalle="Por atender"
+                        icono={<Clock className="size-5" />}
                         tono="warning"
                         activo={filters.tab === 'pendientes'}
                         onClick={() => handleStatusTab('pendientes')}
@@ -186,6 +270,7 @@ export default function TecnicoCampoDashboard({
                         titulo="En proceso"
                         valor={kpis.en_proceso}
                         detalle="En ruta o en trabajo"
+                        icono={<Wrench className="size-5" />}
                         tono="primary"
                         activo={filters.tab === 'en_proceso'}
                         onClick={() => handleStatusTab('en_proceso')}
@@ -194,6 +279,7 @@ export default function TecnicoCampoDashboard({
                         titulo="Finalizados"
                         valor={kpis.finalizados}
                         detalle="Terminados y cerrados"
+                        icono={<CheckCircle2 className="size-5" />}
                         tono="success"
                         activo={filters.tab === 'finalizados'}
                         onClick={() => handleStatusTab('finalizados')}
@@ -222,9 +308,9 @@ export default function TecnicoCampoDashboard({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar cliente, dirección o código de orden..."
-                        className="bg-card focus:ring-primary min-h-12 w-full rounded-xl border border-neutral-200 py-2.5 pr-4 pl-9 text-xs placeholder-neutral-400 focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card focus:ring-primary border-border min-h-12 w-full rounded-xl border py-2.5 pr-4 pl-9 text-xs placeholder-neutral-400 focus:ring-2"
                     />
-                    <Search className="absolute top-4 left-3 h-4 w-4 text-neutral-400" />
+                    <Search className="text-muted-foreground absolute top-4 left-3 h-4 w-4" />
                 </form>
 
                 {/* Orders Cards List */}
@@ -243,14 +329,23 @@ export default function TecnicoCampoDashboard({
                             return (
                                 <div
                                     key={order.id}
-                                    className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
+                                    className="bg-card border-border space-y-3 rounded-3xl border p-4 shadow-sm"
                                 >
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-mono text-sm font-extrabold text-neutral-900 dark:text-neutral-100">
+                                    <div className="flex flex-wrap items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1 basis-48">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="text-primary-strong font-mono text-xs font-bold whitespace-nowrap">
                                                     {order.codigo}
                                                 </span>
+                                                {order.prioridad !==
+                                                    'normal' && (
+                                                    <span className="text-destructive-strong bg-destructive/10 rounded-full px-2 py-0.5 text-xs font-bold">
+                                                        {order.prioridad ===
+                                                        'urgente'
+                                                            ? 'Urgente'
+                                                            : 'Prioridad alta'}
+                                                    </span>
+                                                )}
                                                 <span
                                                     className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${
                                                         isFinished
@@ -266,18 +361,18 @@ export default function TecnicoCampoDashboard({
                                                     )}
                                                 </span>
                                             </div>
-                                            <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                            <h3 className="text-foreground mt-1 line-clamp-1 text-sm font-semibold">
                                                 {order.cliente}
                                             </h3>
                                         </div>
 
-                                        <span className="text-xs font-semibold whitespace-nowrap text-neutral-500 capitalize">
+                                        <span className="text-muted-foreground text-xs font-semibold capitalize">
                                             {order.tipo_servicio}
                                         </span>
                                     </div>
 
                                     {/* Address & Quick Phone */}
-                                    <div className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                                    <div className="text-muted-foreground space-y-1.5 text-xs">
                                         {order.direccion && (
                                             <div className="flex items-start gap-1.5">
                                                 <MapPin className="text-primary-strong mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
@@ -298,8 +393,8 @@ export default function TecnicoCampoDashboard({
                                             </div>
                                         )}
                                         {order.vehiculo && (
-                                            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-                                                <Car className="h-3 w-3 text-neutral-400" />
+                                            <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                                                <Car className="text-muted-foreground h-3 w-3" />
                                                 <span>
                                                     Vehículo: {order.vehiculo}
                                                 </span>
@@ -308,8 +403,8 @@ export default function TecnicoCampoDashboard({
                                     </div>
 
                                     {/* Quick Touch Action Button */}
-                                    <div className="flex items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-700/60">
-                                        <span className="text-xs text-neutral-500">
+                                    <div className="border-border/70 flex items-center justify-between border-t pt-2">
+                                        <span className="text-muted-foreground text-xs">
                                             {order.equipos_count > 0
                                                 ? `${order.equipos_count} equipo(s)`
                                                 : 'Sin equipos registrados'}
@@ -328,6 +423,7 @@ export default function TecnicoCampoDashboard({
                         })
                     )}
                 </div>
+                <PaginacionOrdenes paginas={orders} />
             </div>
         </TecnicoCampoLayout>
     );

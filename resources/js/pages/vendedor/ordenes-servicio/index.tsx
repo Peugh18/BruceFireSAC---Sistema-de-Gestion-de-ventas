@@ -167,6 +167,7 @@ export default function ServiceOrdersIndex({
         departamento_tecnico: 'planta' as 'planta' | 'campo',
         tecnico_id: '',
         referencia: '',
+        vehicle_id: null as number | null,
         prioridad: 'normal',
         observaciones: '',
     });
@@ -703,10 +704,11 @@ export default function ServiceOrdersIndex({
                                             type="button"
                                             onClick={() => {
                                                 setDestino(valor);
-                                                createForm.setData(
-                                                    'referencia',
-                                                    '',
-                                                );
+                                                createForm.setData({
+                                                    ...createForm.data,
+                                                    referencia: '',
+                                                    vehicle_id: null,
+                                                });
                                             }}
                                             className={`flex-1 rounded-md px-2 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
                                         >
@@ -719,8 +721,12 @@ export default function ServiceOrdersIndex({
                                 cliente={cliente}
                                 destino={destino}
                                 value={createForm.data.referencia}
-                                onChange={(valor) =>
-                                    createForm.setData('referencia', valor)
+                                onChange={(valor, vehicleId) =>
+                                    createForm.setData({
+                                        ...createForm.data,
+                                        referencia: valor,
+                                        vehicle_id: vehicleId ?? null,
+                                    })
                                 }
                             />
                         </div>

@@ -461,3 +461,26 @@ test('sin agente no se emite el certificado del extintor y la venta no se bloque
 
     expect(Certificate::where('sale_id', $sale->id)->count())->toBe(0);
 });
+
+test('desde la venta no se emite sin serie de fábrica ni dirección; llenadas en la pantalla, sí', function () {
+    $user = vendedorUser();
+    [$sale, $equipos] = ventaConExtintores(1);
+    $sale->update(['vendedor_id' => $user->id, 'sede_id' => $user->sede_id]);
+    $sale->client->update(['direccion_fiscal' => null]);
+    $equipos[0]->update(['serie_fabricante' => 'No legible / Pendiente de verificar']);
+    $ruta = route('vendedor.ventas.certificados.store', ['current_team' => $user->currentTeam, 'sale' => $sale]);
+
+    $this->actingAs($user)
+        ->post($ruta, ['grupos' => [['tipos' => ['operatividad_garantia'], 'unidades' => [['equipment_id' => $equipos[0]->id]]]]])
+        ->assertSessionHasErrors(['grupos.0.unidades', 'grupos.0.direccion']);
+    expect(Certificate::where('sale_id', $sale->id)->count())->toBe(0);
+
+    $this->post($ruta, ['grupos' => [[
+        'tipos' => ['operatividad_garantia'],
+        'direccion' => 'Av. España 1245, Trujillo',
+        'unidades' => [['equipment_id' => $equipos[0]->id, 'serie_fabricante' => 'FAB-777']],
+    ]]])->assertSessionHasNoErrors();
+
+    expect(Certificate::where('sale_id', $sale->id)->count())->toBe(1)
+        ->and($equipos[0]->fresh()->serie_fabricante)->toBe('FAB-777');
+});

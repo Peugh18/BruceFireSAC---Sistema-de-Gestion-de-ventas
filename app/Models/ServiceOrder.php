@@ -26,7 +26,6 @@ use Illuminate\Support\Carbon;
  * @property int|null $quote_id
  * @property int|null $sale_id
  * @property int|null $service_id
- * @property string $tipo_servicio
  * @property Carbon $fecha
  * @property int|null $tecnico_id
  * @property string|null $departamento_tecnico
@@ -38,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property-read Client $client
  * @property-read Sede|null $sede
  * @property-read Service|null $service
+ * @property-read Collection<int, ServiceOrderLine> $lines
  * @property-read Vehicle|null $vehicle
  * @property-read Quote|null $quote
  * @property-read User|null $tecnico
@@ -49,6 +49,9 @@ use Illuminate\Support\Carbon;
 ])]
 class ServiceOrder extends Model
 {
+    /** Nombre que se muestra mientras el recojo de campo aún no tiene servicio. */
+    public const RECOJO_SIN_SERVICIO = 'Recojo de extintores';
+
     /** @use HasFactory<ServiceOrderFactory> */
     use HasFactory;
 
@@ -197,6 +200,14 @@ class ServiceOrder extends Model
     }
 
     /**
+     * @return HasMany<ServiceOrderLine, $this>
+     */
+    public function lines(): HasMany
+    {
+        return $this->hasMany(ServiceOrderLine::class);
+    }
+
+    /**
      * Los extintores que se certifican y a los que se les renuevan las
      * fechas: los que llegaron al taller y cuya reparación el cliente no
      * rechazó (un extintor sin reparar no sale como operativo).
@@ -220,8 +231,36 @@ class ServiceOrder extends Model
     public function equipments(): BelongsToMany
     {
         return $this->belongsToMany(Equipment::class, 'service_order_equipment')
-            ->withPivot(['recibido', 'observaciones'])
+            ->withPivot(['service_order_line_id', 'recibido', 'observaciones', 'posicion'])
+            ->orderByRaw('COALESCE(service_order_equipment.posicion, 2147483647)')
+            ->orderBy('equipment.id')
             ->withTimestamps();
+    }
+
+    public function resumenServicios(): string
+    {
+        $this->loadMissing('service:id,nombre', 'lines.service:id,nombre');
+
+        $principal = $this->service->nombre ?? $this->lines->first()->service->nombre ?? self::RECOJO_SIN_SERVICIO;
+        $otros = $this->lines
+            ->filter(fn (ServiceOrderLine $line): bool => $line->service_id !== $this->service_id)
+            ->pluck('service_id')
+            ->unique()
+            ->count();
+
+        return $otros > 0 ? "{$principal} + {$otros} más" : $principal;
+    }
+
+    public function cantidadEquiposEsperada(): int
+    {
+        $this->loadMissing('lines');
+        $cantidadLineas = (int) $this->lines->sum('cantidad');
+        $cantidadRecojo = (int) $this->events()
+            ->where('tipo', 'creada')
+            ->get(['payload'])
+            ->max(fn (ServiceOrderEvent $event): int => (int) ($event->payload['cantidad_esperada'] ?? 0));
+
+        return max($cantidadLineas, $cantidadRecojo, $this->equipments()->count());
     }
 
     /**

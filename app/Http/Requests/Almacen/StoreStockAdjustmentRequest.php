@@ -105,9 +105,15 @@ class StoreStockAdjustmentRequest extends FormRequest
 
                     // Un extintor nuevo entra con su serie por Recepciones:
                     // sumar sin unidad descuadra el Kardex con el stock.
-                    $error = ReglasDeAjusteDeStock::errorDeLoteFaltante($product, $tipoAjuste, (string) $this->input('lote'));
+                    $error = ReglasDeAjusteDeStock::errorDeLoteFaltante(
+                        $product,
+                        $tipoAjuste,
+                        (string) $this->input('lote'),
+                        (string) $this->input('fecha_vencimiento'),
+                        $this->filled('product_lot_id'),
+                    );
                     if ($error !== null) {
-                        $validator->errors()->add('lote', $error);
+                        $validator->errors()->add(str_contains($error, 'vencimiento del lote') ? 'fecha_vencimiento' : 'lote', $error);
                     }
 
                     $loteId = $this->input('product_lot_id');

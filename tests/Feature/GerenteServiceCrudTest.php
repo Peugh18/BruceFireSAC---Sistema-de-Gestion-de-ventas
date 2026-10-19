@@ -3,6 +3,7 @@
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\Service;
+use App\Models\TipoDeServicio;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -52,6 +53,7 @@ test('gerente puede crear un nuevo servicio', function () {
     $user = createGerenteUserForServiceTest();
 
     $data = [
+        'tipo_de_servicio_id' => TipoDeServicio::query()->create(['nombre' => 'Recarga'])->id,
         'codigo' => 'SRV-NEW-01',
         'nombre' => 'Recarga de Gas Carbónico CO2 5lb',
         'descripcion' => 'Servicio técnico especializado con prueba de estanqueidad',
@@ -65,8 +67,9 @@ test('gerente puede crear un nuevo servicio', function () {
         ->post(route('gerente.servicios.store', ['current_team' => $user->currentTeam]), $data)
         ->assertRedirect(route('gerente.servicios.index', ['current_team' => $user->currentTeam]));
 
+    // El código que se envía se ignora: el sistema pone el correlativo.
     $this->assertDatabaseHas('services', [
-        'codigo' => 'SRV-NEW-01',
+        'codigo' => 'SRV-0001',
         'nombre' => 'Recarga de Gas Carbónico CO2 5lb',
         'precio_venta' => 38.00,
     ]);

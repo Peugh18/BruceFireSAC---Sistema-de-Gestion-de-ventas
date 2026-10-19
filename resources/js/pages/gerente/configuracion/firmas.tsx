@@ -1,9 +1,7 @@
-import { router, useForm, usePage } from '@inertiajs/react';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Camera,
-    CheckCircle2,
-    FileText,
     PenLine,
     Stamp,
     Trash2,
@@ -19,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import GerenteLayout from '@/layouts/gerente-layout';
+import CertificadosRoutes from '@/routes/gerente/configuracion/certificados';
 import firmas from '@/routes/gerente/configuracion/firmas';
 import type { Team } from '@/types';
 
@@ -30,17 +29,10 @@ type Firmante = {
     activo: boolean;
     firma_url: string | null;
     sello_url: string | null;
-    tipos: string[];
+    tipos: { id: number; nombre: string; cargo: string }[];
 };
 
-type Tipo = {
-    codigo: string;
-    nombre: string;
-    firmantes: string[];
-    sin_firma: boolean;
-};
-
-type Props = { firmantes: Firmante[]; tipos: Tipo[] };
+type Props = { firmantes: Firmante[] };
 
 const etiqueta = 'text-xs font-bold text-foreground/80 uppercase';
 
@@ -55,7 +47,7 @@ function useTeamSlug(): string {
     );
 }
 
-export default function FirmasYSellos({ firmantes, tipos }: Props) {
+export default function FirmasYSellos({ firmantes }: Props) {
     const teamSlug = useTeamSlug();
     const sinFirma = firmantes.filter((f) => f.activo && !f.firma_url).length;
 
@@ -76,8 +68,9 @@ export default function FirmasYSellos({ firmantes, tipos }: Props) {
                             Firmas y sellos
                         </h1>
                         <p className="text-muted-foreground text-[12px]">
-                            Quién firma cada certificado. Los cambios se ven en
-                            todos los certificados, también en los ya emitidos.
+                            Las personas que firman y sus fotos. Quién firma
+                            cada certificado se elige en el editor del
+                            certificado.
                         </p>
                     </div>
                 </div>
@@ -109,63 +102,12 @@ export default function FirmasYSellos({ firmantes, tipos }: Props) {
                         <TarjetaFirmante
                             key={firmante.id}
                             firmante={firmante}
-                            tipos={tipos}
                             teamSlug={teamSlug}
                         />
                     ))}
                 </div>
 
                 <NuevoFirmante teamSlug={teamSlug} />
-
-                <Card className="border-border bg-card gap-3 rounded-2xl p-5 shadow-none">
-                    <div className="flex items-center gap-2">
-                        <FileText className="text-primary-strong size-4" />
-                        <h2 className="font-['Oswald',sans-serif] text-[16px] font-semibold uppercase">
-                            Cómo queda cada certificado
-                        </h2>
-                    </div>
-                    <div className="divide-border flex flex-col divide-y">
-                        {tipos.map((tipo) => (
-                            <div
-                                key={tipo.codigo}
-                                className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-[12.5px]"
-                            >
-                                <div className="min-w-0">
-                                    <p className="font-bold">{tipo.nombre}</p>
-                                    <p className="text-muted-foreground">
-                                        {tipo.firmantes.length > 0
-                                            ? `Firman: ${tipo.firmantes.join(', ')}`
-                                            : 'Nadie firma este certificado todavía.'}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {tipo.sin_firma ? (
-                                        <span className="text-warning-strong inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-bold dark:text-amber-400">
-                                            <AlertTriangle className="size-3" />
-                                            Falta firma
-                                        </span>
-                                    ) : (
-                                        <span className="text-success-strong inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold dark:text-emerald-400">
-                                            <CheckCircle2 className="size-3" />
-                                            Completo
-                                        </span>
-                                    )}
-                                    <a
-                                        href={firmas.vistaPrevia.url({
-                                            current_team: teamSlug,
-                                            tipo: tipo.codigo,
-                                        })}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="border-border hover:border-primary/60 hover:text-primary-strong rounded-lg border px-2.5 py-1 text-xs font-bold transition-colors"
-                                    >
-                                        Ver ejemplo
-                                    </a>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
             </div>
         </GerenteLayout>
     );
@@ -173,11 +115,9 @@ export default function FirmasYSellos({ firmantes, tipos }: Props) {
 
 function TarjetaFirmante({
     firmante,
-    tipos,
     teamSlug,
 }: {
     firmante: Firmante;
-    tipos: Tipo[];
     teamSlug: string;
 }) {
     const [datos, setDatos] = useState({
@@ -223,16 +163,10 @@ function TarjetaFirmante({
         }
     }
 
-    function alternarTipo(codigo: string) {
-        const nuevos = firmante.tipos.includes(codigo)
-            ? firmante.tipos.filter((t) => t !== codigo)
-            : [...firmante.tipos, codigo];
-        guardar({ tipos: nuevos }, 'tipos');
-    }
-
     return (
         <Card
-            className={`border-border bg-card gap-3 rounded-2xl p-4 shadow-none ${firmante.activo ? '' : 'opacity-60'}`}
+            id={`firmante-${firmante.id}`}
+            className={`border-border bg-card target:ring-primary scroll-mt-24 gap-3 rounded-2xl p-4 shadow-none target:ring-2 ${firmante.activo ? '' : 'opacity-60'}`}
         >
             <div className="flex gap-3">
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -376,7 +310,7 @@ function TarjetaFirmante({
                         htmlFor={`gerente-configuracion-firmas-cargo-${firmante.id}`}
                         className={etiqueta}
                     >
-                        Cargo
+                        Cargo habitual
                     </Label>
                     <Input
                         id={`gerente-configuracion-firmas-cargo-${firmante.id}`}
@@ -411,28 +345,31 @@ function TarjetaFirmante({
 
             <div>
                 <p className={`${etiqueta} mb-1.5`}>Firma en</p>
-                <div className="flex flex-wrap gap-1.5">
-                    {tipos.map((tipo) => {
-                        const marcado = firmante.tipos.includes(tipo.codigo);
-
-                        return (
-                            <button
-                                key={tipo.codigo}
-                                type="button"
-                                disabled={guardando !== null}
-                                onClick={() => alternarTipo(tipo.codigo)}
-                                aria-pressed={marcado}
-                                className={`rounded-full border px-2.5 py-1 text-xs font-bold transition-colors disabled:opacity-60 ${
-                                    marcado
-                                        ? 'border-primary bg-primary text-primary-foreground'
-                                        : 'border-border text-muted-foreground hover:border-primary/60 hover:text-primary-strong'
-                                }`}
+                {firmante.tipos.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                        {firmante.tipos.map((tipo) => (
+                            <Link
+                                key={tipo.id}
+                                href={CertificadosRoutes.edit.url({
+                                    current_team: teamSlug,
+                                    certificado: tipo.id,
+                                })}
+                                className="border-border text-muted-foreground hover:border-primary/60 hover:text-primary-strong rounded-full border px-2.5 py-1 text-xs font-bold transition-colors"
                             >
                                 {tipo.nombre}
-                            </button>
-                        );
-                    })}
-                </div>
+                                <span className="font-normal">
+                                    {' '}
+                                    · {tipo.cargo}
+                                </span>
+                            </Link>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-muted-foreground text-xs">
+                        Todavía no firma ningún certificado. Agrégalo desde el
+                        editor del certificado.
+                    </p>
+                )}
             </div>
 
             <div className="border-border flex items-center justify-between gap-2 border-t pt-3">
@@ -507,7 +444,7 @@ function NuevoFirmante({ teamSlug }: { teamSlug: string }) {
                 <div>
                     <Input
                         aria-label="Cargo"
-                        placeholder="Cargo (ej. Ingeniero)"
+                        placeholder="Cargo habitual (ej. Ingeniero)"
                         value={form.data.cargo}
                         onChange={(e) => form.setData('cargo', e.target.value)}
                     />

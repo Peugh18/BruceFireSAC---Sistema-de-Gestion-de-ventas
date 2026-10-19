@@ -19,6 +19,7 @@ class StoreQuoteRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'service_order_id' => ['nullable', 'integer', 'exists:service_orders,id'],
             'client_id' => ['required', 'integer', 'exists:clients,id'],
             'sede_id' => ['nullable', 'integer', 'exists:sedes,id'],
             'vehicle_id' => ['nullable', 'integer', Rule::exists('vehicles', 'id')->where('client_id', $this->input('client_id'))],

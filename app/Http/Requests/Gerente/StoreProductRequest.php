@@ -4,6 +4,7 @@ namespace App\Http\Requests\Gerente;
 
 use App\Enums\EquipmentType;
 use App\Models\ProductCategory;
+use App\Support\CatalogosSunat;
 use App\Support\UnidadMedidaSunat;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -21,13 +22,15 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'codigo' => ['required', 'string', 'max:50', 'unique:products,codigo'],
             // El del fabricante (EAN/UPC): solo letras y números, y no se
             // repite entre productos.
             'codigo_barras' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9-]+$/', 'unique:products,codigo_barras'],
+            // Catálogo 25 (UNSPSC), opcional: va al XML de la factura.
+            'codigo_sunat' => CatalogosSunat::reglaCodigoProducto(),
             'categoria' => ['nullable', 'string', 'max:40', ProductCategory::regla()],
             // C1: el agente y la capacidad pasan a la unidad y al equipo vendido.
-            'agente' => ['nullable', Rule::enum(EquipmentType::class)],
+            // De la lista administrable de agentes (la misma que usan los técnicos).
+            'agente' => ['nullable', 'string', Rule::in(EquipmentType::etiquetas())],
             'capacidad' => ['nullable', 'string', 'max:20'],
             // Fase H: el peso unitario alimenta el peso bruto de la guía de remisión.
             'peso_kg' => ['nullable', 'numeric', 'min:0', 'max:99999'],
@@ -59,6 +62,8 @@ class StoreProductRequest extends FormRequest
     {
         $unidadCompra = mb_strtoupper(trim((string) $this->input('unidad_compra', '')));
 
+        // Lo mínimo para el gerente: si no dice otra cosa, se vende por unidad y es gravado (IGV 18 %).
+        $this->mergeIfMissing(['unidad_medida' => 'NIU', 'tipo_afectacion_igv' => '10']);
         $this->merge([
             'unidad_compra' => $unidadCompra !== '' ? $unidadCompra : null,
             'factor_compra' => $unidadCompra !== '' && $this->filled('factor_compra') ? $this->input('factor_compra') : 1,

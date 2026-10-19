@@ -5,7 +5,9 @@ use App\Http\Controllers\TecnicoPlanta\ChecklistController;
 use App\Http\Controllers\TecnicoPlanta\DashboardController;
 use App\Http\Controllers\TecnicoPlanta\DeficiencyController;
 use App\Http\Controllers\TecnicoPlanta\ExecutionController;
+use App\Http\Controllers\TecnicoPlanta\OrdenTallerController;
 use App\Http\Controllers\TecnicoPlanta\ReceptionController;
+use App\Http\Controllers\Vendedor\ServiceOrderEquipmentController;
 use App\Http\Middleware\EnsureTechnicalOrderAccess;
 use App\Http\Middleware\EnsureTieneSede;
 use Illuminate\Support\Facades\Route;
@@ -21,15 +23,19 @@ Route::prefix('tecnico-planta')
 
         // Recepciones y Alta Técnica Rápida (§18)
         Route::get('recepciones', [ReceptionController::class, 'index'])->name('recepciones.index');
-        Route::get('recepciones/{service_order}', [ReceptionController::class, 'show'])->name('recepciones.show');
+        // Pantalla única de la orden en el taller (recibir, revisar, reparar, certificar).
+        Route::get('ordenes/{service_order}', [OrdenTallerController::class, 'show'])->name('ordenes.show');
         Route::post('ordenes/{service_order}/tomar', [TechnicalOrderAssignmentController::class, 'take'])->name('ordenes.tomar');
         Route::post('recepciones/{service_order}/confirmar', [ReceptionController::class, 'confirmReception'])->name('recepciones.confirm');
         Route::get('equipos/buscar', [ReceptionController::class, 'searchEquipment'])->name('equipos.search');
         Route::post('recepciones/{service_order}/equipos', [ReceptionController::class, 'storeEquipment'])->name('recepciones.equipos.store');
+        // Ordenar y quitar extintores: la misma acción que usa el vendedor (una sola lista).
+        Route::patch('recepciones/{service_order}/equipos/reordenar', [ServiceOrderEquipmentController::class, 'reorder'])->name('recepciones.equipos.reordenar');
+        Route::delete('recepciones/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'destroy'])->name('recepciones.equipos.destroy');
+        Route::patch('recepciones/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'update'])->name('recepciones.equipos.update');
         Route::get('recepciones/{service_order}/stickers', [ReceptionController::class, 'printStickers'])->name('recepciones.stickers');
 
         // Checklist Técnico Digital (§19)
-        Route::get('ordenes/{service_order}/equipos/{equipment}/checklist', [ChecklistController::class, 'create'])->name('checklist.create');
         Route::post('ordenes/{service_order}/equipos/{equipment}/checklist', [ChecklistController::class, 'store'])->name('checklist.store');
 
         // Deficiencias desde Planta (§20)
@@ -38,7 +44,6 @@ Route::prefix('tecnico-planta')
         Route::post('deficiencias/{deficiency}/resolver', [DeficiencyController::class, 'resolve'])->name('deficiencias.resolve');
 
         // Ejecución técnica de taller y cierre (§85, Fase 5)
-        Route::get('ordenes/{service_order}/ejecucion', [ExecutionController::class, 'show'])->name('ejecucion.show');
         Route::post('ordenes/{service_order}/deficiencias/{deficiency}/consumir-repuesto', [ExecutionController::class, 'consumeSpare'])->name('ejecucion.consume-spare');
         Route::post('ordenes/{service_order}/avanzar-estado', [ExecutionController::class, 'advance'])->name('ejecucion.advance');
     });

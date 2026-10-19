@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\ServiceOrder;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Datos con los que nace una guía según el movimiento que la origina, para
@@ -21,6 +22,24 @@ use App\Models\ServiceOrder;
  */
 class GuiaRemisionPrefill
 {
+    /** @return Datos */
+    public function desdeVentaParaCliente(Sale $sale): array
+    {
+        $datos = $this->desdeVenta($sale);
+        $documento = $sale->electronicDocuments->whereIn('tipo', ['factura', 'boleta'])
+            ->whereIn('sunat_estado', ['por_enviar', 'pendiente', 'aceptado', 'observado'])->sortBy('id')->last();
+
+        if ($sale->estado !== 'confirmada' || $documento === null) {
+            throw ValidationException::withMessages(['sale_id' => 'La guía necesita una venta confirmada con boleta o factura vigente.']);
+        }
+        if ($datos['items'] === []) {
+            throw ValidationException::withMessages(['items' => 'La venta debe contener bienes para trasladar.']);
+        }
+
+        return [...$datos, 'doc_relacionado_tipo' => $documento->tipo === 'factura' ? '01' : '03',
+            'doc_relacionado_numero' => $documento->serie.'-'.$documento->correlativo];
+    }
+
     /**
      * @return Datos
      */

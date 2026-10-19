@@ -9,7 +9,6 @@ use App\Models\Product;
 use App\Models\Sede;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Tests\Support\TransferGuide;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -98,7 +97,6 @@ test('el traslado no saca mas de lo que hay y el gerente elige el almacen de ori
     // En tránsito: ya salió del origen, todavía no entró al destino.
     expect(InventoryMovement::saldo($cascos->id, $this->otroAlmacen->id))->toBe(0);
     $traslado = InventoryTransfer::query()->sole();
-    TransferGuide::accepted($traslado, $gerente);
     app(TransferInventory::class)->despachar($traslado, $gerente);
     app(TransferInventory::class)->confirmar($traslado, $gerente);
 

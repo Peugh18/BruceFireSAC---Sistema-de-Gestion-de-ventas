@@ -68,8 +68,9 @@ test('gerente puede crear un nuevo producto con stock minimo', function () {
         ->post(route('gerente.productos.store', ['current_team' => $user->currentTeam]), $data)
         ->assertRedirect(route('gerente.productos.index', ['current_team' => $user->currentTeam]));
 
+    // El código que se envía se ignora: el sistema pone el correlativo.
     $this->assertDatabaseHas('products', [
-        'codigo' => 'PROD-NEW-01',
+        'codigo' => 'PRD-0001',
         'nombre' => 'Extintor de Prueba 6kg',
         'precio_venta' => 85.50,
         'stock_minimo' => 5,
@@ -180,4 +181,22 @@ test('el formulario sugiere el siguiente código de producto libre', function ()
         ->assertInertia(fn (Assert $page) => $page
             ->where('siguienteCodigo', fn (string $codigo) => preg_match('/^PRD-\d{4}$/', $codigo) === 1 && $codigo !== $siguiente)
         );
+});
+
+test('un producto se crea solo con tipo, nombre y precio: unidad y IGV se ponen solos', function () {
+    $gerente = User::factory()->create();
+    $gerente->assignRole('Gerente');
+
+    $this->actingAs($gerente)
+        ->post(route('gerente.productos.store', ['current_team' => $gerente->currentTeam]), [
+            'nombre' => 'Manguera PQS 6 kg',
+            'precio_venta' => 25,
+            'serializado' => false,
+        ])
+        ->assertSessionHasNoErrors();
+
+    $producto = Product::query()->where('nombre', 'Manguera PQS 6 kg')->sole();
+    expect($producto->unidad_medida)->toBe('NIU')
+        ->and($producto->tipo_afectacion_igv)->toBe('10')
+        ->and($producto->codigo)->toStartWith('PRD-');
 });

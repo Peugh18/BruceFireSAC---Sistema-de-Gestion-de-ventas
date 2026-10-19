@@ -106,7 +106,45 @@ class Sede extends Model
      */
     public static function idsAtendidosPor(int $sedeId): array
     {
+        if (self::query()->whereKey($sedeId)->where('tipo', 'taller')->where('activo', true)->exists()) {
+            return array_values(self::query()->where(fn ($query) => $query->where('tipo', '!=', 'taller')->orWhereKey($sedeId))->pluck('id')->map(fn ($id): int => (int) $id)->all());
+        }
+
         return [$sedeId, ...self::query()->where('almacen_id', $sedeId)->pluck('id')->map(fn ($id) => (int) $id)->all()];
+    }
+
+    /**
+     * Sedes comerciales a las que puede pertenecer una orden iniciada por
+     * Campo. El almacén presta el servicio técnico; la tienda asociada es la
+     * responsable comercial visible para sus vendedores.
+     *
+     * @return list<int>
+     */
+    public static function idsComercialesAtendidasPor(int $sedeId): array
+    {
+        $sede = self::query()->find($sedeId);
+        if ($sede === null) {
+            return [];
+        }
+
+        if ($sede->tipo === 'taller') {
+            return $sede->activo
+                ? array_values(self::query()->whereIn('tipo', ['tienda', 'mixta'])->where('activo', true)->pluck('id')->map(fn ($id): int => (int) $id)->all())
+                : [];
+        }
+
+        if ($sede->tipo === 'tienda') {
+            return [$sede->id];
+        }
+
+        $tiendas = $sede->tiendas()
+            ->where('tipo', 'tienda')
+            ->where('activo', true)
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        return array_values($tiendas === [] ? [$sede->id] : $tiendas);
     }
 
     /**
@@ -117,11 +155,20 @@ class Sede extends Model
      */
     public function idsQueAtienden(): array
     {
-        return array_values(array_unique([$this->id, $this->almacenEfectivoId()]));
+        return array_values(array_unique([
+            $this->id,
+            $this->almacenEfectivoId(),
+            ...self::query()->where('tipo', 'taller')->where('activo', true)->pluck('id')->map(fn ($id): int => (int) $id)->all(),
+        ]));
     }
 
     public function esAlmacen(): bool
     {
         return in_array($this->tipo, ['almacen', 'mixta'], true);
+    }
+
+    public static function hayVariosAlmacenes(): bool
+    {
+        return self::query()->whereIn('tipo', ['almacen', 'mixta'])->where('activo', true)->count() >= 2;
     }
 }

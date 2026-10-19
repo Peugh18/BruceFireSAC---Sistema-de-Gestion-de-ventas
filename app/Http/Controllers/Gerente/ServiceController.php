@@ -10,7 +10,9 @@ use App\Models\CertificateType;
 use App\Models\ProductCategory;
 use App\Models\Service;
 use App\Models\Team;
+use App\Models\TipoDeServicio;
 use App\Services\Billing\AfectacionIgv;
+use App\Support\CatalogosSunat;
 use App\Support\UnidadMedidaSunat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +29,7 @@ class ServiceController extends Controller
         $buscar = trim((string) $request->input('buscar', ''));
         $estado = (string) $request->input('estado', 'todos');
 
-        $query = Service::query()
+        $query = Service::query()->with('tipoDeServicio:id,nombre')
             ->when($buscar !== '', function ($q) use ($buscar) {
                 $q->where(function ($sub) use ($buscar) {
                     $sub->where('nombre', 'like', "%{$buscar}%")
@@ -46,14 +48,17 @@ class ServiceController extends Controller
                 'descripcion' => $s->descripcion,
                 'categoria' => $s->categoria,
                 'unidad_medida' => $s->unidad_medida,
-                'agente' => $s->agente,
+                'agente' => EquipmentType::nombreDe($s->agente),
                 'capacidad' => $s->capacidad,
                 'precio_venta' => (float) $s->precio_venta,
                 'codigo_detraccion' => $s->codigo_detraccion,
+                'estado_detraccion' => $s->estado_detraccion ?? 'pendiente',
                 'aplica_igv' => (bool) $s->aplica_igv,
                 'tipo_afectacion_igv' => $s->tipo_afectacion_igv,
                 'igv_requiere_revision' => AfectacionIgv::requiereRevision($s),
                 'certificate_type_id' => $s->certificate_type_id,
+                'tipo_de_servicio_id' => $s->tipo_de_servicio_id,
+                'tipo' => $s->tipoDeServicio?->nombre,
                 'activo' => (bool) $s->activo,
             ];
         });
@@ -63,10 +68,23 @@ class ServiceController extends Controller
 
         return Inertia::render('gerente/servicios/index', [
             'servicios' => $servicios,
+            'tiposDeServicio' => TipoDeServicio::query()->with('certificateType:id,nombre')->orderBy('id')->get()->map(fn (TipoDeServicio $tipo) => [
+                'id' => $tipo->id,
+                'nombre' => $tipo->nombre,
+                'codigo_detraccion' => $tipo->codigo_detraccion,
+                'estado_detraccion' => $tipo->estado_detraccion ?? 'pendiente',
+                'detraccion' => $tipo->codigo_detraccion ? CatalogosSunat::detraccionConNombre($tipo->codigo_detraccion) : null,
+                'certificate_type_id' => $tipo->certificate_type_id,
+                'certificado' => $tipo->certificateType?->nombre,
+                'codigo_sunat' => $tipo->codigo_sunat,
+                'pide_extintor' => $tipo->pide_extintor,
+                'atencion' => $tipo->atencion,
+                'activo' => $tipo->activo,
+            ]),
+            'detracciones' => CatalogosSunat::detracciones(),
             'categorias' => ProductCategory::conUsos(),
             'unidadesMedida' => UnidadMedidaSunat::opciones(),
             'tiposCertificado' => CertificateType::query()->orderBy('nombre')->get(['id', 'nombre']),
-            'agentes' => EquipmentType::opciones(),
             'filters' => [
                 'buscar' => $buscar,
                 'estado' => $estado,

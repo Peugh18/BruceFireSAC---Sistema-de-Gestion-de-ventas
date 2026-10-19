@@ -30,7 +30,7 @@ class InspectionController extends Controller
     public function index(Request $request, Team $current_team): Response
     {
         $tab = $request->query('tab', 'todos');
-        $search = $request->query('q');
+        $search = trim((string) $request->query('q', ''));
 
         $query = ServiceOrder::query()
             ->accessibleToTechnician($request->user())

@@ -13,7 +13,7 @@ class ComprobanteQrGenerator
      * Genera el PNG (como string binario) del QR tributario oficial de
      * SUNAT: RUC_EMISOR|TIPO_DOC|SERIE|CORRELATIVO|TOTAL_IGV|TOTAL_VENTA|
      * FECHA_EMISION|TIPO_DOC_CLIENTE|NUM_DOC_CLIENTE|HASH_XML|
-     * (ver docs/FACTURACION_GREENTER_SUNAT.md §10).
+     * (ver docs/SUNAT_FACTURACION.md §7).
      */
     public function generate(ElectronicDocument $document, string $xmlSigned): string
     {

@@ -1,3 +1,6 @@
+import GraficosDashboard, {
+    type DatosGraficos,
+} from '@/components/graficos-dashboard';
 import { KpiCard } from '@/components/kpi-card';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -103,6 +106,7 @@ export type Oportunidad = {
 };
 
 export type Props = {
+    graficos: DatosGraficos;
     ventas_hoy: VentasHoy;
     caja_hoy: CajaHoy;
     cotizaciones_mes: Record<string, number>;
@@ -126,6 +130,7 @@ function initials(value: string | undefined): string {
 }
 
 export default function VendedorDashboard({
+    graficos,
     ventas_hoy,
     caja_hoy,
     cotizaciones_mes,
@@ -228,7 +233,7 @@ export default function VendedorDashboard({
         {
             label: 'Ventas de hoy',
             value: soles(ventas_hoy.total),
-            detail: `${ventas_hoy.count} ventas · ticket promedio ${soles(ventas_hoy.ticket_promedio)}`,
+            detail: `${ventas_hoy.count} ventas`,
         },
         {
             label: 'Cotizaciones del mes',
@@ -318,6 +323,7 @@ export default function VendedorDashboard({
                         </Link>
                     </nav>
                 </section>
+                <GraficosDashboard rol="vendedor" datos={graficos} />
 
                 <section
                     aria-label="Resumen del día"

@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Models\Agente;
+
 /**
  * Agente extintor: una sola lista para el catálogo (products.agente, guarda
  * el valor), la unidad del almacén y el equipo del cliente (guarda la
@@ -24,10 +26,17 @@ enum EquipmentType: string
         return array_column(self::cases(), 'value');
     }
 
-    /** @return list<string> */
+    /**
+     * Agentes que se ofrecen en los formularios: los de la tabla `agentes`
+     * (se administran desde el sistema). Sin tabla, los de siempre.
+     *
+     * @return list<string>
+     */
     public static function etiquetas(): array
     {
-        return array_map(fn (self $tipo) => $tipo->etiqueta(), self::cases());
+        $activos = Agente::nombresActivos();
+
+        return $activos !== [] ? $activos : array_map(fn (self $tipo) => $tipo->etiqueta(), self::cases());
     }
 
     /** @return list<array{valor: string, etiqueta: string}> */
@@ -58,11 +67,36 @@ enum EquipmentType: string
     {
         $agente = trim((string) $agente);
 
-        return $agente !== '' && (in_array($agente, self::etiquetas(), true) || self::fromDescription($agente) !== self::Otro);
+        return $agente !== '' && (Agente::tipoBaseDe($agente) !== null || in_array($agente, self::etiquetas(), true) || self::fromDescription($agente) !== self::Otro);
+    }
+
+    /**
+     * Tipo de un agente guardado en un producto o servicio: el nombre de la
+     * lista administrable o un valor antiguo del enum ("pqs"). Sin agente,
+     * se deduce del respaldo (por ejemplo, el nombre del servicio).
+     */
+    public static function deAgente(?string $agente, ?string $respaldo = null): self
+    {
+        $agente = trim((string) $agente);
+
+        return self::tryFrom($agente) ?? self::fromDescription($agente !== '' ? $agente : $respaldo);
+    }
+
+    /** Nombre legible del agente guardado: el de la lista, o la etiqueta de un valor antiguo. */
+    public static function nombreDe(?string $agente): ?string
+    {
+        $agente = trim((string) $agente);
+
+        return $agente === '' ? null : (self::tryFrom($agente)?->etiqueta() ?? $agente);
     }
 
     public static function fromDescription(?string $description): self
     {
+        $registrado = Agente::tipoBaseDe($description);
+        if ($registrado !== null) {
+            return $registrado;
+        }
+
         $normalized = mb_strtolower(trim((string) $description));
 
         return match (true) {

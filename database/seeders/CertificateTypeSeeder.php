@@ -27,9 +27,12 @@ class CertificateTypeSeeder extends Seeder
 
             $certificateType = CertificateType::updateOrCreate(['codigo' => $codigo], $tipo);
 
-            $certificateType->signers()->sync(collect($firmas)->mapWithKeys(
-                fn (string $clave, int $indice) => [$firmantes[$clave]->id => ['orden' => $indice + 1]],
-            )->all());
+            // Una firma es una clave ('tecnico') o una clave con el cargo de ese certificado.
+            $certificateType->signers()->sync(collect($firmas)->mapWithKeys(function (string|array $firma, int $indice) use ($firmantes) {
+                $clave = is_array($firma) ? $firma['clave'] : $firma;
+
+                return [$firmantes[$clave]->id => ['orden' => $indice + 1, 'cargo' => is_array($firma) ? $firma['cargo'] : $firmantes[$clave]->cargo]];
+            })->all());
 
             $yaTieneSerie = CertificateSequence::query()
                 ->where('certificate_type_id', $certificateType->id)
@@ -42,7 +45,8 @@ class CertificateTypeSeeder extends Seeder
     }
 
     /**
-     * Firmantes que aparecen en los certificados actuales de la empresa.
+     * Personas que firman los certificados actuales de la empresa, una sola
+     * vez cada una; su cargo en cada certificado va en el tipo.
      *
      * @return array<string, Signer>
      */
@@ -54,11 +58,10 @@ class CertificateTypeSeeder extends Seeder
             'ingeniero_electricista' => ['nombre' => 'Ing. Sixto Leiva Marín', 'cargo' => 'Ingeniero mecánico electricista', 'cip' => '218485', 'especialidad' => 'Mecánica eléctrica'],
             'ingeniero_encargado' => ['nombre' => 'T. Homar Flores G.', 'cargo' => 'Ingeniero encargado', 'cip' => '293886'],
             'tecnico' => ['nombre' => 'Ander Avalos C.', 'cargo' => 'Técnico de operación'],
-            'instructor' => ['nombre' => 'Edgar Guevara Cabrera', 'cargo' => 'Instructor'],
         ];
 
         return collect($datos)->map(fn (array $firmante) => Signer::updateOrCreate(
-            ['nombre' => $firmante['nombre'], 'cargo' => $firmante['cargo']],
+            ['nombre' => $firmante['nombre']],
             [...$firmante, 'activo' => true],
         ))->all();
     }
@@ -231,7 +234,7 @@ class CertificateTypeSeeder extends Seeder
                 'incluye_anio' => true,
                 'columnas' => null,
                 'checklist' => null,
-                'firmantes' => ['instructor'],
+                'firmantes' => [['clave' => 'administrador', 'cargo' => 'Instructor']],
             ],
         ];
     }

@@ -47,6 +47,9 @@ class IssueCreditNote
     {
         $this->validar($original, $motivoCatalogo09);
         $desglose = app(DesgloseNota::class)->calcular($original, 'nota_credito', $motivoCatalogo09, $importe, $opciones);
+        if (in_array($motivoCatalogo09, ['05', '07'], true)) {
+            $importe = round(array_sum(array_column($desglose['lineas'], 'subtotal')), 2);
+        }
 
         return DB::transaction(function () use ($original, $motivoCatalogo09, $detalle, $importe, $opciones, $desglose) {
             // Leida de nuevo y bloqueada: la venta pudo anularse desde que se

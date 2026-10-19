@@ -10,7 +10,8 @@ export type ClientOption = {
     id: number;
     tipo_documento?: string;
     razon_social: string;
-    numero_documento: string;
+    numero_documento: string | null;
+    telefono?: string | null;
 };
 
 export type ClientFicha = ClientOption & {
@@ -34,6 +35,8 @@ export default function ClientPicker({
     headerExtra,
     error,
     autoFocus = false,
+    endpoints,
+    onAddClient,
 }: {
     teamSlug: string;
     value: ClientFicha | null;
@@ -41,6 +44,11 @@ export default function ClientPicker({
     headerExtra?: ReactNode;
     error?: string;
     autoFocus?: boolean;
+    endpoints?: {
+        search: (term: string) => string;
+        ficha: (id: number) => string;
+    };
+    onAddClient?: (term: string) => void;
 }) {
     const [busqueda, setBusqueda] = useState('');
     const [resultados, setResultados] = useState<ClientOption[] | null>(null);
@@ -48,6 +56,7 @@ export default function ClientPicker({
     const [activo, setActivo] = useState(0);
     const [creando, setCreando] = useState(false);
     const [cargandoFicha, setCargandoFicha] = useState(false);
+    const [errorBusqueda, setErrorBusqueda] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -61,16 +70,26 @@ export default function ClientPicker({
         const controller = new AbortController();
         const timeout = window.setTimeout(async () => {
             setCargando(true);
+            setErrorBusqueda(null);
             try {
                 const response = await fetch(
-                    clientes.search.url(teamSlug, { query: { search: term } }),
+                    endpoints?.search(term) ??
+                        clientes.search.url(teamSlug, {
+                            query: { search: term },
+                        }),
                     { signal: controller.signal },
                 );
+                if (!response.ok) {
+                    throw new Error('search');
+                }
                 setResultados((await response.json()) as ClientOption[]);
                 setActivo(0);
             } catch {
                 if (!controller.signal.aborted) {
-                    setResultados([]);
+                    setResultados(null);
+                    setErrorBusqueda(
+                        'No se pudo buscar. Intenta de nuevo antes de registrar otro cliente.',
+                    );
                 }
             } finally {
                 setCargando(false);
@@ -81,7 +100,7 @@ export default function ClientPicker({
             window.clearTimeout(timeout);
             controller.abort();
         };
-    }, [busqueda, teamSlug]);
+    }, [busqueda, teamSlug, endpoints]);
 
     const elegir = async (cliente: ClientOption) => {
         setBusqueda('');
@@ -91,12 +110,20 @@ export default function ClientPicker({
 
         try {
             const response = await fetch(
-                clientes.ficha.url({
-                    current_team: teamSlug,
-                    client: cliente.id,
-                }),
+                endpoints?.ficha(cliente.id) ??
+                    clientes.ficha.url({
+                        current_team: teamSlug,
+                        client: cliente.id,
+                    }),
             );
+            if (!response.ok) {
+                throw new Error('ficha');
+            }
             onChange((await response.json()) as ClientFicha);
+        } catch {
+            setErrorBusqueda(
+                'No se pudo cargar la ficha completa. Vuelve a seleccionar al cliente.',
+            );
         } finally {
             setCargandoFicha(false);
         }
@@ -146,10 +173,9 @@ export default function ClientPicker({
                             </div>
                             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs">
                                 <span className="bg-muted text-foreground/80 rounded-md px-1.5 py-0.5 font-['IBM_Plex_Mono',monospace] font-bold uppercase">
-                                    {value.tipo_documento === 'varios'
-                                        ? 'Sin doc.'
-                                        : value.tipo_documento}{' '}
-                                    {value.numero_documento}
+                                    {value.numero_documento
+                                        ? `${value.tipo_documento ?? 'Documento'} ${value.numero_documento}`
+                                        : 'Documento pendiente'}
                                 </span>
                                 {tieneRuc && value.estado_contribuyente ? (
                                     <span
@@ -178,7 +204,7 @@ export default function ClientPicker({
                             ) : null}
                         </div>
                         <div className="flex shrink-0 gap-1.5">
-                            {value.tipo_documento !== 'varios' ? (
+                            {!endpoints && value.tipo_documento !== 'varios' ? (
                                 <Button
                                     asChild
                                     variant="outline"
@@ -233,8 +259,8 @@ export default function ClientPicker({
                                     setBusqueda(event.target.value)
                                 }
                                 onKeyDown={alTeclear}
-                                placeholder="Escribe nombre, razón social, RUC o DNI..."
-                                className="placeholder:text-muted-foreground h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
+                                placeholder="Nombre, teléfono, RUC o DNI..."
+                                className="placeholder:text-muted-foreground h-11 min-w-0 flex-1 bg-transparent text-base outline-none"
                             />
                             {cargando ? (
                                 <Cargando className="text-muted-foreground size-3.5" />
@@ -243,7 +269,11 @@ export default function ClientPicker({
                         {noEncontrado ? (
                             <Button
                                 type="button"
-                                onClick={() => setCreando(true)}
+                                onClick={() =>
+                                    onAddClient
+                                        ? onAddClient(busqueda.trim())
+                                        : setCreando(true)
+                                }
                                 className="bg-primary hover:bg-primary/90 h-auto shrink-0 rounded-lg px-3.5 text-[12.5px] font-bold text-white shadow-none"
                             >
                                 <UserRoundPlus className="size-3.5" />
@@ -266,7 +296,8 @@ export default function ClientPicker({
                                         {cliente.razon_social}
                                     </span>
                                     <span className="text-muted-foreground shrink-0 font-['IBM_Plex_Mono',monospace] text-xs">
-                                        {cliente.numero_documento}
+                                        {cliente.numero_documento ??
+                                            'Documento pendiente'}
                                     </span>
                                 </button>
                             ))}
@@ -284,6 +315,14 @@ export default function ClientPicker({
                 </div>
             )}
 
+            {errorBusqueda && (
+                <p
+                    className="text-destructive-strong mt-1 text-xs"
+                    role="alert"
+                >
+                    {errorBusqueda}
+                </p>
+            )}
             {error ? (
                 <p
                     className="text-destructive-strong mt-1 text-xs font-semibold"
@@ -293,13 +332,15 @@ export default function ClientPicker({
                 </p>
             ) : null}
 
-            <ClientCreateDialog
-                open={creando}
-                onOpenChange={setCreando}
-                teamSlug={teamSlug}
-                initialDocumento={esDocumento ? busqueda.trim() : ''}
-                onCreated={(cliente) => void elegir(cliente)}
-            />
+            {!onAddClient && (
+                <ClientCreateDialog
+                    open={creando}
+                    onOpenChange={setCreando}
+                    teamSlug={teamSlug}
+                    initialDocumento={esDocumento ? busqueda.trim() : ''}
+                    onCreated={(cliente) => void elegir(cliente)}
+                />
+            )}
         </div>
     );
 }

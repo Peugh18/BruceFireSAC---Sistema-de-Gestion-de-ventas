@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TeamRole;
 use App\Models\Certificate;
 use App\Models\CertificateType;
 use App\Models\Client;
@@ -26,6 +27,8 @@ function conRol(string $rol, ?Sede $sede = null): User
 {
     $user = User::factory()->create(['sede_id' => $sede?->id]);
     $user->assignRole($rol);
+    // Trabaja en la empresa del gerente: solo a ellos se les cambia rol o sede.
+    test()->gerente->currentTeam->members()->attach($user, ['role' => TeamRole::Member->value]);
 
     return $user;
 }
@@ -41,7 +44,7 @@ test('cada rol solo puede quedar en el tipo de sede donde trabaja', function () 
 
     $this->actingAs($this->gerente)
         ->patch(rutaGerente($this->gerente, 'gerente.usuarios.update-sede', ['user' => $tecnico]), ['sede_id' => $this->tienda->id])
-        ->assertSessionHasErrors(['sede_id' => 'Un técnico de planta trabaja en un almacén o una sede mixta; Tienda Centro es una tienda.']);
+        ->assertSessionHasErrors(['sede_id' => 'Un técnico de planta trabaja en un taller; Tienda Centro es una tienda.']);
 
     $this->actingAs($this->gerente)
         ->patch(rutaGerente($this->gerente, 'gerente.usuarios.update-sede', ['user' => $vendedor]), ['sede_id' => null])
@@ -151,7 +154,7 @@ test('no se da de alta a un trabajador en una sede que no corresponde a su rol n
 
     $this->actingAs($this->gerente)
         ->post(rutaGerente($this->gerente, 'gerente.usuarios.store'), [...$datos, 'sede_id' => $this->tienda->id])
-        ->assertSessionHasErrors(['sede_id' => 'Un técnico de planta trabaja en un almacén o una sede mixta; Tienda Centro es una tienda.']);
+        ->assertSessionHasErrors(['sede_id' => 'Un técnico de planta trabaja en un taller; Tienda Centro es una tienda.']);
 
     $this->actingAs($this->gerente)
         ->post(rutaGerente($this->gerente, 'gerente.usuarios.store'), [...$datos, 'email' => $this->gerente->email, 'sede_id' => $this->almacen->id])

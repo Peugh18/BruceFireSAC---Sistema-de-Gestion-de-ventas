@@ -38,6 +38,8 @@ class ReceptionController extends Controller
             ->with([
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento',
                 'sede:id,nombre',
+                'service',
+                'lines.service',
                 'equipments:id,numero_serie,tipo_agente,capacidad,marca',
             ])
             ->latest('id');
@@ -70,7 +72,7 @@ class ReceptionController extends Controller
                 'cliente_doc' => $order->client->numero_documento,
                 'telefono' => $order->client->telefono,
                 'sede' => $order->sede?->nombre,
-                'tipo_servicio' => $order->service->nombre,
+                'tipo_servicio' => $order->resumenServicios(),
                 'fecha' => $order->fecha->toDateString(),
                 'prioridad' => $order->prioridad,
                 'estado' => $order->estado,
@@ -91,58 +93,6 @@ class ReceptionController extends Controller
             'filters' => [
                 'search' => $search,
                 'filter' => $filter,
-            ],
-        ]);
-    }
-
-    /**
-     * Vista de detalle de recepción / escaneo de equipos para una orden.
-     */
-    public function show(Team $current_team, ServiceOrder $service_order): Response
-    {
-        $service_order->load([
-            'client',
-            'sede',
-            'tecnico',
-            'equipments',
-            'events' => fn ($q) => $q->latest('id'),
-        ]);
-
-        return Inertia::render('tecnico-planta/recepciones/show', [
-            'asignacion' => $service_order->asignacionPara(request()->user()),
-            'order' => [
-                'id' => $service_order->id,
-                'codigo' => $service_order->codigo,
-                'cliente' => [
-                    'id' => $service_order->client->id,
-                    'nombre' => $service_order->client->nombre_comercial ?: $service_order->client->razon_social,
-                    'documento' => $service_order->client->numero_documento,
-                    'telefono' => $service_order->client->telefono,
-                    'direccion' => $service_order->client->direccion_fiscal,
-                ],
-                'sede' => $service_order->sede?->nombre,
-                'tipo_servicio' => $service_order->service->nombre,
-                'fecha' => $service_order->fecha->toDateString(),
-                'prioridad' => $service_order->prioridad,
-                'estado' => $service_order->estado,
-                'observaciones' => $service_order->observaciones,
-                'equipments' => $service_order->equipments->map(fn (Equipment $eq) => [
-                    'id' => $eq->id,
-                    'numero_serie' => $eq->numero_serie,
-                    'tipo_agente' => $eq->tipo_agente,
-                    'capacidad' => $eq->capacidad,
-                    'marca' => $eq->marca,
-                    'serie_fabricante' => $eq->serie_fabricante,
-                    'anio_fabricacion' => $eq->anio_fabricacion,
-                    'notas' => $eq->notas,
-                    'recibido' => (bool) ($eq->pivot->recibido ?? true),
-                ]),
-                'eventos' => $service_order->events->map(fn ($ev) => [
-                    'id' => $ev->id,
-                    'tipo' => $ev->tipo,
-                    'payload' => $ev->payload,
-                    'created_at' => $ev->created_at?->toIso8601String(),
-                ]),
             ],
         ]);
     }
@@ -246,8 +196,11 @@ class ReceptionController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'numero_serie' => ['nullable', 'string', 'max:100'],
+            'service_order_line_id' => ['nullable', 'integer', 'exists:service_order_lines,id'],
+            'service_id' => ['nullable', 'integer', 'exists:services,id'],
+            'adicional' => ['nullable', 'boolean'],
             'tipo_agente' => ['nullable', Rule::in(EquipmentType::etiquetas())],
-            'capacidad' => ['nullable', 'string', 'max:100'],
+            'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
             'anio_fabricacion' => ['nullable', 'string', 'max:100'],
@@ -262,16 +215,18 @@ class ReceptionController extends Controller
     }
 
     /**
-     * Imprime stickers con código de barras en formato PDF (grilla 2x2) para los equipos de la orden (§18, §84.9).
+     * Imprime etiquetas en rollo o en hojas A4 para los equipos de la orden (§18, §84.9).
      */
     public function printStickers(
         Team $current_team,
         ServiceOrder $service_order,
-        StickerPdfService $stickerPdfService
+        StickerPdfService $stickerPdfService,
+        Request $request,
     ): HttpResponse {
         $equipments = $service_order->equipments()->get();
 
-        $pdf = $stickerPdfService->generateForEquipments($equipments, $service_order);
+        $datos = $request->validate(['formato' => ['sometimes', 'required', 'in:rollo,a4']]);
+        $pdf = $stickerPdfService->generateForEquipments($equipments, $service_order, $datos['formato'] ?? 'rollo');
 
         return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',

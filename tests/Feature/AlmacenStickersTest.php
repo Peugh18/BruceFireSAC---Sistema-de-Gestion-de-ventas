@@ -48,6 +48,8 @@ test('almacen user can generate and view inline pdf stickers for reception with 
             'sede_almacen_id' => $sede->id,
             'numero_serie' => sprintf('BF-EQ-%06d', $i),
             'marca' => 'Buckeye',
+            'capacidad' => '6',
+            'agente' => 'pqs',
             'anio_fabricacion' => 2026,
             'estado' => 'disponible',
             'fecha_ingreso' => today(),
@@ -81,7 +83,38 @@ test('almacen user can generate and view inline pdf stickers for reception with 
     expect($response->getContent())->toStartWith('%PDF-');
 });
 
-test('almacen user can view the stickers index listing only receptions with serialized units', function () {
+test('stickers view renders one 80 by 50 mm thermal sticker per serialized unit', function () {
+    $html = view('pdf.stickers', [
+        'stickers' => collect([
+            [
+                'numero_serie' => 'BF-EQ-000001',
+                'marca' => 'Buckeye',
+                'kilaje' => '6 kg',
+                'agente' => 'PQS ABC',
+                'barcode_base64' => '',
+            ],
+            [
+                'numero_serie' => 'BF-EQ-000002',
+                'marca' => '',
+                'kilaje' => '',
+                'agente' => '',
+                'barcode_base64' => '',
+            ],
+        ]),
+    ])->render();
+
+    expect($html)->toContain('size: 80mm 50mm');
+    expect($html)->toContain('margin: 0');
+    expect(substr_count($html, 'class="sticker"'))->toBe(2);
+    expect($html)->toContain('Buckeye');
+    expect($html)->toContain('6 kg');
+    expect($html)->toContain('PQS ABC');
+    expect($html)->toContain('BF-EQ-000002');
+    expect($html)->not->toContain('null');
+    expect($html)->not->toContain('size: A4 portrait');
+});
+
+test('almacen user can view the stickers index listing receptions with serialized units and bulk products', function () {
     $user = almacenUserForStickersTest();
     $sede = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
 
@@ -121,7 +154,7 @@ test('almacen user can view the stickers index listing only receptions with seri
     $movement->referencia_id = $receptionConStickers->id;
     $movement->save();
 
-    // Recepción SIN unidades serializadas (solo a granel): NO debe aparecer.
+    // Los productos a granel también reciben una etiqueta por producto distinto.
     $receptionSinStickers = Reception::create([
         'proveedor' => 'Proveedor Repuestos SAC',
         'fecha' => today(),
@@ -144,9 +177,11 @@ test('almacen user can view the stickers index listing only receptions with seri
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('almacen/stickers/index')
-            ->has('recepciones.data', 1)
-            ->where('recepciones.data.0.id', $receptionConStickers->id)
-            ->where('recepciones.data.0.unidades_count', 1)
+            ->has('recepciones.data', 2)
+            ->where('recepciones.data.0.id', $receptionSinStickers->id)
+            ->where('recepciones.data.0.productos_count', 1)
+            ->where('recepciones.data.1.id', $receptionConStickers->id)
+            ->where('recepciones.data.1.unidades_count', 1)
         );
 });
 

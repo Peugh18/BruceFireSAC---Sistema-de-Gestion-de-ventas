@@ -1,12 +1,13 @@
-import { Building2, PenLine } from 'lucide-react';
+import { Award, Building2, PenLine } from 'lucide-react';
 
 import { TabsBf, type PestanaBf } from '@/components/ui/tabs-bf';
 import empresa from '@/routes/gerente/configuracion/empresa';
+import certificados from '@/routes/gerente/configuracion/certificados';
 import firmas from '@/routes/gerente/configuracion/firmas';
 
 type Props = {
     teamSlug: string;
-    activa: 'empresa' | 'firmas';
+    activa: 'empresa' | 'firmas' | 'certificados';
     firmasPendientes?: number;
 };
 
@@ -20,7 +21,7 @@ export function ConfiguracionTabs({
     activa,
     firmasPendientes = 0,
 }: Props) {
-    const pestanas: PestanaBf<'empresa' | 'firmas'>[] = [
+    const pestanas: PestanaBf<'empresa' | 'firmas' | 'certificados'>[] = [
         {
             id: 'empresa',
             titulo: 'Datos de la empresa',
@@ -33,6 +34,12 @@ export function ConfiguracionTabs({
             icono: PenLine,
             href: firmas.index.url({ current_team: teamSlug }),
             contador: firmasPendientes,
+        },
+        {
+            id: 'certificados',
+            titulo: 'Certificados',
+            icono: Award,
+            href: certificados.index.url({ current_team: teamSlug }),
         },
     ];
 

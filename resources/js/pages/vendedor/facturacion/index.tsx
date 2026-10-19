@@ -1,4 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import PestanasSunat from '@/components/pestanas-sunat';
 import {
     AlertTriangle,
     CheckCircle2,
@@ -312,12 +313,13 @@ export default function FacturacionIndex({
     ];
 
     return (
-        <VendedorLayout title="Comprobantes SUNAT">
+        <VendedorLayout title="Envío SUNAT">
             <div className="flex flex-col gap-4">
                 <PageHeader
-                    title="Comprobantes SUNAT"
-                    description="Facturas, boletas y notas enviadas a SUNAT con su respuesta. Marca varios para descargarlos juntos."
+                    title="Envío SUNAT"
+                    description="Facturas, boletas y notas de crédito o débito con su respuesta de SUNAT. Se envían solas cada 5 minutos; marca varias para descargarlas juntas."
                 />
+                <PestanasSunat actual="comprobantes" />
                 {(plazoSunat.por_vencer > 0 ||
                     plazoSunat.vencidos > 0 ||
                     filters.plazo) && (

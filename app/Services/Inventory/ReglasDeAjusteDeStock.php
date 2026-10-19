@@ -90,15 +90,23 @@ class ReglasDeAjusteDeStock
 
     /**
      * Los productos con lote: el ingreso dice su lote y vencimiento. Error
-     * si falta el lote, o null si procede.
+     * si falta el lote o, para un lote nuevo, su vencimiento; null si procede.
      */
-    public static function errorDeLoteFaltante(?Product $product, string $tipoAjuste, ?string $lote): ?string
+    public static function errorDeLoteFaltante(?Product $product, string $tipoAjuste, ?string $lote, ?string $vencimiento = null, bool $loteExistente = false): ?string
     {
-        if (! $product?->controla_lote || $tipoAjuste !== 'incremento' || trim((string) $lote) !== '') {
+        if (! $product?->controla_lote || $tipoAjuste !== 'incremento') {
             return null;
         }
 
-        return "{$product->nombre} lleva lote: escribe el número de lote y su vencimiento.";
+        if (trim((string) $lote) === '' && ! $loteExistente) {
+            return "{$product->nombre} lleva lote: escribe el número de lote y su vencimiento.";
+        }
+
+        if (! $loteExistente && trim((string) $vencimiento) === '') {
+            return "Escribe la fecha de vencimiento del lote de {$product->nombre}.";
+        }
+
+        return null;
     }
 
     /**

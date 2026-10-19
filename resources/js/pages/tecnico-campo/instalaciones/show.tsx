@@ -1,8 +1,12 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import CampoMarca from '@/components/campo-marca';
+import MedicionesCertificadoCampo, {
+    iniciarMediciones,
+    type FormularioCertificadoCampo,
+} from '@/components/mediciones-certificado-campo';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
-import ConversacionOrden, {
-    type ConversacionProps,
-} from '@/components/conversacion-orden';
+import BarraOrdenCampo from '@/components/barra-orden-campo';
+import type { ConversacionProps } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 import SubirEvidencia, {
@@ -65,6 +69,16 @@ type ServiceOrder = {
     id: number;
     codigo: string;
     estado: string;
+    events?: Array<{
+        payload: {
+            accion?: string;
+            area?: string;
+            ubicacion_instalada?: string;
+            pruebas?: string;
+            observaciones?: string;
+            conformidad_nombre?: string;
+        } | null;
+    }>;
     tipo_servicio?: string;
     client_id: number;
     client: Client;
@@ -78,6 +92,7 @@ type ServiceOrder = {
 };
 
 type Props = {
+    formulariosCertificado: FormularioCertificadoCampo[];
     asignacion: AsignacionOrden;
     currentTeam?: Team | null;
     order: ServiceOrder;
@@ -98,6 +113,7 @@ type InstalledItem = {
 };
 
 export default function InstalacionShow({
+    formulariosCertificado,
     asignacion,
     currentTeam,
     order,
@@ -112,14 +128,19 @@ export default function InstalacionShow({
         flash?: { success?: string; error?: string };
     }>().props;
 
-    const isFinalizada = ['listo_entrega', 'entregado', 'cerrado'].includes(
-        order.estado,
-    );
+    const isFinalizada = [
+        'listo_certificado',
+        'listo_entrega',
+        'entregado',
+        'cerrado',
+        'anulada',
+    ].includes(order.estado);
     const agentes = useAgentesExtintor();
 
     // Lista de equipos a instalar en el formulario
     const [equiposList, setEquiposList] = useState<InstalledItem[]>(
-        unidadesVendidas.length > 0
+        (unidadesVendidas.length > 0 || formulariosCertificado.length > 0) &&
+            !isFinalizada
             ? []
             : order.equipments.length > 0
               ? order.equipments.map((eq) => ({
@@ -144,15 +165,24 @@ export default function InstalacionShow({
                 ],
     );
 
+    const instalacionRegistrada = order.events?.find(
+        (event) => event.payload?.accion === 'instalacion_campo_realizada',
+    )?.payload;
     const form = useForm({
-        area: 'Área Principal / Operaciones',
-        ubicacion_instalada: '',
+        area:
+            instalacionRegistrada?.area ??
+            (isFinalizada ? '' : 'Área Principal / Operaciones'),
+        ubicacion_instalada: instalacionRegistrada?.ubicacion_instalada ?? '',
         pruebas:
-            'Soporte fijado a 1.50m sobre nivel de piso. Verificación de manómetro y precinto de seguridad conforme NTP 350.043.',
-        observaciones: '',
-        conformidad_nombre: '',
+            instalacionRegistrada?.pruebas ??
+            (isFinalizada
+                ? ''
+                : 'Soporte fijado a 1.50m sobre nivel de piso. Verificación de manómetro y precinto de seguridad conforme NTP 350.043.'),
+        observaciones: instalacionRegistrada?.observaciones ?? '',
+        conformidad_nombre: instalacionRegistrada?.conformidad_nombre ?? '',
         conformidad_aceptada: false,
-        emitir_certificado: true,
+        emitir_certificado: formulariosCertificado.length === 0,
+        certificados_servicio: iniciarMediciones(formulariosCertificado),
         tipo_certificado_codigo: 'operatividad_garantia',
         firma: null as string | null,
         equipos: equiposList,
@@ -254,12 +284,17 @@ export default function InstalacionShow({
     return (
         <TecnicoCampoLayout title={`Instalación ${order.codigo}`}>
             <Head title={`Instalación ${order.codigo} - Técnico de Campo`} />
+            <BarraOrdenCampo
+                ordenId={order.id}
+                codigo={order.codigo}
+                conversacion={conversacion}
+            />
 
             {/* Back link */}
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <Link
                     href={instalaciones.index.url({ current_team: teamSlug })}
-                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
+                    className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center gap-1.5 text-xs font-bold"
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver a instalaciones</span>
@@ -278,7 +313,7 @@ export default function InstalacionShow({
             <TomarOrden asignacion={asignacion} />
 
             {/* Header Data Card (§25) */}
-            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
                 <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
                     <div>
                         <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
@@ -323,7 +358,7 @@ export default function InstalacionShow({
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex min-h-11 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Contactar
@@ -335,7 +370,7 @@ export default function InstalacionShow({
 
             {/* Emitted Certificates if any */}
             {order.certificates && order.certificates.length > 0 && (
-                <div className="mb-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                <div className="mb-5 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                     <h3 className="text-success-strong mb-2 flex items-center gap-1.5 text-xs font-black">
                         <FileCheck className="text-success-strong size-4" />
                         Certificados Emitidos
@@ -361,8 +396,17 @@ export default function InstalacionShow({
 
             {/* Installation Form (§25) */}
             <form onSubmit={handleSubmit} className="space-y-5">
+                <MedicionesCertificadoCampo
+                    tipos={formulariosCertificado}
+                    value={form.data.certificados_servicio}
+                    onChange={(datos) =>
+                        form.setData('certificados_servicio', datos)
+                    }
+                    errors={form.errors as Record<string, string>}
+                    disabled={isFinalizada}
+                />
                 {/* 1. Datos del área y ubicación */}
-                <div className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
+                <div className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
                     <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                         <Wrench className="text-foreground size-4" />
                         1. Ubicación y Área de Instalación
@@ -429,7 +473,7 @@ export default function InstalacionShow({
                 </div>
 
                 {unidadesVendidas.length > 0 && (
-                    <div className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
+                    <div className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
                         <h2 className="text-foreground text-xs font-black tracking-wider uppercase">
                             Escanear unidades vendidas (
                             {unidadesVendidas.length - faltantes.length}/
@@ -503,221 +547,223 @@ export default function InstalacionShow({
                 )}
 
                 {/* 2. Equipos Instalados -> Pasan a Equipos del Cliente (§25) */}
-                <div className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                                <Flame className="text-warning-strong size-4" />
-                                2. Extintores / Unidades a Instalar (
-                                {equiposList.length})
-                            </h2>
-                            <p className="text-muted-foreground text-xs">
-                                Se registran en el historial de Equipos del
-                                Cliente (Equipment) sin duplicar tablas.
-                            </p>
-                        </div>
-                        {!isFinalizada && (
-                            <button
-                                type="button"
-                                onClick={addEquipmentRow}
-                                className="border-border bg-muted text-foreground inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95"
-                            >
-                                <Plus className="size-3.5" />
-                                Agregar
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="space-y-3">
-                        {equiposList.map((item, idx) => (
-                            <div
-                                key={idx}
-                                className="border-border bg-muted/40 relative space-y-2 rounded-lg border p-3 text-xs"
-                            >
-                                <div className="border-border flex items-center justify-between border-b pb-1.5">
-                                    <span className="text-foreground font-bold">
-                                        Extintor #{idx + 1}
-                                    </span>
-                                    {!isFinalizada &&
-                                        equiposList.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    removeEquipmentRow(idx)
-                                                }
-                                                className="rounded p-1 text-red-500 hover:bg-red-50"
-                                            >
-                                                <Trash2 className="size-3.5" />
-                                                <span className="sr-only">
-                                                    Quitar extintor
-                                                </span>
-                                            </button>
-                                        )}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                            Agente Extintor
-                                        </label>
-                                        <NativeSelect
-                                            aria-label="Agente Extintor"
-                                            disabled={isFinalizada}
-                                            value={item.tipo_agente}
-                                            onChange={(e) =>
-                                                updateEquipmentRow(
-                                                    idx,
-                                                    'tipo_agente',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
-                                        >
-                                            <OpcionesAgente vacia="Sin registrar" />
-                                        </NativeSelect>
-                                    </div>
-                                    <div>
-                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                            Capacidad
-                                        </label>
-                                        <input
-                                            aria-label="Capacidad"
-                                            type="text"
-                                            disabled={isFinalizada}
-                                            value={item.capacidad}
-                                            onChange={(e) =>
-                                                updateEquipmentRow(
-                                                    idx,
-                                                    'capacidad',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="ej. 6 kg"
-                                            className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                            Serie Interna / Código
-                                        </label>
-                                        <input
-                                            aria-label="Serie Interna / Código"
-                                            type="text"
-                                            disabled={isFinalizada}
-                                            value={item.numero_serie}
-                                            onChange={(e) =>
-                                                updateEquipmentRow(
-                                                    idx,
-                                                    'numero_serie',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Auto-correlativo si vacío"
-                                            className="border-border bg-card w-full rounded-md border p-1.5 font-mono text-xs"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                            Marca
-                                        </label>
-                                        <input
-                                            aria-label="Marca"
-                                            type="text"
-                                            disabled={isFinalizada}
-                                            value={item.marca}
-                                            onChange={(e) =>
-                                                updateEquipmentRow(
-                                                    idx,
-                                                    'marca',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Marca"
-                                            className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
-                                        />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                            Ubicación Exacta
-                                        </label>
-                                        <input
-                                            aria-label="Ubicación Exacta"
-                                            type="text"
-                                            disabled={isFinalizada}
-                                            value={item.ubicacion_actual}
-                                            onChange={(e) =>
-                                                updateEquipmentRow(
-                                                    idx,
-                                                    'ubicacion_actual',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="ej. Pared norte frente a montacargas"
-                                            className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
-                                        />
-                                    </div>
-                                </div>
+                {(formulariosCertificado.length === 0 ||
+                    unidadesVendidas.length > 0 ||
+                    order.equipments.length > 0) && (
+                    <div className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
+                                    <Flame className="text-warning-strong size-4" />
+                                    2. Extintores / Unidades a Instalar (
+                                    {equiposList.length})
+                                </h2>
+                                <p className="text-muted-foreground text-xs">
+                                    Código y ubicación de cada extintor del
+                                    cliente.
+                                </p>
                             </div>
-                        ))}
+                            {!isFinalizada && (
+                                <button
+                                    type="button"
+                                    onClick={addEquipmentRow}
+                                    className="border-border bg-muted text-foreground inline-flex min-h-11 items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95"
+                                >
+                                    <Plus className="size-3.5" />
+                                    Agregar
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="space-y-3">
+                            {equiposList.map((item, idx) => (
+                                <div
+                                    key={idx}
+                                    className="border-border bg-muted/40 relative space-y-2 rounded-lg border p-3 text-xs"
+                                >
+                                    <div className="border-border flex items-center justify-between border-b pb-1.5">
+                                        <span className="text-foreground font-bold">
+                                            Extintor #{idx + 1}
+                                        </span>
+                                        {!isFinalizada &&
+                                            equiposList.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        removeEquipmentRow(idx)
+                                                    }
+                                                    className="rounded p-1 text-red-500 hover:bg-red-50"
+                                                >
+                                                    <Trash2 className="size-3.5" />
+                                                    <span className="sr-only">
+                                                        Quitar extintor
+                                                    </span>
+                                                </button>
+                                            )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
+                                                Agente Extintor
+                                            </label>
+                                            <NativeSelect
+                                                aria-label="Agente Extintor"
+                                                disabled={isFinalizada}
+                                                value={item.tipo_agente}
+                                                onChange={(e) =>
+                                                    updateEquipmentRow(
+                                                        idx,
+                                                        'tipo_agente',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
+                                            >
+                                                <OpcionesAgente vacia="Sin registrar" />
+                                            </NativeSelect>
+                                        </div>
+                                        <div>
+                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
+                                                Capacidad
+                                            </label>
+                                            <input
+                                                aria-label="Capacidad"
+                                                type="text"
+                                                disabled={isFinalizada}
+                                                value={item.capacidad}
+                                                onChange={(e) =>
+                                                    updateEquipmentRow(
+                                                        idx,
+                                                        'capacidad',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="ej. 6 kg"
+                                                className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
+                                                Serie Interna / Código
+                                            </label>
+                                            <input
+                                                aria-label="Serie Interna / Código"
+                                                type="text"
+                                                disabled={isFinalizada}
+                                                value={item.numero_serie}
+                                                onChange={(e) =>
+                                                    updateEquipmentRow(
+                                                        idx,
+                                                        'numero_serie',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Auto-correlativo si vacío"
+                                                className="border-border bg-card w-full rounded-md border p-1.5 font-mono text-xs"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
+                                                Marca
+                                            </label>
+                                            <CampoMarca
+                                                disabled={isFinalizada}
+                                                value={item.marca}
+                                                onChange={(marca) =>
+                                                    updateEquipmentRow(
+                                                        idx,
+                                                        'marca',
+                                                        marca,
+                                                    )
+                                                }
+                                                className="border-border bg-card min-w-0 flex-1 rounded-md border p-1.5 text-xs"
+                                            />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
+                                                Ubicación Exacta
+                                            </label>
+                                            <input
+                                                aria-label="Ubicación Exacta"
+                                                type="text"
+                                                disabled={isFinalizada}
+                                                value={item.ubicacion_actual}
+                                                onChange={(e) =>
+                                                    updateEquipmentRow(
+                                                        idx,
+                                                        'ubicacion_actual',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="ej. Pared norte frente a montacargas"
+                                                className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-
+                )}
                 {/* 3. Certificado Aplicable (§25) */}
-                <div className="border-border bg-card space-y-3 rounded-2xl border p-4 shadow-xs">
-                    <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                        <FileCheck className="text-success-strong size-4" />
-                        3. Certificado Aplicable
-                    </h2>
+                {(formulariosCertificado.length === 0 ||
+                    equiposList.length > 0) && (
+                    <div className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
+                        <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
+                            <FileCheck className="text-success-strong size-4" />
+                            3. Certificado Aplicable
+                        </h2>
 
-                    <label className="text-foreground flex cursor-pointer items-center gap-2 text-xs font-bold">
-                        <input
-                            type="checkbox"
-                            disabled={isFinalizada}
-                            checked={form.data.emitir_certificado}
-                            onChange={(e) =>
-                                form.setData(
-                                    'emitir_certificado',
-                                    e.target.checked,
-                                )
-                            }
-                            className="border-border text-foreground size-4 rounded"
-                        />
-                        <span>
-                            Emitir certificado automático al registrar la
-                            instalación
-                        </span>
-                    </label>
-
-                    {form.data.emitir_certificado && (
-                        <div>
-                            <label className="text-muted-foreground mb-1 block text-xs font-bold">
-                                Tipo de Certificado
-                            </label>
-                            <NativeSelect
-                                aria-label="Tipo de Certificado"
+                        <label className="text-foreground flex cursor-pointer items-center gap-2 text-xs font-bold">
+                            <input
+                                type="checkbox"
                                 disabled={isFinalizada}
-                                value={form.data.tipo_certificado_codigo}
+                                checked={form.data.emitir_certificado}
                                 onChange={(e) =>
                                     form.setData(
-                                        'tipo_certificado_codigo',
-                                        e.target.value,
+                                        'emitir_certificado',
+                                        e.target.checked,
                                     )
                                 }
-                                className="border-border bg-card w-full rounded-lg border p-2 text-xs"
-                            >
-                                {certificateTypes.map((ct) => (
-                                    <option key={ct.id} value={ct.codigo}>
-                                        {ct.nombre} ({ct.codigo})
-                                    </option>
-                                ))}
-                            </NativeSelect>
-                        </div>
-                    )}
-                </div>
+                                className="border-border text-foreground size-4 rounded"
+                            />
+                            <span>
+                                Emitir certificado automático al registrar la
+                                instalación
+                            </span>
+                        </label>
 
+                        {form.data.emitir_certificado && (
+                            <div>
+                                <label className="text-muted-foreground mb-1 block text-xs font-bold">
+                                    Tipo de Certificado
+                                </label>
+                                <NativeSelect
+                                    aria-label="Tipo de Certificado"
+                                    disabled={isFinalizada}
+                                    value={form.data.tipo_certificado_codigo}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'tipo_certificado_codigo',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="border-border bg-card w-full rounded-lg border p-2 text-xs"
+                                >
+                                    {certificateTypes.map((ct) => (
+                                        <option key={ct.id} value={ct.codigo}>
+                                            {ct.nombre} ({ct.codigo})
+                                        </option>
+                                    ))}
+                                </NativeSelect>
+                            </div>
+                        )}
+                    </div>
+                )}
                 {/* 4. Conformidad del Cliente en Sitio (§25, §85.6.2) */}
                 {!isFinalizada && (
-                    <div className="bg-card border-border space-y-3 rounded-2xl border p-4 shadow-sm">
+                    <div className="bg-card border-border space-y-3 rounded-3xl border p-4 shadow-sm">
                         <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
                             <UserCheck className="text-foreground size-4" />
                             4. Conformidad de Instalación en Sitio
@@ -844,13 +890,6 @@ export default function InstalacionShow({
                     </div>
                 )}
             </form>
-
-            <div className="mt-5">
-                <ConversacionOrden
-                    ordenId={order.id}
-                    conversacion={conversacion}
-                />
-            </div>
         </TecnicoCampoLayout>
     );
 }

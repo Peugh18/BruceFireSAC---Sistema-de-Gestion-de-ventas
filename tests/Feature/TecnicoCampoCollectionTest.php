@@ -1,8 +1,10 @@
 <?php
 
+use App\Actions\Equipment\QuickRegisterEquipment;
 use App\Enums\TeamRole;
 use App\Models\Client;
 use App\Models\Equipment;
+use App\Models\Evidencia;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
@@ -52,6 +54,35 @@ test('tecnico campo can view recojos list and detail with custody chain', functi
             ->where('order.codigo', 'OS-RCJ-0001')
             ->has('custodyEvents')
         );
+});
+
+test('campo puede tomar una inspeccion libre y queda asignado a cargo', function () {
+    $service = Service::factory()->create(['nombre' => 'Inspección de operatividad']);
+    $order = ServiceOrder::factory()->create([
+        'service_id' => $service->id,
+        'estado' => 'en_proceso',
+        'departamento_tecnico' => 'campo',
+        'tecnico_id' => null,
+    ]);
+
+    $this->actingAs($this->tecnicoCampo)
+        ->get(route('tecnico-campo.inspecciones.show', [
+            'current_team' => $this->team,
+            'service_order' => $order,
+        ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('asignacion.area', 'campo')
+            ->where('asignacion.tecnico', null)
+            ->where('asignacion.es_mia', false));
+
+    $this->post(route('tecnico-campo.ordenes.tomar', [
+        'current_team' => $this->team,
+        'service_order' => $order,
+    ]))->assertRedirect();
+
+    expect($order->fresh()->tecnico_id)->toBe($this->tecnicoCampo->id)
+        ->and($order->events()->where('payload->accion', 'orden_tomada')->count())->toBe(1);
 });
 
 test('registering collection appends custody chain event to ServiceOrderEvent', function () {
@@ -121,4 +152,62 @@ test('tecnico registra cada extintor y descarga la misma constancia de recepcion
         ]))
         ->assertOk()
         ->assertHeader('content-type', 'application/pdf');
+});
+
+test('recojo espontaneo permite identificar el equipo despues sin inventar datos tecnicos', function () {
+    $client = Client::factory()->create();
+    $service = Service::factory()->create(['nombre' => 'Recarga PQS 6 kg']);
+    $order = ServiceOrder::factory()->create([
+        'client_id' => $client->id,
+        'service_id' => $service->id,
+        'estado' => 'pendiente_recepcion',
+        'departamento_tecnico' => 'campo',
+    ]);
+    $order->lines()->create(['service_id' => $service->id, 'cantidad' => 1]);
+    $order->events()->create(['tipo' => 'creada', 'user_id' => $this->tecnicoCampo->id, 'payload' => ['origen' => 'campo']]);
+
+    $this->actingAs($this->tecnicoCampo)
+        ->post(route('tecnico-campo.recojos.equipos.store', ['current_team' => $this->team, 'service_order' => $order]), [])
+        ->assertRedirect();
+
+    $equipment = $order->equipments()->sole();
+    expect($equipment->tipo_agente)->toBe(QuickRegisterEquipment::DEFAULT_UNREADABLE)
+        ->and($equipment->capacidad)->toBe(QuickRegisterEquipment::DEFAULT_UNREADABLE)
+        ->and($equipment->fecha_venta)->toBeNull()
+        ->and($equipment->proxima_fecha_atencion)->toBeNull()
+        ->and($equipment->proxima_prueba_hidrostatica)->toBeNull();
+});
+
+test('recojo espontaneo exige foto y cantidad exacta antes de pasar a planta', function () {
+    $service = Service::factory()->create();
+    $order = ServiceOrder::factory()->create(['service_id' => $service->id, 'estado' => 'pendiente_recepcion', 'departamento_tecnico' => 'campo']);
+    $order->lines()->create(['service_id' => $service->id, 'cantidad' => 2]);
+    $order->events()->create(['tipo' => 'creada', 'user_id' => $this->tecnicoCampo->id, 'payload' => ['origen' => 'campo']]);
+    $equipment = Equipment::factory()->create(['client_id' => $order->client_id]);
+    $order->equipments()->attach($equipment, ['recibido' => false]);
+    $url = route('tecnico-campo.recojos.store', ['current_team' => $this->team, 'service_order' => $order]);
+    $datos = ['contacto_nombre' => 'Responsable del puesto', 'conformidad_cliente' => true];
+
+    $this->actingAs($this->tecnicoCampo)->post($url, $datos)->assertRedirect()->assertSessionHasErrors('recojo');
+    expect($order->events()->where('payload->eslabon_custodia', 'recojo_campo')->exists())->toBeFalse();
+
+    Evidencia::factory()->create(['service_order_id' => $order->id, 'etapa' => 'recojo']);
+    $this->post($url, $datos)->assertRedirect()->assertSessionHasErrors('recojo');
+    expect($order->fresh()->estado)->toBe('pendiente_recepcion');
+});
+
+test('un recojo sin equipos devuelve un error util sin registrar custodia', function () {
+    $orden = ServiceOrder::factory()->create(['departamento_tecnico' => 'campo', 'estado' => 'pendiente_recepcion']);
+    $this->actingAs($this->tecnicoCampo)->post(route('tecnico-campo.recojos.store', ['current_team' => $this->team, 'service_order' => $orden]), ['contacto_nombre' => 'Cliente Demo', 'conformidad_cliente' => true])
+        ->assertRedirect()->assertSessionHasErrors('recojo');
+    expect($orden->events()->count())->toBe(0);
+});
+
+test('una firma invalida no deja el recojo registrado a medias', function () {
+    $orden = ServiceOrder::factory()->create(['departamento_tecnico' => 'campo', 'estado' => 'pendiente_recepcion']);
+    $equipo = Equipment::factory()->create(['client_id' => $orden->client_id]);
+    $orden->equipments()->attach($equipo);
+    $this->actingAs($this->tecnicoCampo)->post(route('tecnico-campo.recojos.store', ['current_team' => $this->team, 'service_order' => $orden]), ['contacto_nombre' => 'Cliente Demo', 'conformidad_cliente' => true, 'firma' => 'data:image/png;base64,AAAA'])
+        ->assertRedirect()->assertSessionHasErrors('firma');
+    expect($orden->events()->count())->toBe(0)->and($orden->fresh()->departamento_tecnico)->toBe('campo');
 });

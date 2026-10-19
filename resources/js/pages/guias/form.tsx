@@ -1,5 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -44,6 +45,12 @@ type Datos = {
     transportista_razon: string;
     doc_relacionado_tipo: string | null;
     doc_relacionado_numero: string | null;
+    nuevo_vehiculo_placa: string;
+    nuevo_vehiculo_categoria: string;
+    nuevo_conductor_dni: string;
+    nuevo_conductor_nombres: string;
+    nuevo_conductor_apellidos: string;
+    nuevo_conductor_licencia: string;
     items: Item[];
 };
 
@@ -65,14 +72,23 @@ export default function GuiaForm({
         nombres: string;
         apellidos: string;
         dni: string;
+        licencia: string;
     }[];
     motivos: Record<string, string>;
 }) {
     const teamSlug =
         usePage<{ currentTeam?: Team | null }>().props.currentTeam?.slug ?? '';
+    const [nuevoVehiculo, setNuevoVehiculo] = useState(false);
+    const [nuevoConductor, setNuevoConductor] = useState(false);
     // Con un solo vehículo o conductor activo no hay nada que elegir.
     const form = useForm<Datos>({
         ...datos,
+        nuevo_vehiculo_placa: '',
+        nuevo_vehiculo_categoria: 'N',
+        nuevo_conductor_dni: '',
+        nuevo_conductor_nombres: '',
+        nuevo_conductor_apellidos: '',
+        nuevo_conductor_licencia: '',
         transport_vehicle_id:
             datos.transport_vehicle_id ||
             (vehiculos.length === 1 ? vehiculos[0].id : ''),
@@ -85,6 +101,7 @@ export default function GuiaForm({
         id: keyof Datos,
         etiqueta: string,
         tipo: 'text' | 'date' | 'number' = 'text',
+        soloLectura = false,
     ) => {
         // Solo los campos de texto: un campo de más (como `items`) daría
         // "[object Object]" al convertirlo.
@@ -100,11 +117,13 @@ export default function GuiaForm({
         const documento =
             id === 'transportista_ruc'
                 ? ('ruc' as const)
-                : id === 'destinatario_num_doc'
-                  ? form.data.destinatario_tipo_doc === '1'
-                      ? ('dni' as const)
-                      : ('ruc' as const)
-                  : null;
+                : id === 'nuevo_conductor_dni'
+                  ? ('dni' as const)
+                  : id === 'destinatario_num_doc'
+                    ? form.data.destinatario_tipo_doc === '1'
+                        ? ('dni' as const)
+                        : ('ruc' as const)
+                    : null;
 
         return (
             <div>
@@ -113,6 +132,7 @@ export default function GuiaForm({
                     <InputPeru
                         tipo={documento}
                         id={`guia-${id}`}
+                        readOnly={soloLectura}
                         value={texto}
                         onChange={(event) =>
                             form.setData(id, event.target.value)
@@ -123,6 +143,7 @@ export default function GuiaForm({
                         id={`guia-${id}`}
                         type={tipo}
                         step={tipo === 'number' ? '0.001' : undefined}
+                        readOnly={soloLectura}
                         value={texto}
                         onChange={(event) =>
                             form.setData(id, event.target.value)
@@ -137,14 +158,6 @@ export default function GuiaForm({
             </div>
         );
     };
-
-    const cambiarItem = (indice: number, cambios: Partial<Item>) =>
-        form.setData(
-            'items',
-            form.data.items.map((item, i) =>
-                i === indice ? { ...item, ...cambios } : item,
-            ),
-        );
 
     return (
         <RoleLayout
@@ -196,6 +209,7 @@ export default function GuiaForm({
                     <div>
                         <Label htmlFor="guia-motivo">Motivo del traslado</Label>
                         <NativeSelect
+                            disabled
                             id="guia-motivo"
                             className={SELECT}
                             value={form.data.motivo}
@@ -210,7 +224,7 @@ export default function GuiaForm({
                             ))}
                         </NativeSelect>
                     </div>
-                    {campo('motivo_descripcion', 'Descripción del motivo')}
+
                     <div>
                         <Label htmlFor="guia-modalidad">Modalidad</Label>
                         <NativeSelect
@@ -240,6 +254,7 @@ export default function GuiaForm({
                         <div>
                             <Label htmlFor="guia-vehiculo">Vehículo</Label>
                             <NativeSelect
+                                disabled={nuevoVehiculo}
                                 id="guia-vehiculo"
                                 className={SELECT}
                                 value={form.data.transport_vehicle_id}
@@ -260,6 +275,48 @@ export default function GuiaForm({
                                     </option>
                                 ))}
                             </NativeSelect>
+                            <label className="mt-3 flex min-h-11 items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={nuevoVehiculo}
+                                    onChange={(event) => {
+                                        setNuevoVehiculo(event.target.checked);
+                                        form.setData(
+                                            'transport_vehicle_id',
+                                            '',
+                                        );
+                                        form.setData(
+                                            'nuevo_vehiculo_placa',
+                                            '',
+                                        );
+                                    }}
+                                />{' '}
+                                Agregar vehículo
+                            </label>
+                            {nuevoVehiculo && (
+                                <div className="space-y-3">
+                                    {campo('nuevo_vehiculo_placa', 'Placa')}
+                                    <Label htmlFor="guia-categoria">
+                                        Categoría del vehículo
+                                    </Label>
+                                    <NativeSelect
+                                        id="guia-categoria"
+                                        value={
+                                            form.data.nuevo_vehiculo_categoria
+                                        }
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'nuevo_vehiculo_categoria',
+                                                event.target.value,
+                                            )
+                                        }
+                                    >
+                                        <option value="N">N (camión)</option>
+                                        <option value="M1">M1 (auto)</option>
+                                        <option value="L">L (moto)</option>
+                                    </NativeSelect>
+                                </div>
+                            )}
                             {form.errors.transport_vehicle_id ? (
                                 <p className="text-destructive-strong mt-1 text-xs">
                                     {form.errors.transport_vehicle_id}
@@ -269,6 +326,7 @@ export default function GuiaForm({
                         <div>
                             <Label htmlFor="guia-conductor">Conductor</Label>
                             <NativeSelect
+                                disabled={nuevoConductor}
                                 id="guia-conductor"
                                 className={SELECT}
                                 value={form.data.driver_id}
@@ -287,10 +345,43 @@ export default function GuiaForm({
                                     >
                                         {conductor.apellidos},{' '}
                                         {conductor.nombres} · DNI{' '}
-                                        {conductor.dni}
+                                        {conductor.dni} · Licencia{' '}
+                                        {conductor.licencia}
                                     </option>
                                 ))}
                             </NativeSelect>
+                            <label className="mt-3 flex min-h-11 items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={nuevoConductor}
+                                    onChange={(event) => {
+                                        setNuevoConductor(event.target.checked);
+                                        form.setData('driver_id', '');
+                                        form.setData('nuevo_conductor_dni', '');
+                                    }}
+                                />{' '}
+                                Agregar conductor
+                            </label>
+                            {nuevoConductor && (
+                                <div className="space-y-3">
+                                    {campo(
+                                        'nuevo_conductor_dni',
+                                        'DNI del conductor',
+                                    )}
+                                    {campo(
+                                        'nuevo_conductor_nombres',
+                                        'Nombres del conductor',
+                                    )}
+                                    {campo(
+                                        'nuevo_conductor_apellidos',
+                                        'Apellidos del conductor',
+                                    )}
+                                    {campo(
+                                        'nuevo_conductor_licencia',
+                                        'Licencia de conducir',
+                                    )}
+                                </div>
+                            )}
                             {form.errors.driver_id ? (
                                 <p className="text-destructive-strong mt-1 text-xs">
                                     {form.errors.driver_id}
@@ -314,6 +405,7 @@ export default function GuiaForm({
                             Tipo de documento del destinatario
                         </Label>
                         <NativeSelect
+                            disabled
                             id="guia-destinatario_tipo_doc"
                             className={SELECT}
                             value={form.data.destinatario_tipo_doc}
@@ -328,8 +420,18 @@ export default function GuiaForm({
                             <option value="1">DNI</option>
                         </NativeSelect>
                     </div>
-                    {campo('destinatario_num_doc', 'Número de documento')}
-                    {campo('destinatario_nombre', 'Nombre o razón social')}
+                    {campo(
+                        'destinatario_num_doc',
+                        'Número de documento',
+                        'text',
+                        true,
+                    )}
+                    {campo(
+                        'destinatario_nombre',
+                        'Nombre o razón social',
+                        'text',
+                        true,
+                    )}
                 </Card>
 
                 <Card className="grid gap-3 p-4 sm:grid-cols-2">
@@ -340,7 +442,11 @@ export default function GuiaForm({
                 </Card>
 
                 <Card className="space-y-3 p-4">
-                    <h2 className="font-semibold">Bienes a trasladar</h2>
+                    <h2 className="font-semibold">Bienes de la venta</h2>
+                    <p className="text-muted-foreground text-sm">
+                        Se copian del comprobante. Peso total en kilogramos;
+                        cantidades según la unidad de cada bien.
+                    </p>
                     {form.data.items.map((item, indice) => (
                         <div
                             key={`${item.codigo}-${indice}`}
@@ -349,23 +455,16 @@ export default function GuiaForm({
                             <Input
                                 aria-label="Descripción del bien"
                                 value={item.descripcion}
-                                onChange={(event) =>
-                                    cambiarItem(indice, {
-                                        descripcion: event.target.value,
-                                    })
-                                }
+                                readOnly
                             />
                             <Input
-                                aria-label="Cantidad"
+                                aria-label={`Cantidad (${item.unidad})`}
+                                title={`Unidad: ${item.unidad}`}
                                 type="number"
                                 min={0}
                                 step="0.001"
                                 value={item.cantidad}
-                                onChange={(event) =>
-                                    cambiarItem(indice, {
-                                        cantidad: event.target.value,
-                                    })
-                                }
+                                readOnly
                             />
                             <Input
                                 aria-label="Peso en kg (viene del producto)"

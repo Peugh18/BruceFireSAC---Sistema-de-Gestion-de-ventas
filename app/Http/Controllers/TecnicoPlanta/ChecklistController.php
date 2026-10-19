@@ -9,69 +9,9 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class ChecklistController extends Controller
 {
-    /**
-     * Muestra la pantalla del checklist técnico digital para un equipo de la orden (§19).
-     */
-    public function create(
-        Team $current_team,
-        ServiceOrder $service_order,
-        Equipment $equipment
-    ): Response {
-        // Solo los extintores de esta orden (no se ven los de otro cliente).
-        abort_unless($service_order->equipments()->whereKey($equipment->id)->exists(), 404);
-
-        $service_order->load(['client:id,nombre_comercial,razon_social,numero_documento', 'sede:id,nombre']);
-
-        // Historial previo de checklists para este equipo
-        $previousChecklists = $equipment->serviceOrders()
-            ->with(['checklists' => fn ($q) => $q->where('equipment_id', $equipment->id)->latest('id')])
-            ->get()
-            ->pluck('checklists')
-            ->flatten()
-            ->take(3);
-
-        $esCO2 = str_contains(strtoupper((string) $equipment->tipo_agente), 'CO2');
-
-        // Configuración de elementos sugeridos según tipo (§19.1)
-        $elementos = array_map(function ($key, $label) use ($esCO2) {
-            $defaultEstado = ($esCO2 && $key === 'manometro') ? 'no_aplica' : 'conforme';
-
-            return [
-                'clave' => $key,
-                'nombre' => $label,
-                'default_estado' => $defaultEstado,
-                'aplica' => ! ($esCO2 && $key === 'manometro'),
-            ];
-        }, array_keys(ProcessChecklist::ELEMENTOS), array_values(ProcessChecklist::ELEMENTOS));
-
-        return Inertia::render('tecnico-planta/checklist/create', [
-            'order' => [
-                'id' => $service_order->id,
-                'codigo' => $service_order->codigo,
-                'cliente' => $service_order->client->nombre_comercial ?: $service_order->client->razon_social,
-                'tipo_servicio' => $service_order->service->nombre,
-                'estado' => $service_order->estado,
-            ],
-            'equipment' => [
-                'id' => $equipment->id,
-                'numero_serie' => $equipment->numero_serie,
-                'tipo_agente' => $equipment->tipo_agente,
-                'capacidad' => $equipment->capacidad,
-                'marca' => $equipment->marca,
-                'serie_fabricante' => $equipment->serie_fabricante,
-                'anio_fabricacion' => $equipment->anio_fabricacion,
-                'ubicacion_actual' => $equipment->ubicacion_actual,
-            ],
-            'elementos' => $elementos,
-            'previousChecklists' => $previousChecklists,
-        ]);
-    }
-
     /**
      * Guarda el checklist técnico digital y dispara deficiencias si las hay (§19, §20).
      */
@@ -113,24 +53,9 @@ class ChecklistController extends Controller
                 ? 'Checklist registrado con observaciones. Se generaron las deficiencias correspondientes.'
                 : 'Checklist registrado exitosamente: Todos los componentes conformes.');
 
-        // Con todos los extintores recibidos ya revisados, el siguiente paso es
-        // terminar el trabajo: se lleva directo a la ejecución en vez de
-        // devolverlo a la recepción.
-        $conChecklist = $service_order->checklists()->pluck('equipment_id')->unique();
-        $recibidos = $service_order->equipments()->wherePivot('recibido', true)->get();
-        $faltan = $recibidos->reject(fn (Equipment $eq) => $conChecklist->contains($eq->id));
-
-        if ($recibidos->isNotEmpty() && $faltan->isEmpty() && $service_order->fresh()->estado === 'en_proceso') {
-            return redirect()
-                ->route('tecnico-planta.ejecucion.show', ['current_team' => $current_team, 'service_order' => $service_order])
-                ->with('success', $msg.' Ya están todos revisados: termina el trabajo y emite los certificados.');
-        }
-
+        // Vuelve a la pantalla de la orden: ella sola abre el paso que sigue.
         return redirect()
-            ->route('tecnico-planta.recepciones.show', [
-                'current_team' => $current_team,
-                'service_order' => $service_order,
-            ])
+            ->route('tecnico-planta.ordenes.show', ['current_team' => $current_team, 'service_order' => $service_order])
             ->with('success', $msg);
     }
 }

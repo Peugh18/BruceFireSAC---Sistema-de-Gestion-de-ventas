@@ -24,11 +24,9 @@ class SignerController extends Controller
      */
     public function index(Team $current_team): Response
     {
-        $tipos = CertificateType::query()->with('signers')->orderBy('nombre')->get();
-
         return Inertia::render('gerente/configuracion/firmas', [
             'firmantes' => Signer::query()
-                ->with('certificateTypes:id,codigo')
+                ->with('certificateTypes:id,codigo,nombre')
                 ->orderByDesc('activo')
                 ->orderBy('nombre')
                 ->get()
@@ -40,14 +38,9 @@ class SignerController extends Controller
                     'activo' => $signer->activo,
                     'firma_url' => $signer->firma_path ? route('gerente.configuracion.firmas.imagen', ['current_team' => $current_team, 'firmante' => $signer, 'tipo' => 'firma', 'v' => md5($signer->firma_path)]) : null,
                     'sello_url' => $signer->sello_path ? route('gerente.configuracion.firmas.imagen', ['current_team' => $current_team, 'firmante' => $signer, 'tipo' => 'sello', 'v' => md5($signer->sello_path)]) : null,
-                    'tipos' => $signer->certificateTypes->pluck('codigo')->values(),
+                    // Solo para mostrar: quién firma cada certificado se elige en su editor.
+                    'tipos' => $signer->certificateTypes->map(fn (CertificateType $tipo) => ['id' => $tipo->id, 'nombre' => $tipo->nombre, 'cargo' => $tipo->pivot->cargo ?: $signer->cargo])->values(),
                 ]),
-            'tipos' => $tipos->map(fn (CertificateType $tipo) => [
-                'codigo' => $tipo->codigo,
-                'nombre' => $tipo->nombre,
-                'firmantes' => $tipo->signers->pluck('nombre')->values(),
-                'sin_firma' => $tipo->signers->isEmpty() || $tipo->signers->contains(fn (Signer $signer) => $signer->firma_path === null),
-            ]),
         ]);
     }
 

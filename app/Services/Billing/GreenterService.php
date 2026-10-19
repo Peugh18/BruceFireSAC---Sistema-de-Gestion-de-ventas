@@ -123,7 +123,7 @@ class GreenterService
                     ->setCodMedioPago((string) config('billing.detraccion.cod_medio_pago'))
                     ->setPercent($sale->estado !== 'borrador' && $sale->monto_detraccion_snapshot !== null
                         ? round($detraccionCalc['monto'] / (float) $sale->total * 100, 2)
-                        : (float) config('billing.detraccion.tasa') * 100)
+                        : $detraccionCalc['porcentaje'])
                     ->setMount($detraccionCalc['monto'])
             );
 
@@ -131,7 +131,7 @@ class GreenterService
                 ...$invoice->getLegends(),
                 (new Legend)
                     ->setCode('2006')
-                    ->setValue('Operación sujeta al Sistema de Pago de Obligaciones Tributarias'),
+                    ->setValue('Operación sujeta al Sistema de Pago de Obligaciones Tributarias con el Gobierno Central'),
             ]);
         }
 
@@ -423,6 +423,10 @@ class GreenterService
             ->setTipAfeIgv($tipAfeIgv)
             ->setTotalImpuestos($igvLinea)
             ->setMtoPrecioUnitario($precioUnitario);
+
+        if (($codigoSunat = $productOrService->codigoSunat()) !== null) {
+            $detail->setCodProdSunat($codigoSunat);
+        }
 
         if ((float) $item->descuento > 0) {
             $detail->setDescuentos([

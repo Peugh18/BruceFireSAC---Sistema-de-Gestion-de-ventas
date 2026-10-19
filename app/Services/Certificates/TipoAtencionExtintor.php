@@ -2,6 +2,7 @@
 
 namespace App\Services\Certificates;
 
+use App\Models\Equipment;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
@@ -38,9 +39,27 @@ class TipoAtencionExtintor
      */
     public static function deOrden(ServiceOrder $order): string
     {
-        $order->loadMissing('service');
+        $order->loadMissing('service', 'lines.service');
+        $servicios = $order->lines->isNotEmpty()
+            ? $order->lines->pluck('service')
+            : collect([$order->service]);
+        $atenciones = $servicios
+            ->map(fn (?Service $service): string => self::deServicio($service))
+            ->filter()
+            ->unique()
+            ->all();
 
-        return self::deServicio($order->service);
+        return implode(' / ', array_intersect(['recarga', 'mantenimiento'], $atenciones));
+    }
+
+    public static function deEquipoEnOrden(ServiceOrder $order, Equipment $equipment): string
+    {
+        $order->loadMissing('service', 'lines.service');
+        $lineId = $equipment->getRelation('pivot')->getAttribute('service_order_line_id');
+        $line = $lineId === null ? null : $order->lines->firstWhere('id', (int) $lineId);
+        $service = $line->service ?? $order->service;
+
+        return self::deServicio($service);
     }
 
     /**
@@ -51,6 +70,10 @@ class TipoAtencionExtintor
     {
         if ($service === null) {
             return '';
+        }
+
+        if ($service->tipoDeServicio?->atencion !== null) {
+            return $service->tipoDeServicio->atencion;
         }
 
         if (in_array($service->categoria, ['recarga', 'recarga_mantenimiento'], true)

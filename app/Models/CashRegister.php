@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Database\Factories\CashRegisterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -26,6 +28,7 @@ use Illuminate\Validation\ValidationException;
  * @property Carbon|null $updated_at
  * @property-read User $vendedor
  * @property-read Sede|null $sede
+ * @property-read Collection<int, CashRegisterWithdrawal> $salidas
  */
 #[Fillable([
     'vendedor_id',
@@ -69,6 +72,25 @@ class CashRegister extends Model
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
+    }
+
+    /**
+     * @return HasMany<CashRegisterWithdrawal, $this>
+     */
+    public function salidas(): HasMany
+    {
+        return $this->hasMany(CashRegisterWithdrawal::class);
+    }
+
+    /**
+     * Efectivo que debería haber en caja: fondo inicial + efectivo cobrado
+     * (menos devuelto y anulado) - salidas de dinero del turno.
+     */
+    public function efectivoEsperado(): float
+    {
+        $efectivo = $this->movimientosPorFormaDePago()['efectivo'] ?? 0.0;
+
+        return round((float) $this->monto_apertura + $efectivo - (float) $this->salidas()->sum('monto'), 2);
     }
 
     public function estaAbierto(): bool

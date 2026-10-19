@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreSedeRequest;
 use App\Http\Requests\Gerente\UpdateSedeRequest;
 use App\Models\InventoryMovement;
+use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
 use App\Models\Sede;
 use App\Models\Team;
@@ -110,11 +111,17 @@ class SedeController extends Controller
             return;
         }
 
-        if ($nuevoTipo === 'tienda' && $sede->tiendas()->exists()) {
+        if (in_array($nuevoTipo, ['tienda', 'taller'], true) && $sede->tiendas()->exists()) {
             $tiendas = $sede->tiendas()->pluck('nombre')->implode(', ');
 
             throw ValidationException::withMessages([
                 'tipo' => "{$sede->nombre} abastece a {$tiendas}: conéctalas primero a otro almacén.",
+            ]);
+        }
+
+        if ($nuevoTipo === 'taller' && ($this->tieneStock($sede) || $this->tieneTrasladosPendientes($sede))) {
+            throw ValidationException::withMessages([
+                'tipo' => 'Traslada el stock a un almacén antes de convertir esta sede en Taller.',
             ]);
         }
 
@@ -138,6 +145,9 @@ class SedeController extends Controller
     public function toggleStatus(Request $request, Team $current_team, Sede $sede): RedirectResponse
     {
         if ($sede->activo) {
+            if ($this->tieneTrasladosPendientes($sede)) {
+                return back()->with('error', 'Completa los traslados pendientes de este almacén antes de desactivarlo.');
+            }
             if ($sede->tiendas()->where('activo', true)->exists()) {
                 return redirect()->back()
                     ->with('error', 'No se puede desactivar la sede porque tiene tiendas activas que sacan stock de ella.');
@@ -172,7 +182,7 @@ class SedeController extends Controller
      */
     protected function tieneStock(Sede $sede): bool
     {
-        if (InventoryUnit::query()->where('sede_almacen_id', $sede->id)->where('estado', 'disponible')->exists()) {
+        if (InventoryUnit::query()->where('sede_almacen_id', $sede->id)->whereIn('estado', ['disponible', 'reservado', 'en_transito'])->exists()) {
             return true;
         }
 
@@ -184,5 +194,11 @@ class SedeController extends Controller
             ->havingRaw('SUM(inventory_movements.cantidad) > 0')
             ->select('inventory_movements.product_id')
             ->exists();
+    }
+
+    protected function tieneTrasladosPendientes(Sede $sede): bool
+    {
+        return InventoryTransfer::query()->whereIn('estado', [InventoryTransfer::PENDIENTE_DESPACHO, InventoryTransfer::EN_TRANSITO])
+            ->where(fn ($query) => $query->where('origen_sede_id', $sede->id)->orWhere('destino_sede_id', $sede->id))->exists();
     }
 }

@@ -7,6 +7,7 @@ use App\Enums\TeamRole;
 use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,11 +18,16 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesAndPermissionsSeeder::class);
 
+        // Catálogo 25 de SUNAT, si ya se convirtió el archivo oficial a CSV.
+        if (is_readable(database_path('data/sunat_codigos_producto.csv'))) {
+            Artisan::call('sunat:importar-codigos-producto');
+        }
+
         // En producción no se crean usuarios de demostración (su contraseña es
         // conocida): el primer Gerente se crea con sistema:crear-gerente y él
         // registra las sedes y al personal.
         if (app()->environment('production')) {
-            $this->call(CertificateTypeSeeder::class);
+            $this->call([CertificateTypeSeeder::class, TipoDeServicioSeeder::class]);
 
             return;
         }
@@ -45,6 +51,11 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $taller = Sede::firstOrCreate(
+            ['nombre' => 'Taller de recargas'],
+            ['tipo' => 'taller', 'ubigeo' => '130101', 'activo' => true],
+        );
+
         $vendedor = User::firstOrCreate(
             ['email' => 'vendedor@brucefire.pe'],
             [
@@ -61,8 +72,8 @@ class DatabaseSeeder extends Seeder
         $demoUsers = [
             ['name' => 'Gerente Demo', 'email' => 'gerente@brucefire.pe', 'role' => 'Gerente', 'sede_id' => null],
             ['name' => 'Almacén Demo', 'email' => 'almacen@brucefire.pe', 'role' => 'Almacen', 'sede_id' => $almacen->id],
-            ['name' => 'Técnico Planta Demo', 'email' => 'tecnico.planta@brucefire.pe', 'role' => 'TecnicoPlanta', 'sede_id' => $almacen->id],
-            ['name' => 'Técnico Campo Demo', 'email' => 'tecnico.campo@brucefire.pe', 'role' => 'TecnicoCampo', 'sede_id' => $almacen->id],
+            ['name' => 'Técnico Planta Demo', 'email' => 'tecnico.planta@brucefire.pe', 'role' => 'TecnicoPlanta', 'sede_id' => $taller->id],
+            ['name' => 'Técnico Campo Demo', 'email' => 'tecnico.campo@brucefire.pe', 'role' => 'TecnicoCampo', 'sede_id' => $taller->id],
         ];
 
         foreach ($demoUsers as $demo) {
@@ -80,6 +91,6 @@ class DatabaseSeeder extends Seeder
             $user->forceFill(['current_team_id' => $team->id, 'sede_id' => $demo['sede_id']])->save();
         }
 
-        $this->call(CertificateTypeSeeder::class);
+        $this->call([CertificateTypeSeeder::class, TipoDeServicioSeeder::class]);
     }
 }

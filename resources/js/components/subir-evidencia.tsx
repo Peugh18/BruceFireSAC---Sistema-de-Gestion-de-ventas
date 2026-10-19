@@ -6,6 +6,13 @@ import { show as verEvidencia } from '@/routes/evidencias';
 import type { Team } from '@/types';
 import { toast } from 'sonner';
 import { NativeSelect } from '@/components/ui/native-select';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 
 export interface EvidenciaListada {
     id: number;
@@ -20,6 +27,7 @@ interface Props {
     titulo: string;
     evidencias?: EvidenciaListada[];
     equipos?: { id: number; serie: string }[];
+    soloLectura?: boolean;
 }
 
 /** Sube fotos sueltas de la orden (antes, después…) con la cámara del celular. */
@@ -29,6 +37,7 @@ export default function SubirEvidencia({
     titulo,
     evidencias = [],
     equipos = [],
+    soloLectura = false,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const equipo = currentTeam?.slug ?? '';
@@ -67,7 +76,7 @@ export default function SubirEvidencia({
                 <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
                     {titulo} ({propias.length})
                 </span>
-                {equipos.length > 0 && (
+                {!soloLectura && equipos.length > 0 && (
                     <NativeSelect
                         aria-label="Extintor de la foto"
                         value={equipoId}
@@ -82,7 +91,9 @@ export default function SubirEvidencia({
                         ))}
                     </NativeSelect>
                 )}
-                <BotonFoto onFoto={subir} etiqueta="Agregar foto" />
+                {!soloLectura && (
+                    <BotonFoto onFoto={subir} etiqueta="Agregar foto" />
+                )}
                 {subiendo && (
                     <span className="text-xs text-neutral-500">
                         Subiendo...
@@ -92,24 +103,39 @@ export default function SubirEvidencia({
             {propias.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {propias.map((e) => (
-                        <a
-                            key={e.id}
-                            href={verEvidencia.url({
-                                current_team: equipo,
-                                evidencia: e.id,
-                            })}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            <img
-                                src={verEvidencia.url({
-                                    current_team: equipo,
-                                    evidencia: e.id,
-                                })}
-                                alt={`Foto ${titulo.toLowerCase()}`}
-                                className="h-16 w-16 rounded-lg object-cover"
-                            />
-                        </a>
+                        <Dialog key={e.id}>
+                            <DialogTrigger asChild>
+                                <button
+                                    type="button"
+                                    aria-label={`Ver foto ${titulo.toLowerCase()} ${e.id}`}
+                                    className="focus-visible:ring-ring rounded-lg focus-visible:ring-2 focus-visible:outline-none"
+                                >
+                                    <img
+                                        src={verEvidencia.url({
+                                            current_team: equipo,
+                                            evidencia: e.id,
+                                        })}
+                                        alt={`Foto ${titulo.toLowerCase()}`}
+                                        className="h-16 w-16 rounded-lg object-cover"
+                                    />
+                                </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-h-[90dvh] overflow-y-auto">
+                                <DialogTitle>{titulo}</DialogTitle>
+                                <DialogDescription>
+                                    Foto vinculada a esta orden
+                                    {e.equipment_id ? ' y a su extintor' : ''}.
+                                </DialogDescription>
+                                <img
+                                    src={verEvidencia.url({
+                                        current_team: equipo,
+                                        evidencia: e.id,
+                                    })}
+                                    alt={`Foto ${titulo.toLowerCase()}`}
+                                    className="max-h-[70dvh] w-full object-contain"
+                                />
+                            </DialogContent>
+                        </Dialog>
                     ))}
                 </div>
             )}

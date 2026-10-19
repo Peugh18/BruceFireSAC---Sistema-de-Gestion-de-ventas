@@ -286,6 +286,9 @@
             <div class="box-title">Cuotas del crédito</div>
             <table class="mini">
                 <tr><th>Cuota</th><th>Vencimiento</th><th>Moneda</th><th style="text-align: right;">Importe</th></tr>
+                @if($detraccion['aplica'])
+                    <tr><td colspan="3">Monto neto pendiente de pago</td><td class="num">{{ number_format($netoPendiente, 2) }}</td></tr>
+                @endif
                 @foreach($sale->installments as $installment)
                     <tr>
                         <td>{{ $installment->numero_cuota }}</td>
@@ -300,11 +303,16 @@
 
     @if($detraccion['aplica'])
         <div class="box">
-            <div class="box-title">Operación sujeta al Sistema de Pago de Obligaciones Tributarias (Detracción)</div>
-            Código de bien/servicio: {{ $detraccion['codigo_bien'] }} (Catálogo 54) — Monto de la detracción: S/ {{ number_format($detraccion['monto'], 2) }}
-            @if($company->cuenta_detraccion)
-                <br>Depositar en la cuenta del Banco de la Nación N.° {{ $company->cuenta_detraccion }}
-            @endif
+            <div class="box-title">Información de la detracción</div>
+            <table class="mini">
+                <tr><td>Leyenda</td><td>Operación sujeta al Sistema de Pago de Obligaciones Tributarias con el Gobierno Central</td></tr>
+                <tr><td>Bien o servicio</td><td>{{ \App\Support\CatalogosSunat::detraccionConNombre($detraccion['codigo_bien']) }}</td></tr>
+                <tr><td>Medio de pago</td><td>{{ \App\Support\CatalogosSunat::medioDePagoConNombre((string) ($detraccion['medio_pago'] ?? config('billing.detraccion.cod_medio_pago'))) }}</td></tr>
+                @if($company->cuenta_detraccion)
+                    <tr><td>Nro. Cta. Banco de la Nación</td><td>{{ $company->cuenta_detraccion }}</td></tr>
+                @endif
+                <tr><td>Porcentaje: {{ rtrim(rtrim(number_format($detraccion['porcentaje'] ?? ((float) $montos['total'] > 0 ? (float) $detraccion['monto'] / (float) $montos['total'] * 100 : 0), 2), '0'), '.') }} %</td><td>Monto de la detracción: S/ {{ number_format($detraccion['monto'], 2) }}</td></tr>
+            </table>
         </div>
     @endif
 

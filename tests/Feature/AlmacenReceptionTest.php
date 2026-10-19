@@ -423,3 +423,31 @@ test('una recepcion no acepta dos equipos con la misma serie de fabrica', functi
 
     expect(Reception::count())->toBe(0);
 });
+
+test('almacen no crea productos al recibir: solo el gerente los registra', function () {
+    $user = almacenUserForReceptionTest();
+    $sede = Sede::factory()->create(['tipo' => 'almacen', 'activo' => true]);
+
+    $this->actingAs($user)
+        ->post(route('almacen.recepciones.store', ['current_team' => $user->currentTeam]), [
+            'proveedor' => 'Proveedor nuevo SAC',
+            'fecha' => today()->toDateString(),
+            'sede_almacen_id' => $sede->id,
+            'items' => [[
+                'cantidad' => 4,
+                'cantidad_conforme' => 4,
+                'costo_unitario' => 12.50,
+                'nuevo_producto' => [
+                    'codigo' => 'REP-VALVULA-01',
+                    'nombre' => 'Válvula de repuesto',
+                    'categoria' => 'repuesto',
+                    'unidad_medida' => 'NIU',
+                    'serializado' => false,
+                ],
+            ]],
+        ])
+        ->assertSessionHasErrors('items.0.product_id');
+
+    $this->assertDatabaseMissing('products', ['codigo' => 'REP-VALVULA-01']);
+    $this->assertDatabaseCount('inventory_movements', 0);
+});

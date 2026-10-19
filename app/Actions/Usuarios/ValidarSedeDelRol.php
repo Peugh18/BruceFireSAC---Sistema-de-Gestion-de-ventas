@@ -24,6 +24,7 @@ class ValidarSedeDelRol
         'tienda' => 'una tienda',
         'almacen' => 'un almacén',
         'mixta' => 'una sede mixta',
+        'taller' => 'un taller',
     ];
 
     public function handle(?string $rol, ?Sede $sede, string $campo = 'sede_id'): void

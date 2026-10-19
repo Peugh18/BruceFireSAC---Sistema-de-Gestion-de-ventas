@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\AgenteController;
 use App\Http\Controllers\ChispaController;
 use App\Http\Controllers\ConversacionOrdenController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EquipmentSheetController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\PublicCertificateVerificationController;
 use App\Http\Controllers\PublicQuotePdfController;
 use App\Http\Controllers\UbigeoController;
@@ -30,6 +32,7 @@ Route::prefix('{current_team}')
         // Conversación y evidencias de la orden (Fase D): vendedor, técnicos y Gerente.
         Route::middleware('role:Gerente|Vendedor|TecnicoPlanta|TecnicoCampo')->group(function () {
             Route::post('ordenes/{service_order}/mensajes', [ConversacionOrdenController::class, 'mensaje'])->name('ordenes.mensajes.store');
+            Route::post('ordenes/{service_order}/mensajes/leido', [ConversacionOrdenController::class, 'leido'])->name('ordenes.mensajes.leido');
             Route::post('ordenes/{service_order}/evidencias', [ConversacionOrdenController::class, 'guardarEvidencia'])->name('ordenes.evidencias.store');
             Route::get('evidencias/{evidencia}', [ConversacionOrdenController::class, 'evidencia'])->name('evidencias.show');
             Route::get('equipos/{equipment}', [EquipmentSheetController::class, 'show'])->name('equipos.show');
@@ -47,6 +50,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('ubigeos', UbigeoController::class)->name('ubigeos.buscar');
     Route::post('asistente', ChispaController::class)->middleware('throttle:20,1')->name('asistente');
     Route::patch('asistente/{registro}', [ChispaController::class, 'valorar'])->middleware('throttle:60,1')->name('asistente.valorar');
+
+    // Agentes extintores: se agregan, renombran o quitan desde un modal en los formularios.
+    Route::middleware('role:Gerente|Vendedor|TecnicoPlanta|Almacen')->group(function () {
+        Route::get('agentes', [AgenteController::class, 'index'])->name('agentes.index');
+        Route::post('agentes', [AgenteController::class, 'store'])->name('agentes.store');
+        Route::patch('agentes/{agente}', [AgenteController::class, 'update'])->name('agentes.update');
+        Route::delete('agentes/{agente}', [AgenteController::class, 'destroy'])->name('agentes.destroy');
+    });
+
+    // Marcas de extintor: igual que los agentes, desde un modal en los formularios.
+    Route::middleware('role:Gerente|Vendedor|TecnicoPlanta|TecnicoCampo|Almacen')->group(function () {
+        Route::get('marcas', [MarcaController::class, 'index'])->name('marcas.index');
+        Route::post('marcas', [MarcaController::class, 'store'])->name('marcas.store');
+        Route::patch('marcas/{marca}', [MarcaController::class, 'update'])->name('marcas.update');
+        Route::delete('marcas/{marca}', [MarcaController::class, 'destroy'])->name('marcas.destroy');
+    });
 });
 
 require __DIR__.'/settings.php';

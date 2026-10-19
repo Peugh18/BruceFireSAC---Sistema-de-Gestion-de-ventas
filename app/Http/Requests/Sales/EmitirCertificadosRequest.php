@@ -28,6 +28,8 @@ class EmitirCertificadosRequest extends FormRequest
             'grupos.*.unidades' => ['present', 'array'],
             'grupos.*.unidades.*.equipment_id' => ['required', 'integer', 'distinct', 'exists:equipment,id'],
             'grupos.*.unidades.*.numero_cliente' => ['nullable', 'string', 'max:40'],
+            // La serie de fábrica que faltaba: se llena aquí mismo.
+            'grupos.*.unidades.*.serie_fabricante' => ['nullable', 'string', 'max:100'],
             // Prueba hidrostática: lo que registró el técnico (C2).
             'grupos.*.unidades.*.fecha_ultima_ph' => ['nullable', 'date', 'before_or_equal:today'],
             'grupos.*.unidades.*.presion_ph' => ['nullable', 'string', 'max:20'],

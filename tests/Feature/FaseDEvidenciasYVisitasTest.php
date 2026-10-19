@@ -134,7 +134,7 @@ test('el tecnico de planta ya puede responder en la conversacion de la orden', f
 
     $this->actingAs($planta)->post(($this->url)('ordenes.mensajes.store'), ['mensaje' => 'Recibido, reviso hoy'])->assertSessionHasNoErrors();
 
-    $this->actingAs($planta)->get(($this->url)('tecnico-planta.ejecucion.show'))
+    $this->actingAs($planta)->get(($this->url)('tecnico-planta.ordenes.show'))
         ->assertInertia(fn ($page) => $page->has('conversacion.eventos', 1));
 });
 

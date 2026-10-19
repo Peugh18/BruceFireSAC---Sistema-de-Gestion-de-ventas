@@ -16,6 +16,7 @@ use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use App\Services\Certificates\PruebasHidrostaticas;
 use App\Services\Reports\ActaConformidadPdfService;
+use App\Services\Tecnico\CertificadosDeCampo;
 use App\Services\Tecnico\ConversacionDeLaOrden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -37,7 +38,7 @@ class MaintenanceController extends Controller
 {
     public function index(Request $request, Team $current_team): Response
     {
-        $buscar = $request->query('q');
+        $buscar = trim((string) $request->query('q', ''));
 
         $mantenimientos = $this->ordenes($request)
             ->with(['client', 'sede', 'equipments'])
@@ -74,6 +75,7 @@ class MaintenanceController extends Controller
             'evidencias' => $serviceOrder->evidencias()->whereIn('etapa', ['antes', 'despues'])->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($serviceOrder),
             'finalizado' => $this->finalizado($serviceOrder),
+            'formulariosCertificado' => app(CertificadosDeCampo::class)->formularios($serviceOrder),
         ]);
     }
 
@@ -145,6 +147,7 @@ class MaintenanceController extends Controller
     {
         $validated = $request->validate([
             'conformidad_nombre' => ['required', 'string', 'max:150'],
+            ...CertificadosDeCampo::reglas(),
             'conformidad_aceptada' => ['required', 'accepted'],
             'firma' => ['required', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
             'observaciones_generales' => ['nullable', 'string', 'max:1000'],
@@ -155,10 +158,13 @@ class MaintenanceController extends Controller
             // bloquea y se revalida DENTRO de la transacción (A2), junto con
             // el evento, el estado y el certificado.
             $serviceOrder = ServiceOrder::query()->lockForUpdate()->findOrFail($serviceOrder->id);
+            abort_unless($serviceOrder->atendiblePor($request->user()), 404);
             EquipoDeLaOrden::asegurarAbierta($serviceOrder);
             $serviceOrder->tomarSiLibre($request->user());
 
-            if (! $serviceOrder->checklists()->exists()) {
+            $mediciones = app(CertificadosDeCampo::class)->validar($serviceOrder, $validated['certificados_servicio'] ?? []);
+
+            if (($mediciones === [] || $serviceOrder->equipments()->exists()) && ! $serviceOrder->checklists()->exists()) {
                 throw ValidationException::withMessages(['checklist' => 'Completa el checklist de al menos un extintor.']);
             }
 
@@ -198,6 +204,11 @@ class MaintenanceController extends Controller
             }
 
             $serviceOrder->update(['estado' => 'listo_entrega']);
+
+            app(CertificadosDeCampo::class)->emitir($serviceOrder, $mediciones, 'mantenimiento', $validated['observaciones_generales'] ?? null);
+            if ($mediciones !== [] && $serviceOrder->equipments()->doesntExist()) {
+                return 'Mantenimiento finalizado y certificados emitidos con las mediciones registradas.';
+            }
 
             return $this->emitirCertificado($serviceOrder)
                 ? 'Mantenimiento finalizado y certificado emitido para los extintores conformes.'
@@ -279,6 +290,7 @@ class MaintenanceController extends Controller
             ->accessibleToTechnician($request->user())
             ->where('estado', '!=', 'anulada')
             ->where('departamento_tecnico', 'campo')
-            ->whereHas('service', fn ($service) => $service->where('nombre', 'like', '%mantenim%'));
+            ->where(fn (Builder $orden) => $orden->whereHas('service', fn (Builder $service) => $service->where('nombre', 'like', '%mantenim%'))
+                ->orWhereHas('lines.service', fn (Builder $service) => $service->where('nombre', 'like', '%mantenim%')));
     }
 }

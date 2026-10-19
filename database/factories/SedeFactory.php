@@ -32,11 +32,17 @@ class SedeFactory extends Factory
 
     public function tienda(): static
     {
-        return $this->state(['tipo' => 'tienda']);
+        // Una tienda siempre saca stock de un almacén (SedeObserver lo exige).
+        return $this->state(['tipo' => 'tienda', 'almacen_id' => Sede::factory()->almacen()]);
     }
 
     public function mixta(): static
     {
         return $this->state(['tipo' => 'mixta']);
+    }
+
+    public function taller(): static
+    {
+        return $this->state(['tipo' => 'taller', 'almacen_id' => null]);
     }
 }

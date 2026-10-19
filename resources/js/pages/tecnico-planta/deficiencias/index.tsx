@@ -1,56 +1,32 @@
-import {
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    DialogDescription,
-} from '@/components/ui/dialog';
-import React, { useRef, useState } from 'react';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
-import AlertError from '@/components/alert-error';
-import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
-import type { Team } from '@/types';
-import {
-    AlertTriangle,
-    CheckCircle2,
-    Clock,
-    XCircle,
-    Search,
-    Wrench,
-    ShieldAlert,
-    UserCheck,
-    PackageCheck,
-    RotateCcw,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import DeficienciasRoutes from '@/routes/tecnico-planta/deficiencias';
-import EjecucionRoutes from '@/routes/tecnico-planta/ejecucion';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ArrowRight, Camera, Search } from 'lucide-react';
+import { useState } from 'react';
+
 import { Empty } from '@/components/ui/empty';
+import { Input } from '@/components/ui/input';
+import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
+import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
+import DeficienciasRoutes from '@/routes/tecnico-planta/deficiencias';
+import OrdenesRoutes from '@/routes/tecnico-planta/ordenes';
+import type { Team } from '@/types';
 
 interface DeficiencyItem {
     id: number;
     orden_id: number;
     orden_codigo: string;
     cliente: string;
-    equipment_id: number | null;
     equipo_serie: string | null;
-    equipo_tipo: string | null;
     componente: string;
     condicion: string;
-    nota: string | null;
-    accion_recomendada: string | null;
     repuesto_sugerido: string | null;
-    requiere_autorizacion: boolean;
     estado: string;
     resolucion: string | null;
     authorization: {
         autorizado_por: string;
         canal: string;
-        fecha: string;
-        observacion: string | null;
-        vendedor: string | null;
     } | null;
     created_at: string | null;
+    foto_url: string | null;
 }
 
 interface Props {
@@ -58,423 +34,242 @@ interface Props {
         data: DeficiencyItem[];
         current_page: number;
         last_page: number;
-        total: number;
+        prev_page_url: string | null;
+        next_page_url: string | null;
     };
     counts: {
         todas: number;
+        para_reparar: number;
         esperando_autorizacion: number;
-        autorizada: number;
         rechazada: number;
         resuelta: number;
     };
-    filters: {
-        estado: string;
-        search: string;
-    };
+    filters: { estado: string; search: string };
 }
 
+const FILTROS = [
+    { clave: 'para_reparar', texto: 'Para reparar' },
+    { clave: 'esperando_autorizacion', texto: 'En espera' },
+    { clave: 'rechazada', texto: 'Rechazadas' },
+    { clave: 'resuelta', texto: 'Reparadas' },
+] as const;
+
+const ETIQUETAS: Record<string, { texto: string; clase: string }> = {
+    detectada: {
+        texto: 'Para reparar',
+        clase: 'bg-primary/10 text-primary-strong',
+    },
+    autorizada: {
+        texto: 'Autorizada',
+        clase: 'bg-emerald-500/15 text-success-strong',
+    },
+    esperando_autorizacion: {
+        texto: 'Espera al vendedor',
+        clase: 'bg-amber-500/15 text-warning-strong',
+    },
+    rechazada: { texto: 'Rechazada', clase: 'bg-muted text-muted-foreground' },
+    resuelta: {
+        texto: 'Reparada',
+        clase: 'bg-emerald-500/15 text-success-strong',
+    },
+};
+
+function hace(fecha: string | null): string {
+    if (!fecha) {
+        return '';
+    }
+
+    const minutos = Math.max(
+        0,
+        Math.round((Date.now() - new Date(fecha).getTime()) / 60000),
+    );
+
+    if (minutos < 60) {
+        return `hace ${minutos} min`;
+    }
+
+    const horas = Math.round(minutos / 60);
+
+    return horas < 24 ? `hace ${horas} h` : `hace ${Math.round(horas / 24)} d`;
+}
+
+/** Las fallas de todas las órdenes del técnico; cada una lleva a su orden. */
 export default function DeficienciasIndex({
     deficiencies,
     counts,
     filters,
 }: Props) {
-    const modalTrigger = useRef<HTMLElement | null>(null);
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
-    const teamSlug = currentTeam?.slug ?? '';
+    const equipo = currentTeam?.slug ?? '';
+    const [search, setSearch] = useState(filters.search);
 
-    const [search, setSearch] = useState(filters.search || '');
-    const [resolveModalItem, setResolveModalItem] =
-        useState<DeficiencyItem | null>(null);
-
-    const resolveForm = useForm({
-        resolucion: '',
-    });
-
-    const aplicarBusqueda = () => {
+    const filtrar = (estado: string, texto = search) =>
         router.get(
-            DeficienciasRoutes.index.url({ current_team: teamSlug }),
-            { estado: filters.estado, search: search.trim() },
-            { preserveState: true },
+            DeficienciasRoutes.index.url({ current_team: equipo }),
+            { estado, search: texto.trim() },
+            { preserveState: true, preserveScroll: true },
         );
-    };
-    const handleSearch = useBusquedaDinamica(search, aplicarBusqueda);
-
-    const handleFilterChange = (nuevoEstado: string) => {
-        router.get(
-            DeficienciasRoutes.index.url({ current_team: teamSlug }),
-            { estado: nuevoEstado, search },
-            { preserveState: true },
-        );
-    };
-
-    const handleResolve = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!resolveModalItem) return;
-
-        resolveForm.post(
-            DeficienciasRoutes.resolve.url({
-                current_team: teamSlug,
-                deficiency: resolveModalItem.id,
-            }),
-            {
-                onError: (errors) =>
-                    toast.error(
-                        Object.values(errors)[0] ??
-                            'No se pudo completar la acción.',
-                    ),
-                onSuccess: () => {
-                    setResolveModalItem(null);
-                    resolveForm.reset();
-                },
-            },
-        );
-    };
-
-    const getEstadoBadge = (estado: string) => {
-        switch (estado) {
-            case 'esperando_autorizacion':
-                return (
-                    <span className="text-warning-strong inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold dark:bg-amber-950/60 dark:text-amber-300">
-                        <Clock className="h-3 w-3" />
-                        Por Autorizar
-                    </span>
-                );
-            case 'autorizada':
-                return (
-                    <span className="text-success-strong inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold dark:bg-emerald-950/60 dark:text-emerald-300">
-                        <CheckCircle2 className="h-3 w-3" />
-                        Autorizada
-                    </span>
-                );
-            case 'rechazada':
-                return (
-                    <span className="text-destructive-strong inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold dark:bg-rose-950/60 dark:text-rose-300">
-                        <XCircle className="h-3 w-3" />
-                        Rechazada
-                    </span>
-                );
-            case 'resuelta':
-                return (
-                    <span className="bg-muted text-foreground inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold">
-                        <PackageCheck className="h-3 w-3" />
-                        Resuelta
-                    </span>
-                );
-            default:
-                return (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
-                        {estado}
-                    </span>
-                );
-        }
-    };
+    const buscar = useBusquedaDinamica(search, () => filtrar(filters.estado));
 
     return (
         <TecnicoPlantaLayout>
-            <Head title="Deficiencias - Taller Planta" />
+            <Head title="Hallazgos - Planta" />
 
-            <div className="space-y-4 pb-12">
-                {/* Title */}
+            <div className="space-y-4">
                 <div>
-                    <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-                        Deficiencias de Taller
+                    <h1 className="text-foreground text-lg font-black tracking-tight">
+                        Hallazgos
                     </h1>
-                    <p className="text-xs text-neutral-500">
-                        Gestión de observaciones, autorizaciones de Vendedor y
-                        reparaciones
+                    <p className="text-muted-foreground text-xs">
+                        Las fallas de todas tus órdenes. Toca una para ir a su
+                        orden.
                     </p>
                 </div>
 
-                {/* Filter Pills */}
-                <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
-                    <button
-                        type="button"
-                        onClick={() => handleFilterChange('todas')}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.estado === 'todas' || !filters.estado
-                                ? 'bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        Todas ({counts.todas})
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() =>
-                            handleFilterChange('esperando_autorizacion')
-                        }
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.estado === 'esperando_autorizacion'
-                                ? 'bg-amber-600 text-white shadow-xs'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        Por Autorizar ({counts.esperando_autorizacion})
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleFilterChange('autorizada')}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.estado === 'autorizada'
-                                ? 'bg-emerald-600 text-white shadow-xs'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        Autorizadas ({counts.autorizada})
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleFilterChange('resuelta')}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-colors ${
-                            filters.estado === 'resuelta'
-                                ? 'bg-primary text-white shadow-xs'
-                                : 'bg-card border border-neutral-200 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
-                        }`}
-                    >
-                        Resueltas ({counts.resuelta})
-                    </button>
-                </div>
-
-                {/* Search Bar */}
-                <form onSubmit={handleSearch} className="relative">
-                    <input
-                        aria-label="Buscar por componente, falla, orden o serie"
-                        type="text"
+                <form onSubmit={buscar} className="relative">
+                    <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                    <Input
+                        aria-label="Buscar por orden, extintor o falla"
+                        placeholder="Buscar por orden, extintor o falla"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Buscar por componente, falla, orden, serie..."
-                        className="bg-card w-full rounded-xl border border-neutral-200 py-2.5 pr-4 pl-9 text-xs placeholder-neutral-400 focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-800"
+                        className="bg-card h-11 pl-9 text-sm"
                     />
-                    <Search className="absolute top-3.5 left-3 h-4 w-4 text-neutral-400" />
                 </form>
 
-                {/* Deficiencies List */}
-                <div className="space-y-3">
-                    {deficiencies.data.length === 0 ? (
-                        <Empty
-                            icon={<ShieldAlert />}
-                            title="No se encontraron deficiencias en este filtro"
-                            description={
-                                search || filters.estado !== 'todos'
-                                    ? 'No hay registros que coincidan con la búsqueda o filtro aplicado.'
-                                    : 'No hay deficiencias registradas en este momento.'
-                            }
-                        >
-                            {(search || filters.estado !== 'todos') && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSearch('');
-                                        router.get(
-                                            DeficienciasRoutes.index.url({
-                                                current_team: teamSlug,
-                                            }),
-                                            { estado: 'todos' },
-                                        );
-                                    }}
-                                    className="border-border bg-card text-foreground hover:bg-muted mt-2 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors"
-                                >
-                                    <RotateCcw className="size-3" />
-                                    <span>Ver todas las deficiencias</span>
-                                </button>
-                            )}
-                        </Empty>
-                    ) : (
-                        deficiencies.data.map((d) => (
-                            <div
-                                key={d.id}
-                                className="bg-card space-y-3 rounded-2xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700/80 dark:bg-neutral-800"
+                <div
+                    role="group"
+                    aria-label="Filtrar hallazgos"
+                    className="border-border/60 bg-muted/50 grid grid-cols-2 gap-1.5 rounded-2xl border p-1.5"
+                >
+                    {FILTROS.map((f) => {
+                        const activo = filters.estado === f.clave;
+
+                        return (
+                            <button
+                                key={f.clave}
+                                type="button"
+                                aria-pressed={activo}
+                                onClick={() => filtrar(f.clave)}
+                                className={`focus-visible:ring-ring flex min-h-12 min-w-0 items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs focus-visible:ring-2 focus-visible:outline-none ${
+                                    activo
+                                        ? 'bg-card text-foreground font-bold shadow-sm'
+                                        : 'text-muted-foreground hover:bg-card/60 font-medium'
+                                }`}
                             >
-                                <div className="flex items-start justify-between gap-2">
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-mono text-xs font-extrabold text-neutral-900 dark:text-neutral-100">
-                                                {d.orden_codigo}
-                                            </span>
-                                            {d.equipo_serie && (
-                                                <span className="text-warning-strong font-mono text-xs font-bold">
-                                                    {d.equipo_serie}
-                                                </span>
-                                            )}
-                                            {getEstadoBadge(d.estado)}
-                                        </div>
-                                        <div className="mt-0.5 line-clamp-1 text-xs text-neutral-500">
-                                            {d.cliente}
-                                        </div>
-                                    </div>
-
-                                    {d.estado !== 'resuelta' &&
-                                        d.repuesto_sugerido && (
-                                            <Link
-                                                href={EjecucionRoutes.show.url({
-                                                    current_team: teamSlug,
-                                                    service_order: d.orden_id,
-                                                })}
-                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
-                                                title="Requiere repuesto: resuélvela desde Ejecución para descontar el Kardex de Almacén"
-                                            >
-                                                <PackageCheck className="h-3 w-3" />
-                                                <span>
-                                                    Resolver con repuesto
-                                                </span>
-                                            </Link>
-                                        )}
-                                    {d.estado !== 'resuelta' &&
-                                        !d.repuesto_sugerido && (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setResolveModalItem(d)
-                                                }
-                                                className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-neutral-900 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
-                                            >
-                                                <Wrench className="h-3 w-3" />
-                                                <span>Resolver</span>
-                                            </button>
-                                        )}
-                                </div>
-
-                                {/* Component & Condition */}
-                                <div className="space-y-1 rounded-xl bg-neutral-50 p-2.5 dark:bg-neutral-900/60">
-                                    <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
-                                        <AlertTriangle className="text-warning-strong h-3.5 w-3.5" />
-                                        <span>{d.componente}</span>
-                                    </div>
-                                    <p className="text-xs text-neutral-700 dark:text-neutral-300">
-                                        {d.condicion}
-                                    </p>
-                                </div>
-
-                                {/* Actions / Spare Parts */}
-                                {(d.accion_recomendada ||
-                                    d.repuesto_sugerido) && (
-                                    <div className="grid grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-                                        {d.accion_recomendada && (
-                                            <div>
-                                                <span className="text-neutral-400">
-                                                    Acción:{' '}
-                                                </span>
-                                                <span className="font-medium text-neutral-800 dark:text-neutral-200">
-                                                    {d.accion_recomendada}
-                                                </span>
-                                            </div>
-                                        )}
-                                        {d.repuesto_sugerido && (
-                                            <div>
-                                                <span className="text-neutral-400">
-                                                    Repuesto:{' '}
-                                                </span>
-                                                <span className="font-medium text-neutral-800 dark:text-neutral-200">
-                                                    {d.repuesto_sugerido}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Authorization Banner from Vendedor (§17, §20) */}
-                                {d.authorization && (
-                                    <div className="text-success-strong space-y-1 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300">
-                                        <div className="flex items-center gap-1.5 font-bold">
-                                            <UserCheck className="text-success-strong h-3.5 w-3.5" />
-                                            <span>
-                                                Autorizado por{' '}
-                                                {d.authorization.autorizado_por}{' '}
-                                                ({d.authorization.canal})
-                                            </span>
-                                        </div>
-                                        {d.authorization.observacion && (
-                                            <p className="text-success-strong text-xs dark:text-emerald-400">
-                                                "{d.authorization.observacion}"
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Resolution Note if Resolved */}
-                                {d.resolucion && (
-                                    <div className="border-border bg-muted text-foreground rounded-xl border p-2.5 text-xs">
-                                        <span className="font-bold">
-                                            Resolución:{' '}
-                                        </span>
-                                        <span>{d.resolucion}</span>
-                                    </div>
-                                )}
-                            </div>
-                        ))
-                    )}
+                                <span>{f.texto}</span>
+                                <span
+                                    className={`flex min-w-6 shrink-0 items-center justify-center rounded-lg px-1.5 py-0.5 text-xs tabular-nums ${activo ? 'bg-primary/10 text-primary-strong' : 'bg-background/70 text-muted-foreground'}`}
+                                >
+                                    {counts[f.clave]}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
 
-                {/* MODAL: Resolver Deficiencia */}
-                {resolveModalItem && (
-                    <Dialog
-                        open
-                        onOpenChange={(open) => {
-                            if (!open && !resolveForm.processing)
-                                setResolveModalItem(null);
-                        }}
-                    >
-                        <DialogContent
-                            onOpenAutoFocus={() => {
-                                modalTrigger.current =
-                                    document.activeElement as HTMLElement;
-                            }}
-                            onCloseAutoFocus={(event) => {
-                                event.preventDefault();
-                                modalTrigger.current?.focus();
-                            }}
-                            className="border-border bg-card max-h-[90dvh] space-y-4 overflow-y-auto overscroll-contain sm:max-w-lg"
-                        >
-                            <div className="flex items-center justify-between border-b border-neutral-100 pb-3 dark:border-neutral-800">
-                                <div>
-                                    <DialogTitle className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                                        Resolver Deficiencia
-                                    </DialogTitle>
-                                    <DialogDescription className="text-xs text-neutral-500">
-                                        {resolveModalItem.componente} -{' '}
-                                        {resolveModalItem.orden_codigo}
-                                    </DialogDescription>
-                                </div>
-                            </div>
+                {deficiencies.data.length === 0 ? (
+                    <Empty
+                        icon={<Camera />}
+                        title="Nada en este grupo"
+                        description={
+                            filters.estado === 'para_reparar'
+                                ? 'No hay fallas listas para reparar.'
+                                : 'No hay fallas con este estado.'
+                        }
+                    />
+                ) : (
+                    <ul className="space-y-3">
+                        {deficiencies.data.map((d) => {
+                            const etiqueta = ETIQUETAS[d.estado] ?? {
+                                texto: d.estado,
+                                clase: 'bg-muted text-muted-foreground',
+                            };
 
-                            <form
-                                onSubmit={handleResolve}
-                                className="space-y-3"
+                            return (
+                                <li key={d.id}>
+                                    <Link
+                                        href={OrdenesRoutes.show.url({
+                                            current_team: equipo,
+                                            service_order: d.orden_id,
+                                        })}
+                                        className="border-border bg-card flex gap-3 rounded-2xl border p-3"
+                                    >
+                                        {d.foto_url ? (
+                                            <img
+                                                src={d.foto_url}
+                                                alt={`Foto de ${d.componente}`}
+                                                className="size-16 shrink-0 rounded-xl object-cover"
+                                            />
+                                        ) : (
+                                            <span className="bg-muted text-muted-foreground flex size-16 shrink-0 items-center justify-center rounded-xl">
+                                                <Camera
+                                                    className="size-5"
+                                                    aria-label="Sin foto"
+                                                />
+                                            </span>
+                                        )}
+                                        <span className="min-w-0 flex-1 space-y-0.5">
+                                            <span className="flex items-start gap-2">
+                                                <span className="text-foreground flex-1 text-sm font-bold">
+                                                    {d.componente}
+                                                </span>
+                                                <span
+                                                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${etiqueta.clase}`}
+                                                >
+                                                    {etiqueta.texto}
+                                                </span>
+                                            </span>
+                                            <span className="text-muted-foreground block text-xs">
+                                                {d.orden_codigo} · {d.cliente}
+                                            </span>
+                                            <span className="text-muted-foreground block text-xs">
+                                                {[
+                                                    d.equipo_serie,
+                                                    d.condicion,
+                                                    d.repuesto_sugerido,
+                                                    d.estado ===
+                                                        'esperando_autorizacion' &&
+                                                        hace(d.created_at),
+                                                    d.authorization &&
+                                                        `Autorizó ${d.authorization.autorizado_por}`,
+                                                    d.resolucion,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </span>
+                                            {(d.estado === 'detectada' ||
+                                                d.estado === 'autorizada') && (
+                                                <span className="text-destructive-strong inline-flex items-center gap-1 text-sm font-bold">
+                                                    Reparar
+                                                    <ArrowRight className="size-4" />
+                                                </span>
+                                            )}
+                                        </span>
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+
+                {deficiencies.last_page > 1 && (
+                    <div className="flex gap-2">
+                        {[
+                            ['Anterior', deficiencies.prev_page_url],
+                            ['Siguiente', deficiencies.next_page_url],
+                        ].map(([texto, url]) => (
+                            <button
+                                key={texto}
+                                type="button"
+                                disabled={!url}
+                                onClick={() => url && router.get(url)}
+                                className="border-border text-foreground min-h-11 flex-1 rounded-xl border text-sm font-bold disabled:opacity-40"
                             >
-                                <AlertError
-                                    errors={Object.values(resolveForm.errors)}
-                                />
-                                <div>
-                                    <label className="mb-1 block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                        Descripción del trabajo ejecutado *
-                                    </label>
-                                    <textarea
-                                        aria-label="Descripción del trabajo ejecutado *"
-                                        value={resolveForm.data.resolucion}
-                                        onChange={(e) =>
-                                            resolveForm.setData(
-                                                'resolucion',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="Ej: Se reemplazó el manómetro y se presurizó a 195 PSI..."
-                                        rows={3}
-                                        className="w-full rounded-xl border border-neutral-300 bg-neutral-50 p-2.5 text-xs focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-800"
-                                        required
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={resolveForm.processing}
-                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:bg-emerald-800"
-                                >
-                                    <CheckCircle2 className="h-4 w-4" />
-                                    <span>Marcar como Resuelta en Taller</span>
-                                </button>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                                {texto}
+                            </button>
+                        ))}
+                    </div>
                 )}
             </div>
         </TecnicoPlantaLayout>

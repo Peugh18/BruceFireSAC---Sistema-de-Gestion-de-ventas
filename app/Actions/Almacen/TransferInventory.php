@@ -2,7 +2,6 @@
 
 namespace App\Actions\Almacen;
 
-use App\Models\DispatchGuide;
 use App\Models\InventoryMovement;
 use App\Models\InventoryTransfer;
 use App\Models\InventoryUnit;
@@ -16,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 class TransferInventory
 {
     /**
-     * Prepara el traslado sin afectar stock. La GRE se emite antes del despacho.
+     * Prepara el traslado sin afectar stock.
      *
      * @param  array{destination_sede_id:int, serials?:list<string>, product_id?:int, quantity?:int, observation?:string|null}  $data
      */
@@ -33,7 +32,7 @@ class TransferInventory
                 'origen_sede_id' => $sourceSedeId,
                 'destino_sede_id' => $data['destination_sede_id'],
                 'user_id' => $user->id,
-                'estado' => InventoryTransfer::PENDIENTE_GUIA,
+                'estado' => InventoryTransfer::PENDIENTE_DESPACHO,
                 'observacion' => $data['observation'] ?? null,
             ]);
 
@@ -64,7 +63,7 @@ class TransferInventory
                 'serials' => $serials->all(),
                 'product_id' => $data['product_id'] ?? null,
                 'quantity' => $data['quantity'] ?? $serials->count(),
-                'estado' => InventoryTransfer::PENDIENTE_GUIA,
+                'estado' => InventoryTransfer::PENDIENTE_DESPACHO,
             ], userId: $user->id);
 
             return $traslado;
@@ -76,14 +75,10 @@ class TransferInventory
         return DB::transaction(function () use ($traslado, $user): InventoryTransfer {
             $traslado = InventoryTransfer::query()->lockForUpdate()->findOrFail($traslado->id);
             abort_if($user->almacenRestringidoId() !== null && $user->almacenRestringidoId() !== $traslado->origen_sede_id, 403);
-            if ($traslado->estado !== InventoryTransfer::PENDIENTE_GUIA) {
+            if ($traslado->estado !== InventoryTransfer::PENDIENTE_DESPACHO) {
                 throw ValidationException::withMessages(['traslado' => 'Este traslado ya fue despachado.']);
             }
-            $guia = DispatchGuide::query()->where('inventory_transfer_id', $traslado->id)->latest('id')->lockForUpdate()->first();
-            if ($guia === null || ! $guia->estaListaParaTrasladar() || $guia->motivo !== '04' || $guia->sede_id !== $traslado->origen_sede_id) {
-                throw ValidationException::withMessages(['guia' => 'El despacho requiere la GRE del traslado aceptada por SUNAT y su CDR disponible.']);
-            }
-            $datos = $this->datos($traslado, $user, 'Despacho entre sedes con GRE aceptada y CDR.');
+            $datos = $this->datos($traslado, $user, 'Despacho interno entre sedes.');
             foreach ($traslado->items()->orderBy('product_id')->get() as $item) {
                 if ($item->inventory_unit_id !== null) {
                     $unit = InventoryUnit::query()->lockForUpdate()->findOrFail($item->inventory_unit_id);
@@ -108,7 +103,7 @@ class TransferInventory
                 }
             }
             $traslado->update(['estado' => InventoryTransfer::EN_TRANSITO]);
-            AuditLogger::log('inventario.traslado_despachado', $traslado, ['estado' => InventoryTransfer::PENDIENTE_GUIA], ['estado' => InventoryTransfer::EN_TRANSITO, 'guia_id' => $guia->id], userId: $user->id);
+            AuditLogger::log('inventario.traslado_despachado', $traslado, ['estado' => $traslado->getOriginal('estado')], ['estado' => InventoryTransfer::EN_TRANSITO], userId: $user->id);
 
             return $traslado;
         });

@@ -1,4 +1,5 @@
-import { ProgresoSegmentado } from '@/components/progreso';
+import ChecklistExtintor from '@/components/checklist-extintor';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ResumenRevision } from '@/components/resumen-revision';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
@@ -18,9 +19,8 @@ import {
     MessageSquare,
 } from 'lucide-react';
 import React, { useState } from 'react';
-import ConversacionOrden, {
-    type ConversacionProps,
-} from '@/components/conversacion-orden';
+import BarraOrdenCampo from '@/components/barra-orden-campo';
+import type { ConversacionProps } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
 import SubirEvidencia, {
     type EvidenciaListada,
@@ -104,7 +104,7 @@ type ServiceOrder = {
     certificates: Array<{
         id: number;
         numero: string;
-        certificateType?: { nombre: string };
+        certificate_type?: { nombre: string };
     }>;
 };
 
@@ -199,23 +199,30 @@ export default function InspeccionShow({
     };
 
     const isFinalizada = [
+        'listo_certificado',
         'listo_entrega',
         'en_ruta_entrega',
         'entregado',
         'cerrado',
+        'anulada',
     ].includes(order.estado);
 
     return (
         <TecnicoCampoLayout title={`Inspección ${order.codigo}`}>
             <Head title={`Inspección ${order.codigo} - Técnico de Campo`} />
+            <BarraOrdenCampo
+                ordenId={order.id}
+                codigo={order.codigo}
+                conversacion={conversacion}
+            />
 
             {/* Back bar */}
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <Link
                     href={InspeccionesRoutes.index.url({
                         current_team: teamSlug,
                     })}
-                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
+                    className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center gap-1.5 text-xs font-bold"
                 >
                     <ArrowLeft className="size-4" />
                     <span>Volver al listado</span>
@@ -232,7 +239,7 @@ export default function InspeccionShow({
             )}
 
             {/* Header Data Card (§24) */}
-            <div className="border-border bg-card mb-5 rounded-2xl border p-4 shadow-xs">
+            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
                 <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
                     <div>
                         <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
@@ -248,7 +255,7 @@ export default function InspeccionShow({
                         )}
                     </div>
                     <span className="border-primary/20 bg-primary/5 text-primary-strong rounded-full border px-2.5 py-1 text-xs font-black">
-                        {order.estado.replace('_', ' ').toUpperCase()}
+                        {etiquetaEstadoOrden(order.estado)}
                     </span>
                 </div>
 
@@ -276,7 +283,7 @@ export default function InspeccionShow({
                             </div>
                             <a
                                 href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
+                                className="text-success-strong inline-flex min-h-11 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
                             >
                                 <Phone className="size-3" />
                                 Llamar
@@ -290,19 +297,25 @@ export default function InspeccionShow({
 
             {/* Indicaciones de Ventas / Notas de Coordinación */}
             {(() => {
-                const notasVendedor = (order.events || []).filter(
-                    (ev) =>
-                        ev.payload?.origen === 'vendedor' ||
-                        ev.tipo === 'notificacion_vendedor' ||
-                        (ev.tipo === 'otro' && ev.payload?.mensaje),
-                );
+                const notasVendedor = (order.events || [])
+                    .filter(
+                        (ev) =>
+                            ev.payload?.origen === 'vendedor' ||
+                            ev.tipo === 'notificacion_vendedor' ||
+                            (ev.tipo === 'otro' && ev.payload?.mensaje),
+                    )
+                    .filter((ev) => {
+                        const texto =
+                            ev.payload?.mensaje || ev.payload?.descripcion;
+                        return typeof texto === 'string' && texto.trim() !== '';
+                    });
 
                 if (!order.observaciones && notasVendedor.length === 0) {
                     return null;
                 }
 
                 return (
-                    <div className="border-border bg-muted mb-6 rounded-2xl border p-4">
+                    <div className="border-border bg-muted mb-6 rounded-3xl border p-4">
                         <div className="text-foreground flex items-center gap-2 text-xs font-bold">
                             <MessageSquare className="text-foreground size-4" />
                             <span>Indicaciones de Ventas y Coordinación</span>
@@ -330,7 +343,7 @@ export default function InspeccionShow({
                                         <p className="font-medium">
                                             {n.payload?.mensaje ||
                                                 n.payload?.descripcion ||
-                                                JSON.stringify(n.payload)}
+                                                ''}
                                         </p>
                                         <span className="text-muted-foreground mt-1 block text-xs">
                                             {n.created_at
@@ -364,7 +377,7 @@ export default function InspeccionShow({
                         <button
                             type="button"
                             onClick={() => setShowAddEquipmentModal(true)}
-                            className="border-primary/20 bg-primary/5 text-foreground inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-bold active:scale-95"
+                            className="border-primary/20 bg-primary/5 text-foreground inline-flex min-h-11 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-bold active:scale-95"
                         >
                             <Plus className="size-3.5" />
                             Agregar Extintor
@@ -377,7 +390,7 @@ export default function InspeccionShow({
 
                 {/* Modal for adding/linking equipment */}
                 {showAddEquipmentModal && (
-                    <div className="bg-card border-primary/20 mb-4 rounded-2xl border-2 p-4 shadow-md">
+                    <div className="bg-card border-primary/20 mb-4 rounded-3xl border-2 p-4 shadow-md">
                         <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
                             <h3 className="text-foreground text-xs font-black">
                                 Registrar Extintor en Inspección
@@ -515,7 +528,7 @@ export default function InspeccionShow({
                 {/* List of Extinguishers as Cards */}
                 <div className="space-y-3">
                     {order.equipments.length === 0 ? (
-                        <div className="border-border bg-card rounded-2xl border border-dashed p-6 text-center">
+                        <div className="border-border bg-card rounded-3xl border border-dashed p-6 text-center">
                             <p className="text-muted-foreground text-xs">
                                 No hay extintores vinculados a esta orden
                                 todavía.
@@ -541,7 +554,7 @@ export default function InspeccionShow({
                             return (
                                 <div
                                     key={eq.id}
-                                    className="border-border bg-card rounded-2xl border p-4 shadow-xs"
+                                    className="border-border bg-card rounded-3xl border p-4 shadow-xs"
                                 >
                                     <div className="mb-2 flex items-start justify-between gap-2">
                                         <div>
@@ -566,12 +579,12 @@ export default function InspeccionShow({
                                         {latestChecklist ? (
                                             latestChecklist.resultado_general ===
                                             'conforme' ? (
-                                                <span className="text-success-strong inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-bold">
+                                                <span className="text-success-strong inline-flex min-h-11 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-bold">
                                                     <CheckCircle2 className="size-3" />
                                                     Conforme
                                                 </span>
                                             ) : (
-                                                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold">
+                                                <span className="border-destructive/20 bg-destructive/10 text-destructive-strong inline-flex min-h-11 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold">
                                                     <AlertCircle className="size-3" />
                                                     Con Observación
                                                 </span>
@@ -613,14 +626,19 @@ export default function InspeccionShow({
 
                                     {/* Inline Checklist Form */}
                                     {isEvaluating && (
-                                        <InlineChecklistForm
-                                            orderId={order.id}
-                                            equipment={eq}
-                                            teamSlug={teamSlug}
-                                            elementosChecklist={
-                                                elementosChecklist
-                                            }
-                                            onClose={() =>
+                                        <ChecklistExtintor
+                                            elementos={elementosChecklist}
+                                            serie={eq.numero_serie}
+                                            url={ChecklistRoutes.store.url({
+                                                current_team: teamSlug,
+                                                service_order: order.id,
+                                                equipment: eq.id,
+                                            })}
+                                            esCo2={(eq.tipo_agente ?? '')
+                                                .toUpperCase()
+                                                .includes('CO2')}
+                                            fotoObligatoria={false}
+                                            onCerrar={() =>
                                                 setEvaluatingEquipmentId(null)
                                             }
                                         />
@@ -634,7 +652,7 @@ export default function InspeccionShow({
 
             {/* Deficiencies summary if any */}
             {order.deficiencies && order.deficiencies.length > 0 && (
-                <div className="border-destructive/20 bg-destructive/10 mb-6 rounded-2xl border p-4">
+                <div className="border-destructive/20 bg-destructive/10 mb-6 rounded-3xl border p-4">
                     <h3 className="text-destructive-strong mb-2 flex items-center gap-1.5 text-xs font-black">
                         <AlertCircle className="text-destructive-strong size-4" />
                         Deficiencias Detectadas ({order.deficiencies.length})
@@ -670,7 +688,7 @@ export default function InspeccionShow({
 
             {/* Certificates emitted if any */}
             {order.certificates && order.certificates.length > 0 && (
-                <div className="mb-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                <div className="mb-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                     <h3 className="text-success-strong mb-2 flex items-center gap-1.5 text-xs font-black">
                         <FileCheck className="text-success-strong size-4" />
                         Certificados Emitidos
@@ -682,7 +700,7 @@ export default function InspeccionShow({
                                 className="bg-card flex items-center justify-between rounded-lg border border-emerald-500/20 p-2.5 text-xs"
                             >
                                 <span className="text-foreground font-bold">
-                                    {cert.certificateType?.nombre ||
+                                    {cert.certificate_type?.nombre ||
                                         'Certificado'}
                                 </span>
                                 <span className="text-success-strong font-mono font-bold">
@@ -696,7 +714,7 @@ export default function InspeccionShow({
 
             {/* Finalize Inspection Form (§24, §85.6.2) */}
             {!isFinalizada && (
-                <div className="border-border bg-card rounded-2xl border p-4 shadow-sm">
+                <div className="border-border bg-card rounded-3xl border p-4 shadow-sm">
                     <h2 className="text-foreground mb-1 flex items-center gap-2 text-sm font-black">
                         <UserCheck className="text-primary-strong size-4" />
                         Finalizar Inspección y Conformidad en Sitio
@@ -854,263 +872,6 @@ export default function InspeccionShow({
                     </form>
                 </div>
             )}
-
-            <div className="mt-5">
-                <ConversacionOrden
-                    ordenId={order.id}
-                    conversacion={conversacion}
-                />
-            </div>
         </TecnicoCampoLayout>
-    );
-}
-
-/**
- * Formulario interactivo táctil para evaluar los 14 elementos del extintor
- */
-function InlineChecklistForm({
-    orderId,
-    equipment,
-    teamSlug,
-    elementosChecklist,
-    onClose,
-}: {
-    orderId: number;
-    equipment: Equipment;
-    teamSlug: string;
-    elementosChecklist: Record<string, string>;
-    onClose: () => void;
-}) {
-    const isCo2 = (equipment.tipo_agente || '').toUpperCase().includes('CO2');
-
-    // Inicializar los estados de los 14 elementos
-    const initialItems = Object.keys(elementosChecklist).reduce(
-        (acc, clave) => {
-            // En CO2, manómetro no aplica automáticamente (§19)
-            const autoNoAplica = isCo2 && clave === 'manometro';
-            acc[clave] = {
-                estado: autoNoAplica ? 'no_aplica' : 'conforme',
-                condicion: '',
-                nota: '',
-                requiere_autorizacion: false,
-            };
-            return acc;
-        },
-        {} as Record<
-            string,
-            {
-                estado: string;
-                condicion: string;
-                nota: string;
-                requiere_autorizacion: boolean;
-            }
-        >,
-    );
-
-    const checklistForm = useForm({
-        items: initialItems,
-        observaciones: '',
-    });
-
-    const setItemEstado = (clave: string, estado: string) => {
-        checklistForm.setData('items', {
-            ...checklistForm.data.items,
-            [clave]: {
-                ...checklistForm.data.items[clave],
-                estado,
-            },
-        });
-    };
-
-    const setItemField = (clave: string, field: string, val: unknown) => {
-        checklistForm.setData('items', {
-            ...checklistForm.data.items,
-            [clave]: {
-                ...checklistForm.data.items[clave],
-                [field]: val,
-            },
-        });
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        checklistForm.post(
-            ChecklistRoutes.store.url({
-                current_team: teamSlug,
-                service_order: orderId,
-                equipment: equipment.id,
-            }),
-            {
-                onError: (errors) =>
-                    toast.error(
-                        Object.values(errors)[0] ??
-                            'No se pudo completar la acción.',
-                    ),
-                onSuccess: () => onClose(),
-            },
-        );
-    };
-
-    return (
-        <form
-            onSubmit={handleSubmit}
-            className="border-primary/20 bg-primary/5 mt-3 space-y-3 rounded-lg border p-3"
-        >
-            <AlertError errors={Object.values(checklistForm.errors)} />
-            <div className="border-primary/20 flex items-center justify-between border-b pb-2">
-                <span className="text-primary-strong text-xs font-black">
-                    Evaluación Checklist: {equipment.numero_serie}
-                </span>
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="text-muted-foreground text-xs font-bold"
-                >
-                    Cerrar
-                </button>
-            </div>
-
-            <ProgresoSegmentado
-                label="Estado del formulario de revisión"
-                segmentos={[
-                    {
-                        label: 'conformes',
-                        value: Object.values(checklistForm.data.items).filter(
-                            (item) => item.estado === 'conforme',
-                        ).length,
-                        tone: 'success',
-                    },
-                    {
-                        label: 'observados',
-                        value: Object.values(checklistForm.data.items).filter(
-                            (item) => item.estado === 'observado',
-                        ).length,
-                        tone: 'warning',
-                    },
-                    {
-                        label: 'no aplican',
-                        value: Object.values(checklistForm.data.items).filter(
-                            (item) => item.estado === 'no_aplica',
-                        ).length,
-                        tone: 'neutral',
-                    },
-                ]}
-            />
-            <p className="text-muted-foreground text-xs">
-                Borrador con valores precargados; la revisión se registra al
-                guardar.
-            </p>
-            <div className="space-y-2">
-                {Object.entries(elementosChecklist).map(([clave, nombre]) => {
-                    const item = checklistForm.data.items[clave] || {
-                        estado: 'conforme',
-                    };
-                    const isObservado = item.estado === 'observado';
-
-                    return (
-                        <div
-                            key={clave}
-                            className="border-border bg-card rounded-lg border p-2.5"
-                        >
-                            <div className="mb-1.5 flex items-center justify-between gap-2">
-                                <span className="text-foreground text-xs font-bold">
-                                    {nombre}
-                                </span>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setItemEstado(clave, 'conforme')
-                                        }
-                                        className={`min-h-[32px] rounded-md px-2 py-1 text-xs font-bold transition-all ${
-                                            item.estado === 'conforme'
-                                                ? 'bg-success-strong text-background shadow-xs'
-                                                : 'bg-muted text-muted-foreground'
-                                        }`}
-                                    >
-                                        OK
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setItemEstado(clave, 'observado')
-                                        }
-                                        className={`min-h-[32px] rounded-md px-2 py-1 text-xs font-bold transition-all ${
-                                            item.estado === 'observado'
-                                                ? 'bg-destructive text-white shadow-xs'
-                                                : 'bg-muted text-muted-foreground'
-                                        }`}
-                                    >
-                                        Obs
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setItemEstado(clave, 'no_aplica')
-                                        }
-                                        className={`min-h-[32px] rounded-md px-2 py-1 text-xs font-bold transition-all ${
-                                            item.estado === 'no_aplica'
-                                                ? 'bg-muted-foreground text-white shadow-xs'
-                                                : 'bg-muted text-muted-foreground'
-                                        }`}
-                                    >
-                                        N/A
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Detalle si está observado */}
-                            {isObservado && (
-                                <div className="border-destructive/20 mt-2 space-y-1.5 border-t pt-2">
-                                    <input
-                                        aria-label="Descripción de la condición observada..."
-                                        type="text"
-                                        placeholder="Descripción de la condición observada..."
-                                        value={item.condicion || ''}
-                                        onChange={(e) =>
-                                            setItemField(
-                                                clave,
-                                                'condicion',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="border-destructive/20 bg-destructive/10 w-full rounded-md border p-1.5 text-xs"
-                                    />
-                                    <label className="text-destructive-strong flex items-center gap-1.5 text-xs font-semibold">
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                item.requiere_autorizacion ||
-                                                false
-                                            }
-                                            onChange={(e) =>
-                                                setItemField(
-                                                    clave,
-                                                    'requiere_autorizacion',
-                                                    e.target.checked,
-                                                )
-                                            }
-                                            className="border-destructive/20 text-destructive-strong size-3.5 rounded"
-                                        />
-                                        <span>
-                                            Requiere cotización/autorización de
-                                            cliente
-                                        </span>
-                                    </label>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
-            <button
-                type="submit"
-                disabled={checklistForm.processing}
-                className="hover:bg-success-strong/90 min-h-[44px] w-full rounded-lg bg-emerald-600 text-xs font-bold text-white shadow-sm"
-            >
-                Guardar Checklist de este Extintor
-            </button>
-        </form>
     );
 }

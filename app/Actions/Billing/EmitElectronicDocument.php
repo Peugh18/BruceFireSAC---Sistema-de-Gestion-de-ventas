@@ -41,13 +41,22 @@ class EmitElectronicDocument
     public function programar(Sale $sale, ?CarbonInterface $fechaEmision = null): ElectronicDocument
     {
         $horas = (float) config('billing.envio_diferido_horas');
+        $fecha = $fechaEmision ?? now();
+        $tipo = $sale->comprobante_tipo === 'factura' ? 'factura' : 'boleta';
+        $referencia = new ElectronicDocument(['tipo' => $tipo, 'serie' => $this->serieFor($tipo), 'fecha_emision' => $fecha]);
+        $limite = $referencia->fechaLimiteEnvio();
 
-        if ($horas <= 0) {
-            return $this->handle($sale);
+        if (today()->gt($limite)) {
+            throw ValidationException::withMessages(['fecha' => 'La fecha de emisión supera el plazo de envío a SUNAT. Revisa la operación antes de emitir.']);
         }
 
-        $document = $this->crearDocumento($sale, 'por_enviar', $fechaEmision);
-        $document->update(['enviar_desde' => now()->addMinutes((int) round($horas * 60))]);
+        if ($horas <= 0) {
+            return $this->sendDocument($this->crearDocumento($sale, 'pendiente', $fecha));
+        }
+
+        $document = $this->crearDocumento($sale, 'por_enviar', $fecha);
+        $revision = now()->addMinutes((int) round($horas * 60));
+        $document->update(['enviar_desde' => $revision->gte($limite) ? now() : $revision]);
 
         $this->prepararDocumento($document);
 

@@ -17,6 +17,7 @@ class AuditLogFactory extends Factory
         return [
             'user_id' => User::factory(),
             'team_id' => Team::factory(),
+            'actor_role' => null,
             'action' => fake()->randomElement([
                 'venta.creada',
                 'stock.ajuste',

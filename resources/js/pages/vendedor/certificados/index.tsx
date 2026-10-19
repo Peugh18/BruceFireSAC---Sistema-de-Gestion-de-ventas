@@ -1,15 +1,12 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     Award,
-    Eye,
     FileDown,
     FileText,
     Filter,
     Printer,
-    Receipt,
     RotateCcw,
     Search,
-    Users,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -18,18 +15,9 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import certificados from '@/routes/vendedor/certificados';
 import clientes from '@/routes/vendedor/clientes';
-import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 import { fechaCorta } from '@/lib/utils';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -40,7 +28,10 @@ type CertificateRow = {
     tipo: string | null;
     tipo_codigo: string | null;
     cliente: string | null;
+    documento: string | null;
     client_id: number | null;
+    orden: string | null;
+    codigos: string[];
     referencia: string | null;
     venta: {
         id: number;
@@ -87,7 +78,57 @@ function badgeClass(estado: string) {
 }
 
 const accion =
-    'border-border bg-card text-foreground/80 size-7 rounded-md shadow-none';
+    'border-border bg-card text-foreground/80 size-9 rounded-lg shadow-none';
+
+type Grupo = {
+    clave: string;
+    dia: string | null;
+    certificados: CertificateRow[];
+};
+
+/** Una atención: lo que recibió un cliente el mismo día por la misma orden o venta. */
+function agrupar(filas: CertificateRow[]): Grupo[] {
+    const grupos: Grupo[] = [];
+
+    for (const fila of filas) {
+        const clave = `${fila.fecha_emision}|${fila.client_id}|${fila.venta?.id ?? fila.orden ?? fila.id}`;
+        const grupo = grupos.find((g) => g.clave === clave);
+
+        if (grupo) {
+            grupo.certificados.push(fila);
+        } else {
+            grupos.push({
+                clave,
+                dia: fila.fecha_emision,
+                certificados: [fila],
+            });
+        }
+    }
+
+    return grupos;
+}
+
+function nombreDelDia(fecha: string | null): string {
+    if (!fecha) {
+        return 'Sin fecha';
+    }
+
+    const d = new Date(`${fecha}T00:00:00`);
+    const hoy = new Date();
+    const ayer = new Date();
+    ayer.setDate(hoy.getDate() - 1);
+    const texto = d.toLocaleDateString('es-PE', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+    });
+
+    if (d.toDateString() === hoy.toDateString()) {
+        return `Hoy · ${texto}`;
+    }
+
+    return d.toDateString() === ayer.toDateString() ? `Ayer · ${texto}` : texto;
+}
 
 export default function CertificadosIndex({
     certificates,
@@ -138,7 +179,7 @@ export default function CertificadosIndex({
             <div className="flex flex-col gap-4">
                 <PageHeader
                     title="Certificados"
-                    description="Todos los certificados emitidos, con la venta de la que salieron. Toca uno para verlo."
+                    description="Agrupados por atención: qué recibió cada cliente y cuándo."
                 />
 
                 <Card className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none">
@@ -240,278 +281,244 @@ export default function CertificadosIndex({
                             )}
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <Table className="w-full border-collapse text-[12.5px]">
-                                <TableHeader>
-                                    <TableRow>
-                                        {[
-                                            'Certificado',
-                                            'Cliente',
-                                            'Venta',
-                                            'Qué certifica',
-                                            'Vigencia',
-                                            'Estado',
-                                            '',
-                                        ].map((h) => (
-                                            <TableHead
-                                                key={h}
-                                                className="text-left"
-                                            >
-                                                {h || (
-                                                    <span className="sr-only">
-                                                        Acciones
-                                                    </span>
-                                                )}
-                                            </TableHead>
-                                        ))}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {certificates.data.map((certificate) => (
-                                        <TableRow
-                                            key={certificate.id}
-                                            onClick={() =>
-                                                router.visit(
-                                                    verCertificado(
-                                                        certificate.id,
-                                                    ),
-                                                )
-                                            }
-                                            className="hover:bg-muted/40 cursor-pointer"
+                        <div className="flex flex-col gap-3">
+                            {agrupar(certificates.data).map(
+                                (grupo, indice, todos) => {
+                                    const primero = grupo.certificados[0];
+                                    const codigos = [
+                                        ...new Set(
+                                            grupo.certificados.flatMap(
+                                                (c) => c.codigos,
+                                            ),
+                                        ),
+                                    ];
+                                    const nuevoDia =
+                                        indice === 0 ||
+                                        todos[indice - 1].dia !== grupo.dia;
+                                    const pdf = (c: CertificateRow) =>
+                                        certificados.pdf.url({
+                                            current_team: teamSlug,
+                                            certificate: c.id,
+                                        });
+
+                                    return (
+                                        <div
+                                            key={grupo.clave}
+                                            className="space-y-3"
                                         >
-                                            <TableCell className="border-border border-b px-2.5 py-[11px]">
-                                                <div className="flex items-center gap-2">
-                                                    <div
-                                                        className={`flex size-[30px] shrink-0 items-center justify-center rounded-lg ${certificate.estado === 'vigente' ? 'bg-destructive/10 text-primary-strong' : 'bg-muted text-muted-foreground'}`}
-                                                    >
-                                                        <Award className="size-4" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="font-['IBM_Plex_Mono',monospace] font-bold">
-                                                            {certificate.numero}
-                                                        </div>
-                                                        <div className="text-muted-foreground max-w-[220px] truncate text-xs">
-                                                            {certificate.tipo ??
-                                                                certificate.tipo_codigo}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="border-border border-b px-2.5 py-[11px]">
-                                                {certificate.client_id ? (
-                                                    <Link
-                                                        href={clientes.show.url(
-                                                            {
-                                                                current_team:
-                                                                    teamSlug,
-                                                                client: certificate.client_id,
-                                                            },
-                                                        )}
-                                                        onClick={(event) =>
-                                                            event.stopPropagation()
-                                                        }
-                                                        className="text-foreground hover:text-primary-strong font-semibold hover:underline"
-                                                    >
-                                                        {certificate.cliente}
-                                                    </Link>
-                                                ) : (
-                                                    '-'
-                                                )}
-                                                {certificate.referencia ? (
-                                                    <div className="text-muted-foreground text-xs">
-                                                        {certificate.referencia}
-                                                    </div>
-                                                ) : null}
-                                            </TableCell>
-                                            <TableCell className="border-border border-b px-2.5 py-[11px] whitespace-nowrap">
-                                                {certificate.venta ? (
-                                                    <Link
-                                                        href={ventas.show.url({
-                                                            current_team:
-                                                                teamSlug,
-                                                            sale: certificate
-                                                                .venta.id,
-                                                        })}
-                                                        onClick={(event) =>
-                                                            event.stopPropagation()
-                                                        }
-                                                        className="group inline-flex flex-col"
-                                                    >
-                                                        <span className="group-hover:text-primary-strong inline-flex items-center gap-1 font-['IBM_Plex_Mono',monospace] font-bold group-hover:underline">
-                                                            <Receipt className="size-3" />
-                                                            {certificate.venta
-                                                                .numero ??
-                                                                `Venta ${certificate.venta.id}`}
-                                                        </span>
-                                                        {certificate.venta
-                                                            .comprobante ? (
-                                                            <span className="text-muted-foreground text-xs">
-                                                                {
-                                                                    certificate
-                                                                        .venta
-                                                                        .comprobante
-                                                                }
-                                                            </span>
-                                                        ) : null}
-                                                    </Link>
-                                                ) : (
-                                                    <span className="text-muted-foreground text-xs">
-                                                        Orden de servicio
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="border-border border-b px-2.5 py-[11px]">
-                                                {certificate.participantes >
-                                                0 ? (
-                                                    <span className="text-foreground/80 inline-flex items-center gap-1 text-xs">
-                                                        <Users className="size-3.5" />
-                                                        {
-                                                            certificate.participantes
-                                                        }{' '}
-                                                        trabajadores
-                                                    </span>
-                                                ) : certificate.unidades
-                                                      .length > 0 ? (
-                                                    <div className="flex max-w-[260px] flex-wrap gap-1">
-                                                        {certificate.unidades
-                                                            .slice(0, 4)
-                                                            .map((unit) => (
-                                                                <span
-                                                                    key={unit}
-                                                                    className="bg-muted text-foreground/80 rounded-md px-1.5 py-0.5 font-['IBM_Plex_Mono',monospace] text-xs font-bold"
-                                                                >
-                                                                    {unit}
-                                                                </span>
-                                                            ))}
-                                                        {certificate.unidades
-                                                            .length > 4 ? (
-                                                            <span className="text-muted-foreground px-1 text-xs font-bold">
-                                                                +
-                                                                {certificate
-                                                                    .unidades
-                                                                    .length -
-                                                                    4}{' '}
-                                                                más
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-muted-foreground">
-                                                        -
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="border-border text-foreground/80 border-b px-2.5 py-[11px] whitespace-nowrap">
-                                                {fechaCorta(
-                                                    certificate.fecha_vigencia_hasta,
-                                                ) || '-'}
-                                            </TableCell>
-                                            <TableCell className="border-border border-b px-2.5 py-[11px]">
-                                                <Badge
-                                                    className={`rounded-full border-transparent px-2.5 py-1 text-xs font-bold capitalize ${badgeClass(certificate.estado)}`}
-                                                >
-                                                    {certificate.estado}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell
-                                                className="border-border border-b px-2.5 py-[11px]"
-                                                onClick={(event) =>
-                                                    event.stopPropagation()
-                                                }
-                                            >
-                                                <div className="flex gap-1.5">
-                                                    <Button
-                                                        aria-label="Ver certificado"
-                                                        asChild
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className={accion}
-                                                        title="Ver certificado"
-                                                    >
-                                                        <Link
-                                                            href={verCertificado(
-                                                                certificate.id,
-                                                            )}
-                                                        >
-                                                            <Eye className="size-3.5" />
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        aria-label="Descargar PDF"
-                                                        asChild
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className={accion}
-                                                        title="Descargar PDF"
-                                                    >
-                                                        <a
-                                                            href={certificados.pdf.url(
-                                                                {
-                                                                    current_team:
-                                                                        teamSlug,
-                                                                    certificate:
-                                                                        certificate.id,
-                                                                },
-                                                            )}
-                                                        >
-                                                            <FileDown className="size-3.5" />
-                                                        </a>
-                                                    </Button>
-                                                    <Button
-                                                        aria-label="Imprimir certificado"
-                                                        asChild
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className={accion}
-                                                        title="Imprimir"
-                                                    >
-                                                        <a
-                                                            href={certificados.pdf.url(
-                                                                {
-                                                                    current_team:
-                                                                        teamSlug,
-                                                                    certificate:
-                                                                        certificate.id,
-                                                                },
-                                                                {
-                                                                    query: {
-                                                                        inline: 1,
+                                            {nuevoDia ? (
+                                                <h2 className="text-muted-foreground pt-2 text-xs font-bold tracking-wide uppercase">
+                                                    {nombreDelDia(grupo.dia)}
+                                                </h2>
+                                            ) : null}
+                                            <article className="border-border bg-card space-y-3 rounded-2xl border p-4">
+                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                                    <div className="min-w-0 flex-[1_1_280px]">
+                                                        {primero.client_id ? (
+                                                            <Link
+                                                                href={clientes.show.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        client: primero.client_id,
                                                                     },
-                                                                },
-                                                            )}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            <Printer className="size-3.5" />
-                                                        </a>
-                                                    </Button>
-                                                    <Button
-                                                        aria-label="Descargar Word editable"
-                                                        asChild
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className={accion}
-                                                        title="Descargar Word editable"
-                                                    >
-                                                        <a
-                                                            href={certificados.word.url(
+                                                                )}
+                                                                className="text-foreground hover:text-primary-strong text-base font-bold hover:underline"
+                                                            >
                                                                 {
-                                                                    current_team:
-                                                                        teamSlug,
-                                                                    certificate:
-                                                                        certificate.id,
-                                                                },
-                                                            )}
+                                                                    primero.cliente
+                                                                }
+                                                            </Link>
+                                                        ) : (
+                                                            <span className="text-foreground text-base font-bold">
+                                                                {primero.cliente ??
+                                                                    'Sin cliente'}
+                                                            </span>
+                                                        )}
+                                                        <p className="text-muted-foreground text-xs">
+                                                            {[
+                                                                primero.documento,
+                                                                primero.orden,
+                                                                primero.venta
+                                                                    ?.numero &&
+                                                                    `venta ${primero.venta.numero}`,
+                                                                primero.venta
+                                                                    ?.comprobante,
+                                                                codigos.length >
+                                                                    0 &&
+                                                                    `${codigos.length} ${codigos.length === 1 ? 'extintor' : 'extintores'}`,
+                                                                primero.participantes >
+                                                                    0 &&
+                                                                    `${primero.participantes} trabajadores`,
+                                                            ]
+                                                                .filter(Boolean)
+                                                                .join(' · ')}
+                                                        </p>
+                                                    </div>
+                                                    {grupo.certificados.length >
+                                                    1 ? (
+                                                        <Button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                grupo.certificados.forEach(
+                                                                    (c) => {
+                                                                        const enlace =
+                                                                            document.createElement(
+                                                                                'a',
+                                                                            );
+                                                                        enlace.href =
+                                                                            pdf(
+                                                                                c,
+                                                                            );
+                                                                        enlace.download =
+                                                                            '';
+                                                                        enlace.click();
+                                                                    },
+                                                                )
+                                                            }
+                                                            className="h-11"
                                                         >
-                                                            <FileText className="size-3.5 text-[#2b579a]" />
-                                                        </a>
-                                                    </Button>
+                                                            <FileDown className="size-4" />
+                                                            Descargar los{' '}
+                                                            {
+                                                                grupo
+                                                                    .certificados
+                                                                    .length
+                                                            }{' '}
+                                                            PDF
+                                                        </Button>
+                                                    ) : null}
                                                 </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                                <div className="grid gap-2 md:grid-cols-2">
+                                                    {grupo.certificados.map(
+                                                        (certificate) => (
+                                                            <div
+                                                                key={
+                                                                    certificate.id
+                                                                }
+                                                                className="border-border flex flex-wrap items-center gap-2 rounded-xl border p-3"
+                                                            >
+                                                                <Award
+                                                                    className={`size-5 shrink-0 ${certificate.estado === 'vigente' ? 'text-primary-strong' : 'text-muted-foreground'}`}
+                                                                />
+                                                                <Link
+                                                                    href={verCertificado(
+                                                                        certificate.id,
+                                                                    )}
+                                                                    className="min-w-0 flex-1"
+                                                                >
+                                                                    <span className="text-foreground block font-['IBM_Plex_Mono',monospace] text-sm font-bold">
+                                                                        {
+                                                                            certificate.numero
+                                                                        }
+                                                                    </span>
+                                                                    <span className="text-muted-foreground block truncate text-xs">
+                                                                        {certificate.tipo ??
+                                                                            certificate.tipo_codigo}
+                                                                        {certificate.fecha_vigencia_hasta
+                                                                            ? ` · hasta ${fechaCorta(certificate.fecha_vigencia_hasta)}`
+                                                                            : ''}
+                                                                    </span>
+                                                                </Link>
+                                                                <Badge
+                                                                    className={`rounded-full border-transparent px-2.5 py-1 text-xs font-bold capitalize ${badgeClass(certificate.estado)}`}
+                                                                >
+                                                                    {
+                                                                        certificate.estado
+                                                                    }
+                                                                </Badge>
+                                                                <div className="flex gap-1">
+                                                                    <Button
+                                                                        aria-label={`Descargar PDF de ${certificate.numero}`}
+                                                                        asChild
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        className={
+                                                                            accion
+                                                                        }
+                                                                        title="Descargar PDF"
+                                                                    >
+                                                                        <a
+                                                                            href={pdf(
+                                                                                certificate,
+                                                                            )}
+                                                                        >
+                                                                            <FileDown className="size-4" />
+                                                                        </a>
+                                                                    </Button>
+                                                                    <Button
+                                                                        aria-label={`Imprimir ${certificate.numero}`}
+                                                                        asChild
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        className={
+                                                                            accion
+                                                                        }
+                                                                        title="Imprimir"
+                                                                    >
+                                                                        <a
+                                                                            href={certificados.pdf.url(
+                                                                                {
+                                                                                    current_team:
+                                                                                        teamSlug,
+                                                                                    certificate:
+                                                                                        certificate.id,
+                                                                                },
+                                                                                {
+                                                                                    query: {
+                                                                                        inline: 1,
+                                                                                    },
+                                                                                },
+                                                                            )}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                        >
+                                                                            <Printer className="size-4" />
+                                                                        </a>
+                                                                    </Button>
+                                                                    <Button
+                                                                        aria-label={`Descargar Word de ${certificate.numero}`}
+                                                                        asChild
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        className={
+                                                                            accion
+                                                                        }
+                                                                        title="Descargar Word editable"
+                                                                    >
+                                                                        <a
+                                                                            href={certificados.word.url(
+                                                                                {
+                                                                                    current_team:
+                                                                                        teamSlug,
+                                                                                    certificate:
+                                                                                        certificate.id,
+                                                                                },
+                                                                            )}
+                                                                        >
+                                                                            <FileText className="size-4 text-[#2b579a]" />
+                                                                        </a>
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
+                                                {codigos.length > 0 ? (
+                                                    <p className="text-muted-foreground text-xs">
+                                                        Extintores:{' '}
+                                                        <span className="text-foreground font-['IBM_Plex_Mono',monospace]">
+                                                            {codigos.join(
+                                                                ' · ',
+                                                            )}
+                                                        </span>
+                                                    </p>
+                                                ) : null}
+                                            </article>
+                                        </div>
+                                    );
+                                },
+                            )}
                         </div>
                     )}
 

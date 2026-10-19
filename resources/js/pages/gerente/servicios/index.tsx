@@ -25,17 +25,31 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    CategoriaSelect,
-    type CategoriaItem,
-} from '@/components/categoria-select';
+import type { CategoriaItem } from '@/components/categoria-select';
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { toast } from 'sonner';
 import ServiciosRoutes from '@/routes/gerente/servicios';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
 import { NativeSelect } from '@/components/ui/native-select';
+import {
+    TiposDeServicioModal,
+    type TipoDeServicioItem,
+} from '@/components/tipos-de-servicio-modal';
+import {
+    type EstadoDetraccion,
+    type OpcionDetraccion,
+} from '@/components/datos-tributarios-catalogo';
 import { Empty } from '@/components/ui/empty';
+import OpcionesAgente from '@/components/opciones-agente';
+import BotonAgentes from '@/components/agentes-modal';
+
+const etiquetaUnidad = (codigo: string, nombre: string) => {
+    if (codigo === 'ZZ') return 'Unidad de servicio';
+    if (codigo === 'NIU') return 'Unidad';
+    return nombre;
+};
+
 type ServiceItem = {
     id: number;
     codigo: string;
@@ -46,11 +60,14 @@ type ServiceItem = {
     agente: string | null;
     capacidad: string | null;
     precio_venta: number;
+    estado_detraccion: EstadoDetraccion;
     codigo_detraccion: string | null;
     aplica_igv: boolean;
     tipo_afectacion_igv: string | null;
     igv_requiere_revision: boolean;
     certificate_type_id: number | null;
+    tipo_de_servicio_id: number | null;
+    tipo: string | null;
     activo: boolean;
 };
 type PaginationLink = {
@@ -79,9 +96,10 @@ type PageProps = {
     filters: ServiceFilters;
     kpis: ServiceKpis;
     tiposCertificado: { id: number; nombre: string }[];
+    tiposDeServicio: TipoDeServicioItem[];
+    detracciones: OpcionDetraccion[];
     categorias: CategoriaItem[];
     unidadesMedida: { codigo: string; nombre: string }[];
-    agentes: { valor: string; etiqueta: string }[];
     flash?: {
         success?: string;
         error?: string;
@@ -104,9 +122,9 @@ export default function ServiciosIndex() {
         filters,
         kpis,
         tiposCertificado,
-        categorias,
+        tiposDeServicio,
+        detracciones,
         unidadesMedida,
-        agentes,
         flash,
     } = usePage<PageProps>().props;
     const [buscar, setBuscar] = useState(filters.buscar || '');
@@ -115,6 +133,7 @@ export default function ServiciosIndex() {
         null,
     );
     const form = useForm({
+        tipo_de_servicio_id: '',
         codigo: '',
         nombre: '',
         descripcion: '',
@@ -123,6 +142,7 @@ export default function ServiciosIndex() {
         agente: '',
         capacidad: '',
         precio_venta: '',
+        estado_detraccion: 'pendiente' as EstadoDetraccion,
         codigo_detraccion: '',
         aplica_igv: true,
         tipo_afectacion_igv: '10',
@@ -134,6 +154,8 @@ export default function ServiciosIndex() {
         form.reset();
         form.clearErrors();
         form.setData({
+            tipo_de_servicio_id: '',
+            estado_detraccion: 'pendiente',
             codigo: '',
             nombre: '',
             descripcion: '',
@@ -153,6 +175,9 @@ export default function ServiciosIndex() {
     const openEditModal = (service: ServiceItem) => {
         setEditingService(service);
         form.setData({
+            tipo_de_servicio_id: service.tipo_de_servicio_id
+                ? String(service.tipo_de_servicio_id)
+                : '',
             codigo: service.codigo,
             nombre: service.nombre,
             descripcion: service.descripcion || '',
@@ -161,6 +186,7 @@ export default function ServiciosIndex() {
             agente: service.agente ?? '',
             capacidad: service.capacidad ?? '',
             precio_venta: String(service.precio_venta),
+            estado_detraccion: service.estado_detraccion ?? 'pendiente',
             codigo_detraccion: service.codigo_detraccion ?? '',
             aplica_igv: service.aplica_igv,
             tipo_afectacion_igv: service.igv_requiere_revision
@@ -179,8 +205,48 @@ export default function ServiciosIndex() {
         form.reset();
         form.clearErrors();
     };
+    const tipoElegido = tiposDeServicio.find(
+        (tipo) => String(tipo.id) === form.data.tipo_de_servicio_id,
+    );
+    const cambiarTipoServicio = (id: string) => {
+        const tipo = tiposDeServicio.find((t) => String(t.id) === id);
+        form.setData((data) => ({
+            ...data,
+            tipo_de_servicio_id: id,
+            estado_detraccion: tipo?.estado_detraccion ?? 'pendiente',
+            codigo_detraccion: tipo?.codigo_detraccion ?? '',
+            agente: tipo?.pide_extintor ? data.agente : '',
+            capacidad: tipo?.pide_extintor ? data.capacidad : '',
+        }));
+    };
+    const precio = Number(form.data.precio_venta) || 0;
+    const valorSinIgv = precio / 1.18;
+    const reglaElegida = detracciones.find(
+        (opcion) => opcion.codigo === tipoElegido?.codigo_detraccion,
+    );
+    /** La detracción de cada tipo se ve ya en la lista, antes de elegirlo. */
+    const detraccionDelTipo = (tipo: TipoDeServicioItem): string => {
+        if (tipo.estado_detraccion === 'pendiente') {
+            return 'detracción por definir';
+        }
+        if (tipo.estado_detraccion === 'no_sujeto') {
+            return 'sin detracción';
+        }
+        const regla = detracciones.find(
+            (opcion) => opcion.codigo === tipo.codigo_detraccion,
+        );
+
+        return `${tipo.codigo_detraccion}${regla?.porcentaje != null ? ` · ${regla.porcentaje} %` : ''}`;
+    };
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        form.transform((data) => ({
+            ...data,
+            codigo_detraccion:
+                data.estado_detraccion === 'sujeto'
+                    ? data.codigo_detraccion || null
+                    : null,
+        }));
         if (editingService) {
             form.put(
                 ServiciosRoutes.update.url({
@@ -403,8 +469,38 @@ export default function ServiciosIndex() {
                                         <TableCell colSpan={7}>
                                             <Empty
                                                 icon={<Inbox />}
-                                                title="No se encontraron servicios técnicos registrados."
-                                            />
+                                                title={
+                                                    filters.buscar
+                                                        ? 'No hay coincidencias con esta búsqueda.'
+                                                        : 'No se encontraron servicios técnicos registrados.'
+                                                }
+                                            >
+                                                {filters.buscar ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setBuscar('');
+                                                            router.get(
+                                                                ServiciosRoutes.index.url(
+                                                                    {
+                                                                        current_team:
+                                                                            currentTeam.slug,
+                                                                    },
+                                                                ),
+                                                                {
+                                                                    estado: filters.estado,
+                                                                },
+                                                                {
+                                                                    preserveState: true,
+                                                                },
+                                                            );
+                                                        }}
+                                                        className="border-border text-foreground hover:bg-muted/50 rounded-lg border px-3 py-2 text-xs font-semibold"
+                                                    >
+                                                        Limpiar búsqueda
+                                                    </button>
+                                                ) : null}
+                                            </Empty>
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -420,14 +516,31 @@ export default function ServiciosIndex() {
                                                 <div className="text-foreground font-medium">
                                                     {s.nombre}
                                                 </div>
+                                                <p className="text-muted-foreground mt-1 text-xs">
+                                                    {s.estado_detraccion ===
+                                                    'sujeto'
+                                                        ? `Detracción ${s.codigo_detraccion ?? 'por revisar'}`
+                                                        : s.estado_detraccion ===
+                                                            'no_sujeto'
+                                                          ? 'No lleva detracción'
+                                                          : 'Detracción por definir'}
+                                                </p>
                                                 {s.descripcion && (
                                                     <div className="text-muted-foreground max-w-xs truncate text-xs">
                                                         {s.descripcion}
                                                     </div>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-foreground/80 px-4 py-3 font-mono">
-                                                {s.unidad_medida}
+                                            <TableCell className="text-foreground/80 px-4 py-3">
+                                                {etiquetaUnidad(
+                                                    s.unidad_medida,
+                                                    unidadesMedida.find(
+                                                        (u) =>
+                                                            u.codigo ===
+                                                            s.unidad_medida,
+                                                    )?.nombre ??
+                                                        s.unidad_medida,
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
                                                 {formatCurrency(s.precio_venta)}
@@ -563,330 +676,417 @@ export default function ServiciosIndex() {
                             event.preventDefault();
                             modalTrigger.current?.focus();
                         }}
-                        className="border-border bg-card max-h-[90dvh] overflow-y-auto overscroll-contain sm:max-w-2xl"
+                        className="border-border bg-card grid max-h-[90dvh] w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:max-w-2xl"
                     >
-                        <DialogHeader className="border-border border-b pb-3 text-left">
+                        <DialogHeader className="border-border border-b px-6 py-4 text-left">
                             <DialogTitle>
                                 {editingService
                                     ? 'Editar Servicio'
                                     : 'Nuevo Servicio'}
                             </DialogTitle>
                             <DialogDescription>
-                                Define el servicio, su precio y los datos que se
-                                usarán en la venta.
+                                Los campos con * son obligatorios.
                             </DialogDescription>
                         </DialogHeader>
                         <form
                             onSubmit={handleSubmit}
-                            className="mt-4 space-y-4 text-xs"
+                            className="flex min-h-0 flex-col"
                         >
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-foreground/80 block font-semibold">
-                                        Código *
-                                    </label>
-                                    <input
-                                        aria-label="Código *"
-                                        type="text"
-                                        required
-                                        value={form.data.codigo}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'codigo',
-                                                e.target.value.toUpperCase(),
-                                            )
-                                        }
-                                        placeholder="SRV-REC-PQS"
-                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono uppercase focus:outline-none"
-                                    />
-                                    {form.errors.codigo && (
-                                        <p className="text-destructive-strong mt-1">
-                                            {form.errors.codigo}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="text-foreground/80 block font-semibold">
-                                        U.M. *
-                                    </label>
-                                    <NativeSelect
-                                        aria-label="U.M. *"
-                                        value={form.data.unidad_medida}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'unidad_medida',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
+                            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4 text-sm sm:px-6">
+                                {Object.keys(form.errors).length > 0 && (
+                                    <p
+                                        role="alert"
+                                        className="text-destructive-strong rounded-lg border p-3"
                                     >
-                                        {unidadesMedida.map((u) => (
-                                            <option
-                                                key={u.codigo}
-                                                value={u.codigo}
-                                            >
-                                                {u.codigo} ({u.nombre})
-                                            </option>
-                                        ))}
-                                    </NativeSelect>
-                                    {form.errors.unidad_medida && (
-                                        <p className="text-destructive-strong mt-1">
-                                            {form.errors.unidad_medida}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            <CategoriaSelect
-                                value={form.data.categoria}
-                                onChange={(clave) =>
-                                    form.setData('categoria', clave)
-                                }
-                                categorias={categorias}
-                            />
-                            <div>
-                                <label className="text-foreground/80 block font-semibold">
-                                    Nombre del Servicio *
-                                </label>
-                                <input
-                                    aria-label="Nombre del Servicio *"
-                                    type="text"
-                                    required
-                                    value={form.data.nombre}
-                                    onChange={(e) =>
-                                        form.setData('nombre', e.target.value)
-                                    }
-                                    placeholder="Recarga y Mantenimiento PQS 6kg"
-                                    className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                />
-                                {form.errors.nombre && (
-                                    <p className="text-destructive-strong mt-1">
-                                        {form.errors.nombre}
+                                        {Object.values(form.errors)[0]} Tus
+                                        datos se mantienen; corrige el campo
+                                        indicado.
                                     </p>
                                 )}
-                            </div>
-                            <div>
-                                <label className="text-foreground/80 block font-semibold">
-                                    Descripción
-                                </label>
-                                <textarea
-                                    aria-label="Descripción"
-                                    rows={2}
-                                    value={form.data.descripcion}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'descripcion',
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="Detalle de procedimiento técnico, incluye certificado..."
-                                    className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-foreground/80 block font-semibold">
-                                    Precio Venta (S/) *
-                                </label>
-                                <input
-                                    aria-label="Precio Venta (S/) *"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    required
-                                    value={form.data.precio_venta}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'precio_venta',
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="45.00"
-                                    className="border-border focus:border-primary mt-1 w-full rounded-lg border px-3 py-2 font-mono focus:outline-none"
-                                />
-                                {form.errors.precio_venta && (
-                                    <p className="text-destructive-strong mt-1">
-                                        {form.errors.precio_venta}
-                                    </p>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <label className="flex flex-col gap-1">
-                                    Agente que recarga
-                                    <NativeSelect
-                                        value={form.data.agente}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'agente',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="border-border rounded border p-2"
-                                    >
-                                        <option value="">
-                                            No es una recarga
-                                        </option>
-                                        {agentes.map((agente) => (
-                                            <option
-                                                key={agente.valor}
-                                                value={agente.valor}
+                                <div className="grid gap-4">
+                                    <div>
+                                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                                            <label
+                                                htmlFor="servicio-tipo"
+                                                className="block font-medium"
                                             >
-                                                {agente.etiqueta}
+                                                Tipo de servicio *
+                                            </label>
+                                            <TiposDeServicioModal
+                                                equipo={currentTeam.slug}
+                                                tipos={tiposDeServicio}
+                                                certificados={tiposCertificado}
+                                                detracciones={detracciones}
+                                            />
+                                        </div>
+                                        <NativeSelect
+                                            id="servicio-tipo"
+                                            name="tipo_de_servicio_id"
+                                            value={
+                                                form.data.tipo_de_servicio_id
+                                            }
+                                            onChange={(event) =>
+                                                cambiarTipoServicio(
+                                                    event.target.value,
+                                                )
+                                            }
+                                            required
+                                            className="min-h-11 w-full"
+                                            aria-invalid={
+                                                !!form.errors
+                                                    .tipo_de_servicio_id
+                                            }
+                                        >
+                                            <option value="" disabled>
+                                                Elige el tipo de servicio
                                             </option>
-                                        ))}
-                                    </NativeSelect>
-                                </label>
-                                <label className="flex flex-col gap-1">
-                                    Capacidad
-                                    <input
-                                        type="text"
-                                        value={form.data.capacidad}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'capacidad',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="6 kg"
-                                        className="border-border rounded border p-2"
-                                    />
-                                    {form.errors.capacidad && (
-                                        <span className="text-destructive-strong">
-                                            {form.errors.capacidad}
-                                        </span>
+                                            {tiposDeServicio
+                                                .filter(
+                                                    (tipo) =>
+                                                        tipo.activo ||
+                                                        String(tipo.id) ===
+                                                            form.data
+                                                                .tipo_de_servicio_id,
+                                                )
+                                                .map((tipo) => (
+                                                    <option
+                                                        key={tipo.id}
+                                                        value={tipo.id}
+                                                    >
+                                                        {`${tipo.nombre} · ${detraccionDelTipo(tipo)}`}
+                                                    </option>
+                                                ))}
+                                        </NativeSelect>
+                                        <p
+                                            className={`mt-1.5 text-xs ${tipoElegido?.estado_detraccion === 'pendiente' ? 'text-warning-strong' : 'text-muted-foreground'}`}
+                                        >
+                                            {!tipoElegido
+                                                ? 'El tipo trae la detracción, el certificado y el código SUNAT.'
+                                                : [
+                                                      tipoElegido.estado_detraccion ===
+                                                      'pendiente'
+                                                          ? 'Detracción por definir: elígela en Gestionar'
+                                                          : tipoElegido.estado_detraccion ===
+                                                              'no_sujeto'
+                                                            ? 'No lleva detracción'
+                                                            : `Detracción ${tipoElegido.codigo_detraccion} · ${tipoElegido.detraccion ?? reglaElegida?.nombre ?? ''}${reglaElegida?.porcentaje != null ? ` · ${reglaElegida.porcentaje} %` : ''} si pasa S/ 700`,
+                                                      `Certificado: ${tipoElegido.certificado ?? 'no emite'}`,
+                                                      tipoElegido.codigo_sunat
+                                                          ? `SUNAT ${tipoElegido.codigo_sunat}`
+                                                          : null,
+                                                  ]
+                                                      .filter(Boolean)
+                                                      .join(' · ')}
+                                        </p>
+                                        {form.errors.tipo_de_servicio_id && (
+                                            <p
+                                                role="alert"
+                                                className="text-destructive-strong mt-1 text-sm"
+                                            >
+                                                {
+                                                    form.errors
+                                                        .tipo_de_servicio_id
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label
+                                            htmlFor="servicio-nombre"
+                                            className="mb-1.5 block font-medium"
+                                        >
+                                            Nombre del servicio *
+                                        </label>
+                                        <input
+                                            id="servicio-nombre"
+                                            name="nombre"
+                                            type="text"
+                                            required
+                                            value={form.data.nombre}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'nombre',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder="Recarga PQS de 6 kg"
+                                            className="min-h-11 w-full"
+                                            aria-invalid={!!form.errors.nombre}
+                                        />
+                                        {form.errors.nombre && (
+                                            <p
+                                                role="alert"
+                                                className="text-destructive-strong mt-1 text-sm"
+                                            >
+                                                {form.errors.nombre}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-3">
+                                        <div>
+                                            <label
+                                                htmlFor="servicio-precio"
+                                                className="mb-1.5 block font-medium"
+                                            >
+                                                Precio final (S/) *
+                                            </label>
+                                            <input
+                                                id="servicio-precio"
+                                                name="precio_venta"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                inputMode="decimal"
+                                                required
+                                                value={form.data.precio_venta}
+                                                onChange={(event) =>
+                                                    form.setData(
+                                                        'precio_venta',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                placeholder="45.00"
+                                                className="min-h-11 w-full font-mono"
+                                                aria-invalid={
+                                                    !!form.errors.precio_venta
+                                                }
+                                                aria-describedby="servicio-precio-ayuda"
+                                            />
+                                            <p
+                                                id="servicio-precio-ayuda"
+                                                className="text-muted-foreground mt-1 text-xs"
+                                            >
+                                                {form.data
+                                                    .tipo_afectacion_igv ===
+                                                '10'
+                                                    ? `Sin IGV S/ ${valorSinIgv.toFixed(2)} + IGV S/ ${(precio - valorSinIgv).toFixed(2)}`
+                                                    : 'Sin IGV: es el precio que paga el cliente.'}
+                                            </p>
+                                            {form.errors.precio_venta && (
+                                                <p
+                                                    role="alert"
+                                                    className="text-destructive-strong mt-1 text-sm"
+                                                >
+                                                    {form.errors.precio_venta}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label
+                                                htmlFor="servicio-unidad"
+                                                className="mb-1.5 block font-medium"
+                                            >
+                                                Unidad *
+                                            </label>
+                                            <NativeSelect
+                                                id="servicio-unidad"
+                                                required
+                                                value={form.data.unidad_medida}
+                                                onChange={(event) =>
+                                                    form.setData(
+                                                        'unidad_medida',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                className="min-h-11 w-full"
+                                                aria-invalid={
+                                                    !!form.errors.unidad_medida
+                                                }
+                                            >
+                                                {unidadesMedida.map(
+                                                    (unidad) => (
+                                                        <option
+                                                            key={unidad.codigo}
+                                                            value={
+                                                                unidad.codigo
+                                                            }
+                                                        >
+                                                            {unidad.codigo} ·{' '}
+                                                            {etiquetaUnidad(
+                                                                unidad.codigo,
+                                                                unidad.nombre,
+                                                            )}
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </NativeSelect>
+                                            {form.errors.unidad_medida && (
+                                                <p
+                                                    role="alert"
+                                                    className="text-destructive-strong mt-1 text-sm"
+                                                >
+                                                    {form.errors.unidad_medida}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label
+                                                htmlFor="servicio-igv"
+                                                className="mb-1.5 block font-medium"
+                                            >
+                                                Tratamiento del IGV *
+                                            </label>
+                                            <NativeSelect
+                                                id="servicio-igv"
+                                                required
+                                                value={
+                                                    form.data
+                                                        .tipo_afectacion_igv
+                                                }
+                                                onChange={(event) =>
+                                                    form.setData((data) => ({
+                                                        ...data,
+                                                        tipo_afectacion_igv:
+                                                            event.target.value,
+                                                        aplica_igv:
+                                                            event.target
+                                                                .value === '10',
+                                                    }))
+                                                }
+                                                className="min-h-11 w-full"
+                                                aria-invalid={
+                                                    !!form.errors
+                                                        .tipo_afectacion_igv
+                                                }
+                                            >
+                                                <option value="" disabled>
+                                                    Selecciona el tratamiento
+                                                </option>
+                                                <option value="10">
+                                                    Gravado · IGV 18 %
+                                                </option>
+                                                <option value="20">
+                                                    Exonerado
+                                                </option>
+                                                <option value="30">
+                                                    Inafecto
+                                                </option>
+                                            </NativeSelect>
+                                            {form.errors
+                                                .tipo_afectacion_igv && (
+                                                <p
+                                                    role="alert"
+                                                    className="text-destructive-strong mt-1 text-sm"
+                                                >
+                                                    {
+                                                        form.errors
+                                                            .tipo_afectacion_igv
+                                                    }
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {tipoElegido?.pide_extintor && (
+                                        <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+                                            <div className="min-w-0">
+                                                <label
+                                                    htmlFor="servicio-agente"
+                                                    className="mb-1.5 block font-medium"
+                                                >
+                                                    Agente del extintor
+                                                </label>
+                                                <div className="flex gap-1.5">
+                                                    <NativeSelect
+                                                        id="servicio-agente"
+                                                        name="agente"
+                                                        value={form.data.agente}
+                                                        onChange={(event) =>
+                                                            form.setData(
+                                                                'agente',
+                                                                event.target
+                                                                    .value,
+                                                            )
+                                                        }
+                                                        className="min-h-11 min-w-0 flex-1"
+                                                    >
+                                                        <OpcionesAgente vacia="Cualquier agente" />
+                                                    </NativeSelect>
+                                                    <BotonAgentes />
+                                                </div>
+                                                {form.errors.agente && (
+                                                    <p
+                                                        role="alert"
+                                                        className="text-destructive-strong mt-1 text-sm"
+                                                    >
+                                                        {form.errors.agente}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <label
+                                                    htmlFor="servicio-capacidad"
+                                                    className="mb-1.5 block font-medium"
+                                                >
+                                                    Capacidad del extintor
+                                                </label>
+                                                <input
+                                                    id="servicio-capacidad"
+                                                    name="capacidad"
+                                                    type="text"
+                                                    value={form.data.capacidad}
+                                                    onChange={(event) =>
+                                                        form.setData(
+                                                            'capacidad',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="6 kg"
+                                                    className="min-h-11 w-full"
+                                                    aria-invalid={
+                                                        !!form.errors.capacidad
+                                                    }
+                                                />
+                                                {form.errors.capacidad && (
+                                                    <p
+                                                        role="alert"
+                                                        className="text-destructive-strong mt-1 text-sm"
+                                                    >
+                                                        {form.errors.capacidad}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
                                     )}
-                                </label>
+                                </div>
                             </div>
-                            <label className="flex flex-col gap-1">
-                                Certificado que emite
-                                <NativeSelect
-                                    value={form.data.certificate_type_id}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'certificate_type_id',
-                                            e.target.value,
-                                        )
-                                    }
-                                    className="border-border rounded border p-2"
+                            <div className="border-border flex shrink-0 flex-col gap-2 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                                <label
+                                    htmlFor="servicio-activo"
+                                    className="flex min-h-11 cursor-pointer items-center gap-2 font-medium"
                                 >
-                                    <option value="">Ninguno</option>
-                                    {tiposCertificado.map((tipo) => (
-                                        <option key={tipo.id} value={tipo.id}>
-                                            {tipo.nombre}
-                                        </option>
-                                    ))}
-                                </NativeSelect>
-                                {form.errors.certificate_type_id && (
-                                    <span
-                                        className="text-destructive-strong"
-                                        role="alert"
-                                    >
-                                        {form.errors.certificate_type_id}
-                                    </span>
-                                )}
-                            </label>
-                            <label className="flex flex-col gap-1 text-[13px]">
-                                Clasificación de detracción
-                                <NativeSelect
-                                    value={form.data.codigo_detraccion}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'codigo_detraccion',
-                                            e.target.value,
-                                        )
-                                    }
-                                    className="border-border rounded border p-2"
-                                >
-                                    <option value="">
-                                        Por categoría / pendiente de revisión
-                                    </option>
-                                    <option value="022">
-                                        022 · Recarga / otros servicios
-                                        empresariales
-                                    </option>
-                                    <option value="020">
-                                        020 · Mantenimiento y reparación
-                                    </option>
-                                    <option value="037">
-                                        037 · Demás servicios gravados
-                                        (residual)
-                                    </option>
-                                </NativeSelect>
-                                <span className="text-muted-foreground text-xs">
-                                    12% en facturas gravadas mayores a S/ 700.
-                                    Los paquetes combinados requieren revisión
-                                    fiscal antes de elegir el código.
-                                </span>
-                                {form.errors.codigo_detraccion && (
-                                    <span
-                                        role="alert"
-                                        className="text-destructive-strong"
-                                    >
-                                        {form.errors.codigo_detraccion}
-                                    </span>
-                                )}
-                            </label>
-                            <div className="flex items-center gap-6 pt-1">
-                                <label className="flex flex-col gap-1">
-                                    Afectación del IGV
-                                    <NativeSelect
-                                        value={form.data.tipo_afectacion_igv}
-                                        required
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'tipo_afectacion_igv',
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="border-border rounded border p-2"
-                                    >
-                                        <option value="" disabled>
-                                            Elige la afectación
-                                        </option>
-                                        <option value="10">
-                                            Gravado (IGV incluido: 18%)
-                                        </option>
-                                        <option value="20">Exonerado</option>
-                                        <option value="30">Inafecto</option>
-                                    </NativeSelect>
-                                    {form.errors.tipo_afectacion_igv && (
-                                        <span className="text-destructive-strong">
-                                            {form.errors.tipo_afectacion_igv}
-                                        </span>
-                                    )}
-                                </label>
-                                <label className="flex cursor-pointer items-center gap-2">
                                     <input
+                                        id="servicio-activo"
+                                        name="activo"
                                         type="checkbox"
                                         checked={form.data.activo}
-                                        onChange={(e) =>
+                                        onChange={(event) =>
                                             form.setData(
                                                 'activo',
-                                                e.target.checked,
+                                                event.target.checked,
                                             )
                                         }
-                                        className="border-border text-primary-strong rounded"
+                                        className="accent-primary size-4"
                                     />
-                                    <span className="text-foreground/80">
-                                        Activo
-                                    </span>
+                                    Disponible para nuevas ventas
                                 </label>
-                            </div>
-                            <div className="border-border flex justify-end gap-2 border-t pt-3">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="border-border bg-card text-foreground/80 hover:bg-background rounded-lg border px-4 py-2 text-xs font-semibold"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={form.processing}
-                                    className="bg-primary hover:bg-primary/90 rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
-                                >
-                                    {editingService
-                                        ? 'Guardar Cambios'
-                                        : 'Crear Servicio'}
-                                </button>
+                                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                                    <button
+                                        type="button"
+                                        onClick={closeModal}
+                                        className="border-border bg-card text-foreground/80 hover:bg-background min-h-11 w-full rounded-lg border px-4 text-sm font-semibold sm:w-auto"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={form.processing}
+                                        className="bg-primary hover:bg-primary/90 min-h-11 w-full rounded-lg px-4 text-sm font-semibold text-white disabled:opacity-50 sm:w-auto"
+                                    >
+                                        {editingService
+                                            ? 'Guardar cambios'
+                                            : 'Crear servicio'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </DialogContent>

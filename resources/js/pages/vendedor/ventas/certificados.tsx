@@ -136,13 +136,15 @@ function tiposPorDestino(destino: string) {
 
 let secuencia = 1;
 
-// La P.H. se certifica solo con lo que registró el técnico (C2): nada se
-// llena solo, salvo la presión que corresponde al agente como sugerencia.
+// La P.H. se certifica con lo que registró el técnico (C2). La presión y el
+// tiempo son los mismos para todos: 600 PSI por 60 segundos.
 function datosDePrueba(u: Unidad) {
     return {
         ph_fecha: u.fecha_ultima_ph ?? '',
-        ph_presion: u.presion_ph ?? '',
-        ph_tiempo: u.tiempo_ph ?? '',
+        // La serie que falta se escribe aquí; sin ella no se certifica.
+        serie_nueva: '',
+        ph_presion: u.presion_ph ?? '600 PSI',
+        ph_tiempo: u.tiempo_ph ?? '60 SEG',
         ph_resultado: u.fecha_ultima_ph ? 'aprobado' : '',
     };
 }
@@ -296,6 +298,9 @@ export default function ArmarCertificados({
                         .map((f) => ({
                             equipment_id: f.equipment_id,
                             numero_cliente: f.numero_cliente || null,
+                            ...(f.serie_nueva.trim()
+                                ? { serie_fabricante: f.serie_nueva.trim() }
+                                : {}),
                             ...(g.tipos.includes('prueba_hidrostatica') &&
                             !f.ph_reutilizable
                                 ? {
@@ -983,8 +988,42 @@ export default function ArmarCertificados({
                                                             </span>
                                                         </TableCell>
                                                         <TableCell className="px-2.5 py-1.5 font-['IBM_Plex_Mono',monospace] whitespace-nowrap tabular-nums">
-                                                            {fila.serie_fabricante ??
-                                                                '—'}
+                                                            {fila.serie_fabricante &&
+                                                            !fila.serie_fabricante.startsWith(
+                                                                'No legible',
+                                                            ) ? (
+                                                                fila.serie_fabricante
+                                                            ) : (
+                                                                <input
+                                                                    aria-label={`Serie de fábrica de ${fila.codigo_interno}`}
+                                                                    value={
+                                                                        fila.serie_nueva
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        setFilas(
+                                                                            filas.map(
+                                                                                (
+                                                                                    f,
+                                                                                ) =>
+                                                                                    f.equipment_id ===
+                                                                                    fila.equipment_id
+                                                                                        ? {
+                                                                                              ...f,
+                                                                                              serie_nueva:
+                                                                                                  e
+                                                                                                      .target
+                                                                                                      .value,
+                                                                                          }
+                                                                                        : f,
+                                                                            ),
+                                                                        )
+                                                                    }
+                                                                    placeholder="Falta: escríbela"
+                                                                    className="h-9 w-36 rounded-md border-2 border-amber-500 bg-transparent px-2 text-xs"
+                                                                />
+                                                            )}
                                                         </TableCell>
                                                         <TableCell className="px-2.5 py-1.5">
                                                             <NativeSelect

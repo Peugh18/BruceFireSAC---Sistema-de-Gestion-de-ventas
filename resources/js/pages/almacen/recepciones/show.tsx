@@ -1,4 +1,8 @@
 import { ProgresoConEtiqueta } from '@/components/progreso';
+import CampoMarca from '@/components/campo-marca';
+import SelectorFormatoStickers, {
+    type FormatoStickers,
+} from '@/components/formato-stickers';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -80,6 +84,7 @@ export type Props = {
 };
 
 export default function RecepcionesShow({ reception, current_year }: Props) {
+    const [formato, setFormato] = useState<FormatoStickers>('rollo');
     const recibidas = reception.items.reduce(
         (total, item) => total + item.cantidad,
         0,
@@ -204,20 +209,34 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                         <span>Volver a recepciones</span>
                     </Link>
 
-                    <div className="flex items-center gap-2">
-                        {reception.unidades_serializadas.length > 0 && (
-                            <a
-                                href={recepciones.stickers.url({
-                                    current_team: teamSlug,
-                                    reception: reception.id,
-                                })}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="border-border bg-card text-foreground hover:bg-background inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-bold"
-                            >
-                                <Barcode className="size-4" />
-                                <span>Imprimir Stickers (PDF)</span>
-                            </a>
+                    <div className="flex flex-wrap items-center gap-2">
+                        {(reception.unidades_serializadas.length > 0 ||
+                            reception.items.some(
+                                (item) =>
+                                    !item.producto.serializado &&
+                                    item.cantidad_conforme > 0,
+                            )) && (
+                            <>
+                                <SelectorFormatoStickers
+                                    value={formato}
+                                    onChange={setFormato}
+                                />
+                                <a
+                                    href={recepciones.stickers.url(
+                                        {
+                                            current_team: teamSlug,
+                                            reception: reception.id,
+                                        },
+                                        { query: { formato } },
+                                    )}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="border-border bg-card text-foreground hover:bg-background inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-bold"
+                                >
+                                    <Barcode className="size-4" />
+                                    <span>Imprimir Stickers (PDF)</span>
+                                </a>
+                            </>
                         )}
 
                         <Button
@@ -555,25 +574,22 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
                                                                             }
                                                                             className="h-7 text-xs"
                                                                         />
-                                                                        <Input
-                                                                            aria-label="Marca"
-                                                                            placeholder="Marca"
+                                                                        <CampoMarca
                                                                             value={
                                                                                 u.marca
                                                                             }
                                                                             onChange={(
-                                                                                e,
+                                                                                marca,
                                                                             ) =>
                                                                                 updateUnidadNueva(
                                                                                     idx,
                                                                                     uIdx,
                                                                                     'marca',
-                                                                                    e
-                                                                                        .target
-                                                                                        .value,
+                                                                                    marca,
                                                                                 )
                                                                             }
-                                                                            className="h-7 text-xs"
+                                                                            vacia="Elige la marca"
+                                                                            className="h-9 min-w-0 flex-1 text-xs"
                                                                             required
                                                                         />
                                                                         <Input

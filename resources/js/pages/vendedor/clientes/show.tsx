@@ -72,7 +72,7 @@ export type Client = {
     id: number;
     codigo_interno: string;
     tipo_documento: string;
-    numero_documento: string;
+    numero_documento: string | null;
     razon_social: string;
     nombre_comercial: string | null;
     telefono: string | null;
@@ -372,7 +372,7 @@ export default function ClienteShow({
     // Formularios
     const editForm = useForm<ClientFormData>({
         tipo_documento: client.tipo_documento === 'dni' ? 'dni' : 'ruc',
-        numero_documento: client.numero_documento,
+        numero_documento: client.numero_documento ?? '',
         razon_social: client.razon_social,
         nombre_comercial: client.nombre_comercial ?? '',
         telefono: client.telefono ?? '',

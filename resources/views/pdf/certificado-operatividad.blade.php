@@ -151,6 +151,18 @@
         .sello { width: 21mm; }
         /* Marca de agua de un certificado anulado o vencido */
         .sello-estado { position: fixed; top: 360px; left: 0; right: 0; text-align: center; font-size: 110px; font-weight: bold; color: #dc2626; opacity: 0.22; letter-spacing: 10px; transform: rotate(-35deg); z-index: 1000; }
+        @if ($horizontal ?? false)
+            /* A4 horizontal: 271 mm útiles de ancho. */
+            .marca-agua { top: 52mm; left: 86mm; }
+            .anulado { top: 82mm; left: 0; width: 271mm; }
+            .bloques { width: 274.2mm; }
+            .sello-estado { top: 240px; }
+        @endif
+        @foreach (['encabezado' => '.cabecera, .titulo, .norma', 'datos' => '.seccion-datos', 'tabla' => '.zona-tabla', 'pruebas' => '.zona-pruebas', 'cierre' => '.zona-cierre', 'firmas' => '.firmas'] as $zona => $selector)
+            @if (isset($tipo['diseno'][$zona]))
+                {{ $selector }} { position: relative; left: {{ (float) $tipo['diseno'][$zona]['x'] }}pt; top: {{ (float) $tipo['diseno'][$zona]['y'] }}pt; }
+            @endif
+        @endforeach
     </style>
 </head>
 <body>
@@ -221,7 +233,7 @@
     @endif
 
     {{-- Datos del cliente y del servicio --}}
-    <table class="seccion">
+    <table class="seccion seccion-datos">
         <tr>
             <td style="width: 55%; padding-right: 2.4mm;">
                 <table class="barra"><tr><td class="texto">Datos del cliente</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
@@ -264,7 +276,7 @@
 
     {{-- Tabla de equipos o componentes --}}
     @if ($columnas && $filas)
-        <div class="seccion">
+        <div class="seccion zona-tabla">
             <table class="barra"><tr><td class="texto">{{ $tituloTabla }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
             <table @class(['tabla', 'compacta' => count($filas) > 12])>
                 <thead>
@@ -296,7 +308,7 @@
 
     {{-- Pruebas realizadas (checklist C / NC / N/A) --}}
     @if ($pruebas)
-        <table class="seccion" style="page-break-inside: avoid;">
+        <table class="seccion zona-pruebas" style="page-break-inside: avoid;">
             <tr>
                 @foreach (array_chunk($pruebas, $mitadPruebas, true) as $lado => $mitad)
                     <td style="width: 50%; {{ $lado === 0 ? 'padding-right: 2.4mm;' : 'padding-left: 2.4mm;' }}">
@@ -345,7 +357,7 @@
 
     {{-- Resultado, responsabilidad y firmas van siempre juntos --}}
     <div style="page-break-inside: avoid;">
-    <div class="seccion">
+    <div class="seccion zona-cierre">
         <table class="barra"><tr><td class="texto">Resultado de la evaluación</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
         <table class="resultado">
             <tr>
@@ -370,7 +382,7 @@
     </div>
 
     @if (! empty($tipo['responsabilidad']))
-        <p class="responsabilidad">{{ $tipo['responsabilidad'] }}</p>
+        <p class="responsabilidad zona-cierre">{{ $tipo['responsabilidad'] }}</p>
     @endif
 
     {{-- Firmas con el sello al centro --}}

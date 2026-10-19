@@ -69,6 +69,12 @@ class DatosDeCaja
                 'monto_apertura' => $turnoActual->monto_apertura,
                 'estado' => $turnoActual->estado,
                 'ventas_por_forma_pago' => $ventasPorFormaPago,
+                'salidas' => $turnoActual->salidas()->latest('id')->get()->map(fn ($salida) => [
+                    'id' => $salida->id,
+                    'monto' => (float) $salida->monto,
+                    'motivo' => $salida->motivo,
+                    'hora' => $salida->created_at?->format('H:i'),
+                ])->values(),
             ] : null,
             'cierres' => $cierres,
             'sedes' => $sedes,
