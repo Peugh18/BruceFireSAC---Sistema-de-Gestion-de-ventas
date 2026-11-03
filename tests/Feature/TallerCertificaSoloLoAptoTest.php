@@ -53,7 +53,7 @@ test('se certifica solo lo que llego y no se rechazo, y la ph va por extintor', 
     $avanzar('trabajo_terminado')->assertSessionHasNoErrors();
     $avanzar('listo_certificado', ['ph_equipos' => [$llego->id]])->assertSessionHasNoErrors();
 
-    $operatividad = Certificate::where('service_order_id', $this->orden->id)->whereHas('certificateType', fn ($q) => $q->where('codigo', '!=', 'prueba_hidrostatica'))->sole();
+    $operatividad = Certificate::where('service_order_id', $this->orden->id)->whereHas('certificateType', fn ($q) => $q->where('codigo', 'operatividad_garantia'))->sole();
     expect($operatividad->certificateUnits()->pluck('equipment_id')->all())->toBe([$llego->id])
         ->and($llego->fresh()->proxima_fecha_atencion->isFuture())->toBeTrue()
         ->and($llego->fresh()->proxima_prueba_hidrostatica->toDateString())->toBe(now()->addYears(5)->toDateString())
