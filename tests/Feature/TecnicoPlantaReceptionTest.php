@@ -9,6 +9,7 @@ use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -126,31 +127,9 @@ test('alta tecnica rapida caso B creates new equipment with sequence generator a
     expect(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'otro')->exists())->toBeTrue();
 });
 
-test('tecnico planta can print barcode stickers for equipments in order', function () {
-    $client = Client::factory()->create();
-    $order = ServiceOrder::factory()->create([
-        'client_id' => $client->id,
-        'codigo' => 'OS-REC-0005',
-        'estado' => 'recibido_planta',
-    ]);
-
-    $equipment = Equipment::factory()->create([
-        'client_id' => $client->id,
-        'numero_serie' => 'BF-EQ-999999',
-        'tipo_agente' => 'PQS ABC',
-        'capacidad' => '6 kg',
-    ]);
-
-    $order->equipments()->attach($equipment->id, ['recibido' => true]);
-
-    $response = $this->actingAs($this->tecnicoPlanta)
-        ->get(route('tecnico-planta.recepciones.stickers', [
-            'current_team' => $this->team,
-            'service_order' => $order,
-        ]));
-
-    $response->assertOk();
-    expect($response->headers->get('content-type'))->toBe('application/pdf');
+test('tecnico planta ya no imprime stickers: los imprime el vendedor', function () {
+    expect(Route::has('tecnico-planta.recepciones.stickers'))->toBeFalse()
+        ->and(Route::has('vendedor.ordenes-servicio.stickers'))->toBeTrue();
 });
 
 test('no se confirma la recepción con un equipo faltante sin explicar qué pasó', function () {

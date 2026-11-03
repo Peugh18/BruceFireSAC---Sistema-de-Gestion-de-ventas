@@ -22,6 +22,7 @@ import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteContro
 import FiltroSelect from '@/components/filtro-select';
 import { Cargando, FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
+import AceptarCotizacionDialog from '@/components/aceptar-cotizacion-dialog';
 import WhatsappNumeroDialog from '@/components/whatsapp-numero-dialog';
 import { Button } from '@/components/ui/button';
 import { Empty } from '@/components/ui/empty';
@@ -52,7 +53,7 @@ export type QuoteItem = {
     client_id: number;
     puede_guardar_numero: boolean;
     enlace_pdf: string;
-    venta: { id: number; numero: string } | null;
+    venta: { id: number | null; numero: string } | null;
     /** Tiene un servicio (recarga, mantenimiento): solo así va al taller. */
     tiene_servicio: boolean;
     orden: { id: number; codigo: string } | null;
@@ -271,7 +272,7 @@ export default function CotizacionesIndex({
     const recargando = useRecargando();
     const [processingAction, setProcessingAction] = useState<{
         id: number;
-        action: 'send' | 'accept' | 'reject';
+        action: 'send' | 'reject';
     } | null>(null);
 
     const currentFilter = filters?.estado || '';
@@ -339,21 +340,8 @@ export default function CotizacionesIndex({
         );
     };
 
-    const handleAccept = (quote: QuoteItem) => {
-        setProcessingAction({ id: quote.id, action: 'accept' });
-        router.post(
-            QuoteController.accept.url({
-                current_team: teamSlug,
-                quote: quote.id,
-            }),
-            {},
-            {
-                preserveScroll: true,
-                onError: mostrarError,
-                onFinish: () => setProcessingAction(null),
-            },
-        );
-    };
+    const [aceptando, setAceptando] = useState<QuoteItem | null>(null);
+    const handleAccept = (quote: QuoteItem) => setAceptando(quote);
 
     const handleReject = (quote: QuoteItem) => {
         setProcessingAction({ id: quote.id, action: 'reject' });
@@ -591,10 +579,6 @@ export default function CotizacionesIndex({
                                         const isSending =
                                             processingAction?.id === quote.id &&
                                             processingAction.action === 'send';
-                                        const isAccepting =
-                                            processingAction?.id === quote.id &&
-                                            processingAction.action ===
-                                                'accept';
                                         const isRejecting =
                                             processingAction?.id === quote.id &&
                                             processingAction.action ===
@@ -605,15 +589,13 @@ export default function CotizacionesIndex({
                                         const canSend =
                                             quote.estado === 'borrador' ||
                                             quote.estado === 'emitida';
-                                        const canAcceptOrReject =
-                                            quote.estado === 'enviada';
-                                        const canConvert = [
+                                        const canAcceptOrReject = [
                                             'borrador',
                                             'emitida',
                                             'enviada',
-                                            'pendiente',
-                                            'aceptada',
                                         ].includes(quote.estado);
+                                        const canConvert =
+                                            quote.estado === 'aceptada';
 
                                         return (
                                             <TableRow
@@ -711,14 +693,8 @@ export default function CotizacionesIndex({
                                                         ) : (
                                                             !quote.venta &&
                                                             quote.tiene_servicio &&
-                                                            [
-                                                                'borrador',
-                                                                'emitida',
-                                                                'enviada',
-                                                                'aceptada',
-                                                            ].includes(
-                                                                quote.estado,
-                                                            ) && (
+                                                            quote.estado ===
+                                                                'aceptada' && (
                                                                 <Button
                                                                     type="button"
                                                                     variant="outline"
@@ -882,11 +858,7 @@ export default function CotizacionesIndex({
                                                                     }
                                                                     className="flex h-7 cursor-pointer items-center gap-1 rounded-md bg-emerald-600 px-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-emerald-700 disabled:opacity-50"
                                                                 >
-                                                                    {isAccepting ? (
-                                                                        <Cargando className="size-3" />
-                                                                    ) : (
-                                                                        <Check className="size-3 stroke-[2.5]" />
-                                                                    )}
+                                                                    <Check className="size-3 stroke-[2.5]" />
                                                                     <span>
                                                                         Aceptar
                                                                     </span>
@@ -956,7 +928,7 @@ export default function CotizacionesIndex({
                                                             </Link>
                                                         )}
 
-                                                        {quote.venta ? (
+                                                        {quote.venta?.id ? (
                                                             <Link
                                                                 href={ventas.show.url(
                                                                     {
@@ -979,6 +951,14 @@ export default function CotizacionesIndex({
                                                                     }
                                                                 </span>
                                                             </Link>
+                                                        ) : quote.venta ? (
+                                                            <span className="text-muted-foreground flex h-7 items-center gap-1.5 px-2.5 text-xs font-bold">
+                                                                <Receipt className="size-3" />
+                                                                {
+                                                                    quote.venta
+                                                                        .numero
+                                                                }
+                                                            </span>
                                                         ) : null}
                                                     </div>
                                                 </TableCell>
@@ -1045,6 +1025,14 @@ export default function CotizacionesIndex({
                     )}
                 </div>
             </div>
+            <AceptarCotizacionDialog
+                open={aceptando !== null}
+                onOpenChange={(abierto) => {
+                    if (!abierto) setAceptando(null);
+                }}
+                teamSlug={teamSlug}
+                quote={aceptando}
+            />
             {pidiendoNumero ? (
                 <WhatsappNumeroDialog
                     open

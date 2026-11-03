@@ -10,6 +10,8 @@ use App\Models\CompanySetting;
 use App\Models\Equipment;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Certificates\CertificadosDeVenta;
+use App\Services\Certificates\CertificateDateCalculator;
 use App\Services\Certificates\PruebasHidrostaticas;
 use App\Services\Certificates\TipoAtencionExtintor;
 use Illuminate\Support\Carbon;
@@ -24,13 +26,42 @@ class EmitirCertificadosDeVenta
     public function __construct(
         protected IssueCertificate $issueCertificate,
         protected SyncCertificateTraining $syncTraining,
+        protected EmitirCertificadosDeProducto $certificadosDeProducto,
     ) {}
 
     /**
-     * Certificados que necesitan datos técnicos reales (fecha, presión,
-     * resultado o la capacitación dada): no salen solos al cobrar (C2).
+     * La prueba hidrostática necesita datos técnicos reales (fecha, presión,
+     * tiempo y resultado): no sale sola al cobrar (C2). La capacitación sale
+     * con el curso y las horas de la empresa; los participantes son opcionales.
      */
-    public const REQUIEREN_DATOS_TECNICOS = ['prueba_hidrostatica', 'capacitacion'];
+    public const REQUIEREN_DATOS_TECNICOS = ['prueba_hidrostatica'];
+
+    /**
+     * Datos de la capacitación: lo que se armó en la pantalla o, si no, el
+     * curso, las horas y el instructor de la empresa.
+     *
+     * @param  array<string, mixed>|null  $capacitacion
+     * @return array<string, mixed>
+     */
+    public static function datosDeCapacitacion(?array $capacitacion, CompanySetting $company): array
+    {
+        return [
+            'curso' => $capacitacion['curso'] ?? 'USO Y MANEJO DE EXTINTORES',
+            'horas' => (int) ($capacitacion['horas'] ?? 4),
+            'instructor' => $capacitacion['instructor'] ?? $company->instructor_capacitacion,
+            'modo' => $capacitacion['modo'] ?? 'normal',
+            'fotos' => [],
+        ];
+    }
+
+    /** Si la venta o la orden de taller ya dejó la capacitación del cliente. */
+    public static function tieneCapacitacion(Sale $sale): bool
+    {
+        return CertificadosDeVenta::propios($sale)
+            ->whereIn('estado', ['vigente', 'vencido'])
+            ->whereHas('certificateType', fn ($query) => $query->where('codigo', 'capacitacion'))
+            ->exists();
+    }
 
     /**
      * Única regla de certificados de una venta: los tipos que corresponden
@@ -51,7 +82,8 @@ class EmitirCertificadosDeVenta
      * operatividad y garantía de los extintores NUEVOS, en el orden en que se
      * escanearon (C2). La prueba hidrostática y la capacitación quedan
      * pendientes de datos técnicos. Si algún extintor no tiene su agente, no
-     * se emite nada y queda pendiente: la venta no se bloquea (C1).
+     * se emite nada y queda pendiente: la venta no se bloquea (C1). También
+     * salen los certificados de los productos con ficha técnica.
      *
      * @return Collection<int, Certificate>
      */
@@ -60,6 +92,7 @@ class EmitirCertificadosDeVenta
         if ($sale->estado !== 'confirmada') {
             return collect();
         }
+        $this->certificadosDeProducto->handle($sale);
         $sale->loadMissing('items.equipment');
         $reutilizados = collect();
         if ($sale->destino === 'vehiculo') {
@@ -74,7 +107,7 @@ class EmitirCertificadosDeVenta
             ->filter()
             ->values();
         $tipos = array_values(array_filter(
-            array_diff(self::tiposPorDestino((string) $sale->destino), self::REQUIEREN_DATOS_TECNICOS),
+            array_diff(self::tiposPorDestino((string) $sale->destino), self::REQUIEREN_DATOS_TECNICOS, self::tieneCapacitacion($sale) ? ['capacitacion'] : []),
             fn (string $codigo) => CertificateType::query()->where('codigo', $codigo)->exists(),
         ));
 
@@ -128,7 +161,7 @@ class EmitirCertificadosDeVenta
             $equipmentIds = array_values(array_unique(array_merge(...array_map(fn (array $grupo) => array_column($grupo['unidades'], 'equipment_id'), $grupos))));
             Equipment::query()->whereIn('id', $equipmentIds)->orderBy('id')->lockForUpdate()->get();
             $sale->load('client', 'items.service');
-            $equiposDeLaVenta = array_values($sale->items->map(fn (SaleItem $item) => $item->equipment_id)->filter()->all());
+            $equiposDeLaVenta = array_values(CertificadosDeVenta::equipos($sale)->map(fn (Equipment $equipo): int => $equipo->id)->all());
 
             foreach ($grupos as $index => $grupo) {
                 $ajenos = array_diff(array_column($grupo['unidades'], 'equipment_id'), $equiposDeLaVenta);
@@ -155,13 +188,13 @@ class EmitirCertificadosDeVenta
 
             $tipos = CertificateType::query()->get()->keyBy('codigo');
             $company = CompanySetting::current();
-            $pruebas = PruebasHidrostaticas::vigentes($sale->client_id, array_values($sale->items->map(fn (SaleItem $item) => $item->equipment_id)->filter()->all()));
+            $pruebas = PruebasHidrostaticas::vigentes($sale->client_id, $equiposDeLaVenta);
             $grupos = $this->conDatosDePrueba($grupos, $pruebas);
-            $anteriores = Certificate::query()
-                ->whereDoesntHave('certificateType', fn ($query) => $query->where('codigo', 'prueba_hidrostatica'))
+            $anteriores = CertificadosDeVenta::propios($sale)
+                ->whereHas('certificateType', fn ($query) => $query->whereIn('codigo', ['operatividad_garantia', 'capacitacion']))
                 ->with('certificateType')
-                ->where('sale_id', $sale->id)
                 ->whereIn('estado', ['vigente', 'vencido'])
+                ->when(collect($grupos)->contains(fn (array $grupo) => ! empty($grupo['automatico'])), fn ($query) => $query->whereNull('service_order_id'))
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->get()
@@ -198,6 +231,7 @@ class EmitirCertificadosDeVenta
                             $equipos->get($unidad['equipment_id']),
                             $codigo,
                             TipoAtencionExtintor::deVenta($sale, [$unidad['equipment_id']]),
+                            CertificadosDeVenta::fechaRecarga($sale, $unidad['equipment_id']),
                         ), $unidadesDelGrupo);
 
                     $destino = $grupo['destino'] ?? (in_array('prueba_hidrostatica', $grupo['tipos'], true) ? 'vehiculo' : (in_array('capacitacion', $grupo['tipos'], true) ? 'local_cliente' : $sale->destino));
@@ -205,13 +239,7 @@ class EmitirCertificadosDeVenta
                         'referencia' => $grupo['referencia'] ?? $sale->referencia,
                         'direccion' => $grupo['direccion'] ?? null,
                         'tipo_atencion' => $tipoAtencion,
-                        'datos' => $codigo === 'capacitacion' ? [
-                            'curso' => $grupo['capacitacion']['curso'] ?? 'USO Y MANEJO DE EXTINTORES',
-                            'horas' => (int) ($grupo['capacitacion']['horas'] ?? 4),
-                            'instructor' => $grupo['capacitacion']['instructor'] ?? $company->instructor_capacitacion,
-                            'modo' => $grupo['capacitacion']['modo'] ?? 'normal',
-                            'fotos' => [],
-                        ] : ($codigo === 'operatividad_garantia' ? ['destino' => $destino, 'tipos' => ! empty($grupo['automatico']) ? self::tiposPorDestino((string) $destino) : array_values(array_unique($grupo['tipos']))] : null),
+                        'datos' => $codigo === 'capacitacion' ? self::datosDeCapacitacion($grupo['capacitacion'] ?? null, $company) : ($codigo === 'operatividad_garantia' ? ['destino' => $destino, 'tipos' => ! empty($grupo['automatico']) ? self::tiposPorDestino((string) $destino) : array_values(array_unique($grupo['tipos']))] : null),
                     ];
 
                     $anterior = $anteriores->get($codigo)?->shift();
@@ -279,9 +307,9 @@ class EmitirCertificadosDeVenta
                 }
 
                 $fecha = Carbon::parse($unidad['fecha_ultima_ph']);
-                if ($fecha->isAfter(today()) || $fecha->lessThanOrEqualTo(today()->subYears(5))) {
+                if ($fecha->isAfter(today()) || CertificateDateCalculator::proximaPruebaHidrostatica($fecha)->lessThanOrEqualTo(today())) {
                     throw ValidationException::withMessages([
-                        "grupos.{$index}.unidades" => 'Registra una prueba hidrostática real cuya fecha esté dentro de sus cinco años de vigencia.',
+                        "grupos.{$index}.unidades" => 'Registra una prueba hidrostática real que siga vigente según el intervalo configurado.',
                     ]);
                 }
             }
@@ -294,7 +322,7 @@ class EmitirCertificadosDeVenta
      * @param  array<string, mixed>  $unidad
      * @return array<string, mixed>
      */
-    protected function unidad(array $unidad, ?Equipment $equipo, string $codigo, string $tipoAtencion): array
+    protected function unidad(array $unidad, ?Equipment $equipo, string $codigo, string $tipoAtencion, ?string $fechaRecarga): array
     {
         $esPrueba = $codigo === 'prueba_hidrostatica';
 
@@ -302,7 +330,7 @@ class EmitirCertificadosDeVenta
             'equipment_id' => $unidad['equipment_id'],
             'numero_cliente' => $unidad['numero_cliente'] ?? null,
             'fecha_ultima_ph' => $esPrueba ? $unidad['fecha_ultima_ph'] : null,
-            'fecha_ultima_recarga' => $tipoAtencion === 'recarga' ? now()->toDateString() : null,
+            'fecha_ultima_recarga' => $tipoAtencion === 'recarga' ? $fechaRecarga : null,
             'presion_ph' => $esPrueba ? $unidad['presion_ph'] : null,
             'tiempo_ph' => $esPrueba ? $unidad['tiempo_ph'] : null,
             // La presión de trabajo es la nominal del agente real del extintor.

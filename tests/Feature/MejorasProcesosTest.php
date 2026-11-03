@@ -18,7 +18,7 @@ test('orden guarda el servicio del catalogo como fuente unica', function () {
     $client = Client::factory()->create();
     $service = Service::factory()->create(['nombre' => 'Inspección anual']);
 
-    $this->actingAs($seller)->post(route('vendedor.ordenes-servicio.store', ['current_team' => $seller->currentTeam]), ['client_id' => $client->id, 'service_id' => $service->id, 'fecha' => today()->toDateString(), 'departamento_tecnico' => 'campo'])->assertRedirect();
+    $this->actingAs($seller)->post(route('vendedor.ordenes-servicio.store', ['current_team' => $seller->currentTeam]), ['quote_id' => cotizacionAceptada($service, ['client_id' => $client->id])->id, 'fecha' => today()->toDateString(), 'departamento_tecnico' => 'campo'])->assertRedirect();
 
     $order = ServiceOrder::latest('id')->first();
 

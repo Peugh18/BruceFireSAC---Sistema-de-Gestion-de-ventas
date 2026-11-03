@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowDown,
@@ -375,9 +376,7 @@ export default function ArmarCertificados({
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="font-['Oswald',sans-serif] text-[22px] font-semibold uppercase">
-                            Armar certificados
-                        </h1>
+                        <h1 className={pageTitleClass}>Armar certificados</h1>
                         <p className="text-muted-foreground text-[12.5px]">
                             {sale.client.razon_social}. Reparte los extintores
                             por local o vehículo, ordénalos y usa la numeración

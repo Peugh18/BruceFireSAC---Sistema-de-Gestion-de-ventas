@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -204,9 +205,7 @@ export default function SedesIndex() {
 
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
-                        <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
-                            Sedes
-                        </h1>
+                        <h1 className={pageTitleClass}>Sedes</h1>
                         <p className="text-muted-foreground mt-1 text-sm">
                             Puntos de venta con su almacén y el Taller que
                             atiende a todas las tiendas.

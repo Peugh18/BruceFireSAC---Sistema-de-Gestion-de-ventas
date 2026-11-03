@@ -29,6 +29,7 @@ import {
 import AlmacenLayout from '@/layouts/almacen-layout';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
+import { fechaHora, soles } from '@/lib/utils';
 
 export type SedeInfo = {
     id: number;
@@ -121,25 +122,6 @@ export type StockPageProps = {
         bajo_minimo: number;
     };
 };
-
-function formatCurrency(amount: number): string {
-    return `S/ ${amount.toLocaleString('es-PE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`;
-}
-
-function formatDate(isoString: string | null): string {
-    if (!isoString) return '—';
-    const date = new Date(isoString);
-    return date.toLocaleString('es-PE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
 
 function getTipoBadge() {
     return (
@@ -585,7 +567,7 @@ export default function StockIndex({
                                                             {item.unidad_medida}
                                                         </TableCell>
                                                         <TableCell className="text-foreground px-3 py-3 text-right font-mono font-medium">
-                                                            {formatCurrency(
+                                                            {soles(
                                                                 item.precio_venta,
                                                             )}
                                                         </TableCell>
@@ -941,7 +923,7 @@ export default function StockIndex({
                                                         className="hover:bg-muted/40 transition-colors"
                                                     >
                                                         <TableCell className="text-foreground/80 py-3 pr-4 font-mono text-xs whitespace-nowrap">
-                                                            {formatDate(
+                                                            {fechaHora(
                                                                 mov.fecha,
                                                             )}
                                                         </TableCell>

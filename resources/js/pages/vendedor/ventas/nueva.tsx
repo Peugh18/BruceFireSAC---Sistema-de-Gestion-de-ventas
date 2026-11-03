@@ -47,7 +47,8 @@ import { leerCookie } from '@/lib/cookies';
 import clientes from '@/routes/vendedor/clientes';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
-import { fechaLocal } from '@/lib/utils';
+import { type NoGravados, desglosarIgv, fechaLocal, soles } from '@/lib/utils';
+import { fieldError } from '@/components/error-de-campo';
 import CajaRoutes from '@/routes/vendedor/caja';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
@@ -102,6 +103,7 @@ type SaleFormData = {
     client_id: number | '';
     sede_id: number | '';
     quote_id: number | '';
+    corrige_sale_id: number | '';
     vehicle_id: number | '';
     /** X7: cuándo se abrió el formulario (mide el tiempo de registro). */
     iniciado_at: string;
@@ -153,6 +155,7 @@ type VentaPrefill = {
     id: number | null;
     service_order_id?: number;
     quote_id?: number | null;
+    corrige_sale_id?: number | null;
     adicionales_sin_cotizacion?: { componente: string; importe: number }[];
     numero_interno: string;
     emitida?: boolean;
@@ -174,6 +177,7 @@ type VentaPrefill = {
 };
 
 type Props = {
+    noGravados: NoGravados;
     reglasDetraccion: ReglasDetraccion;
     clientesVarios: ClientOption;
     limiteBoletaSinIdentificar: number;
@@ -193,24 +197,6 @@ const NOMBRE_COMPROBANTE: Record<DocumentType, string> = {
 
 function today() {
     return fechaLocal();
-}
-
-function money(value: number) {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-    }).format(value || 0);
-}
-
-function fieldError(errors: Partial<Record<string, string>>, key: string) {
-    return errors[key] ? (
-        <p
-            className="text-destructive-strong mt-1 text-xs font-semibold"
-            role="alert"
-        >
-            {errors[key]}
-        </p>
-    ) : null;
 }
 
 function SegmentButton({
@@ -246,32 +232,8 @@ function SegmentButton({
 let secuencia = 0;
 const nuevaClave = () => `l${++secuencia}`;
 
-/**
- * Los precios ya incluyen IGV: el total es lo que paga el cliente y la base
- * e IGV se separan línea por línea, igual que en el backend.
- */
-function desglosar(lineas: SaleLine[]) {
-    let base = 0;
-    let total = 0;
-
-    for (const linea of lineas) {
-        const t =
-            Math.round(
-                (linea.cantidad * linea.precio_unitario - linea.descuento) *
-                    100,
-            ) / 100;
-        base += Math.round((t / 1.18) * 100) / 100;
-        total += t;
-    }
-
-    return {
-        base: Math.round(base * 100) / 100,
-        igv: Math.round((total - base) * 100) / 100,
-        total: Math.round(total * 100) / 100,
-    };
-}
-
 export default function NuevaVenta({
+    noGravados,
     reglasDetraccion,
     clientesVarios,
     limiteBoletaSinIdentificar,
@@ -307,6 +269,7 @@ export default function NuevaVenta({
         client_id: clienteInicial?.id ?? '',
         sede_id: sedeFija?.id ?? venta?.sede_id ?? '',
         quote_id: quote?.id ?? venta?.quote_id ?? '',
+        corrige_sale_id: venta?.corrige_sale_id ?? '',
         vehicle_id: venta?.vehicle_id ?? quote?.vehicle_id ?? '',
         iniciado_at: new Date().toISOString(),
         fecha: venta?.fecha ?? today(),
@@ -359,7 +322,7 @@ export default function NuevaVenta({
     const [creditoAbierto, setCreditoAbierto] = useState(false);
     const [aviso, setAviso] = useState<string | null>(null);
 
-    const { base, igv, total } = desglosar(form.data.items);
+    const { base, igv, total } = desglosarIgv(form.data.items, noGravados);
     const detraccion = resumenDetraccion(
         form.data.comprobante_tipo,
         total,
@@ -463,6 +426,7 @@ export default function NuevaVenta({
 
     const elegirCliente = (ficha: ClientFicha | null) => {
         setCliente(ficha);
+        if (ficha) form.clearErrors('client_id');
         form.setData((data) => ({
             ...data,
             client_id: ficha?.id ?? '',
@@ -479,7 +443,10 @@ export default function NuevaVenta({
         }));
     };
 
-    const setItems = (items: SaleLine[]) => form.setData('items', items);
+    const setItems = (items: SaleLine[]) => {
+        form.setData('items', items);
+        if (items.length > 0) form.clearErrors('items');
+    };
 
     const actualizarLinea = (key: string, cambio: Partial<SaleLine>) =>
         setItems(
@@ -684,14 +651,10 @@ export default function NuevaVenta({
             return;
         }
 
-        if (
-            caja_abierta === false &&
-            emitir &&
-            form.data.condicion_pago === 'contado' &&
-            form.data.medio_pago === 'efectivo'
-        ) {
+        // Toda venta cae en un turno de caja, se pague como se pague.
+        if (caja_abierta === false && emitir) {
             setAviso(
-                'No tienes una caja abierta. Abre tu turno en Caja o elige otro medio de pago para emitir la venta.',
+                'No tienes una caja abierta. Abre tu turno en Caja y cobranzas para emitir la venta.',
             );
             return;
         }
@@ -787,7 +750,9 @@ export default function NuevaVenta({
                                           ? `Editando el borrador ${venta.numero_interno}`
                                           : venta.service_order_id
                                             ? `Cobro de la orden ${venta.numero_interno}`
-                                            : `Copia de ${venta.numero_interno}`}
+                                            : venta.corrige_sale_id
+                                              ? `Corrección de ${venta.numero_interno}`
+                                              : `Copia de ${venta.numero_interno}`}
                                 </p>
                                 <p className="text-muted-foreground">
                                     {editandoEmitida
@@ -798,7 +763,9 @@ export default function NuevaVenta({
                                           ? 'Cambia lo que haga falta y emite. La venta conserva su número.'
                                           : venta.service_order_id
                                             ? 'Ya están el cliente y los servicios de la orden: revisa y emite.'
-                                            : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
+                                            : venta.corrige_sale_id
+                                              ? 'Cambia lo que estaba mal y emite. Los extintores que sigan conservan su certificado y sus fechas.'
+                                              : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
                                 </p>
                                 {venta.adicionales_sin_cotizacion?.length ? (
                                     <p className="text-warning-strong mt-1 font-semibold">
@@ -860,7 +827,7 @@ export default function NuevaVenta({
                                                 </span>
                                                 <span className="text-muted-foreground font-['IBM_Plex_Mono',monospace] text-xs">
                                                     {line.cantidad} ×{' '}
-                                                    {money(
+                                                    {soles(
                                                         line.precio_unitario,
                                                     )}
                                                 </span>
@@ -1184,40 +1151,37 @@ export default function NuevaVenta({
                                                 className="max-w-[260px]"
                                             />
                                         ) : null}
-                                        {caja_abierta === false &&
-                                            form.data.medio_pago ===
-                                                'efectivo' && (
-                                                <div className="text-warning-strong flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] dark:text-amber-300">
-                                                    <AlertCircle className="text-warning-strong mt-0.5 size-4 shrink-0" />
-                                                    <div>
-                                                        <p className="font-bold">
-                                                            No tienes una caja
-                                                            abierta
-                                                        </p>
-                                                        <p className="mt-0.5">
-                                                            Para registrar
-                                                            cobros en efectivo
-                                                            necesitas abrir tu
-                                                            turno de caja
-                                                            primero.{' '}
-                                                            <a
-                                                                href={CajaRoutes.index.url(
-                                                                    {
-                                                                        current_team:
-                                                                            teamSlug,
-                                                                    },
-                                                                )}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                className="font-bold underline underline-offset-2 hover:opacity-80"
-                                                            >
-                                                                Abrir caja aquí
-                                                                ↗
-                                                            </a>
-                                                        </p>
-                                                    </div>
+                                        {caja_abierta === false && (
+                                            <div className="text-warning-strong flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] dark:text-amber-300">
+                                                <AlertCircle className="text-warning-strong mt-0.5 size-4 shrink-0" />
+                                                <div>
+                                                    <p className="font-bold">
+                                                        No tienes una caja
+                                                        abierta
+                                                    </p>
+                                                    <p className="mt-0.5">
+                                                        Para emitir ventas
+                                                        necesitas abrir tu turno
+                                                        de caja primero. Puedes
+                                                        guardar el borrador
+                                                        mientras tanto.{' '}
+                                                        <a
+                                                            href={CajaRoutes.index.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                },
+                                                            )}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="font-bold underline underline-offset-2 hover:opacity-80"
+                                                        >
+                                                            Abrir caja aquí ↗
+                                                        </a>
+                                                    </p>
                                                 </div>
-                                            )}
+                                            </div>
+                                        )}
                                         {form.data.medio_pago === 'efectivo' &&
                                         total >= LIMITE_BANCARIZACION ? (
                                             <p className="text-warning-strong text-xs font-semibold dark:text-amber-400">
@@ -1540,7 +1504,7 @@ export default function NuevaVenta({
                                                             />
                                                         </TableCell>
                                                         <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
-                                                            {money(
+                                                            {soles(
                                                                 item.cantidad *
                                                                     item.precio_unitario -
                                                                     item.descuento,
@@ -1610,7 +1574,7 @@ export default function NuevaVenta({
                                     Gravado
                                 </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
-                                    {money(base)}
+                                    {soles(base)}
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -1618,7 +1582,7 @@ export default function NuevaVenta({
                                     IGV 18% (incluido)
                                 </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
-                                    {money(igv)}
+                                    {soles(igv)}
                                 </span>
                             </div>
                             <div className="border-border border-t pt-3">
@@ -1627,7 +1591,7 @@ export default function NuevaVenta({
                                         Total
                                     </span>
                                     <span className="text-foreground font-['Oswald',sans-serif] text-[28px] font-semibold">
-                                        {money(total)}
+                                        {soles(total)}
                                     </span>
                                 </div>
                             </div>
@@ -1649,7 +1613,7 @@ export default function NuevaVenta({
                                     <p>
                                         Para estos servicios, el total con IGV
                                         debe superar{' '}
-                                        {money(reglasDetraccion.monto_minimo)}.
+                                        {soles(reglasDetraccion.monto_minimo)}.
                                         Un total igual al límite está
                                         exceptuado.
                                     </p>
@@ -1672,13 +1636,13 @@ export default function NuevaVenta({
                                             <div className="flex justify-between gap-2">
                                                 <dt>Detracción estimada</dt>
                                                 <dd className="font-mono font-semibold">
-                                                    {money(detraccion.monto)}
+                                                    {soles(detraccion.monto)}
                                                 </dd>
                                             </div>
                                             <div className="flex justify-between gap-2">
                                                 <dt>Pago al proveedor</dt>
                                                 <dd className="font-mono font-semibold">
-                                                    {money(detraccion.neto)}
+                                                    {soles(detraccion.neto)}
                                                 </dd>
                                             </div>
                                         </dl>

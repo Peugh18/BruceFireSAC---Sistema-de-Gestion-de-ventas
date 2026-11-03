@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { router, usePage } from '@inertiajs/react';
 import { Activity, Filter, ShieldCheck, Inbox } from 'lucide-react';
 import { useState } from 'react';
@@ -102,9 +103,7 @@ export default function AuditoriaIndex() {
         <GerenteLayout title="Auditoría">
             <div className="space-y-6">
                 <div>
-                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
-                        Auditoría del Sistema
-                    </h1>
+                    <h1 className={pageTitleClass}>Auditoría del Sistema</h1>
                     <p className="text-muted-foreground mt-1 text-sm">
                         Trazabilidad de acciones sensibles: ventas, ajustes de
                         stock, autorizaciones, cierre de órdenes, certificados y

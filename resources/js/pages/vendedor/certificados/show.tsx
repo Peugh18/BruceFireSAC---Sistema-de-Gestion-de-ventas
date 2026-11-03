@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -342,9 +343,7 @@ export default function CertificadosShow({ certificate }: Props) {
                         </Link>
                     </Button>
                     <div className="min-w-0">
-                        <h1 className="text-foreground font-['Oswald',sans-serif] text-[24px] font-semibold tracking-[0.02em] uppercase">
-                            {certificate.numero}
-                        </h1>
+                        <h1 className={pageTitleClass}>{certificate.numero}</h1>
                         <p className="text-muted-foreground text-[12.5px]">
                             {certificate.tipo ?? certificate.tipo_codigo}
                             {certificate.revision > 0

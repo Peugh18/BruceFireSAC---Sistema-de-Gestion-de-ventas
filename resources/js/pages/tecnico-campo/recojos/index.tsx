@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { pageTitleClass } from '@/components/page-header';
+import { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
@@ -65,9 +66,7 @@ export default function RecojosIndex({ recojos, filters }: Props) {
 
             <div className="space-y-4">
                 <div>
-                    <h1 className="text-foreground text-xl font-bold tracking-tight">
-                        Recojos de Extintores
-                    </h1>
+                    <h1 className={pageTitleClass}>Recojos de Extintores</h1>
                     <p className="text-muted-foreground text-xs">
                         Cadena de custodia y recepción en instalaciones del
                         cliente

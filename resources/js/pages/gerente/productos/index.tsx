@@ -1,4 +1,5 @@
-import { router, useForm, usePage } from '@inertiajs/react';
+import { pageTitleClass } from '@/components/page-header';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     CheckCircle2,
@@ -33,12 +34,14 @@ import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { toast } from 'sonner';
 import ProductosRoutes from '@/routes/gerente/productos';
+import CertificadosRoutes from '@/routes/gerente/configuracion/certificados';
 import { useConfirmarAccion } from '@/hooks/use-confirmar-accion';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
 import OpcionesAgente from '@/components/opciones-agente';
 import BotonAgentes from '@/components/agentes-modal';
 import CodigoSunatInput from '@/components/codigo-sunat-input';
+import { soles } from '@/lib/utils';
 type ProductItem = {
     id: number;
     codigo: string;
@@ -62,6 +65,8 @@ type ProductItem = {
     stock_minimo: number | null;
     activo: boolean;
     stock_disponible: number;
+    certificate_type_id: number | null;
+    ficha_pendiente: boolean;
 };
 type PaginationLink = {
     url: string | null;
@@ -93,19 +98,13 @@ type PageProps = {
     categorias: CategoriaItem[];
     unidadesMedida: { codigo: string; nombre: string }[];
     siguienteCodigo: string;
+    certificados: { id: number; nombre: string }[];
     flash?: {
         success?: string;
         error?: string;
     };
     [key: string]: unknown;
 };
-function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-        minimumFractionDigits: 2,
-    }).format(amount);
-}
 const emptyProduct = {
     codigo: '',
     codigo_barras: '',
@@ -126,6 +125,7 @@ const emptyProduct = {
     factor_compra: '1',
     stock_minimo: '',
     activo: true,
+    certificate_type_id: '',
 };
 const productControl =
     'border-border bg-background w-full min-h-11 rounded-lg border px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 disabled:bg-muted disabled:opacity-60 aria-invalid:border-red-600';
@@ -140,6 +140,7 @@ export default function ProductosIndex() {
         categorias,
         unidadesMedida,
         siguienteCodigo,
+        certificados,
         flash,
     } = usePage<PageProps>().props;
     const [buscar, setBuscar] = useState(filters.buscar || '');
@@ -205,6 +206,9 @@ export default function ProductosIndex() {
                     ? String(product.stock_minimo)
                     : '',
             activo: product.activo,
+            certificate_type_id: product.certificate_type_id
+                ? String(product.certificate_type_id)
+                : '',
         };
         form.setDefaults(data);
         form.setData(data);
@@ -461,9 +465,7 @@ export default function ProductosIndex() {
                 {/* Cabecera y Botón Nuevo */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
-                        <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
-                            Productos
-                        </h1>
+                        <h1 className={pageTitleClass}>Productos</h1>
                         <p className="text-muted-foreground mt-1 text-sm">
                             Administración de existencias, precios de venta y
                             umbrales de stock mínimo.
@@ -656,6 +658,13 @@ export default function ProductosIndex() {
                                                             {p.descripcion}
                                                         </div>
                                                     )}
+                                                    {p.ficha_pendiente && (
+                                                        <div className="text-destructive-strong text-xs font-medium dark:text-red-300">
+                                                            Falta la ficha
+                                                            técnica: Almacén
+                                                            debe completarla
+                                                        </div>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-foreground/80 px-4 py-3 font-mono">
                                                     {p.unidad_medida === 'NIU'
@@ -663,9 +672,7 @@ export default function ProductosIndex() {
                                                         : p.unidad_medida}
                                                 </TableCell>
                                                 <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
-                                                    {formatCurrency(
-                                                        p.precio_venta,
-                                                    )}
+                                                    {soles(p.precio_venta)}
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
                                                     <span
@@ -1079,6 +1086,74 @@ export default function ProductosIndex() {
                                         )}
                                     </div>
                                 )}
+                                <div>
+                                    <label
+                                        htmlFor="producto-certificate_type_id"
+                                        className="mb-1.5 block font-medium"
+                                    >
+                                        Certificado que lleva
+                                    </label>
+                                    <NativeSelect
+                                        id="producto-certificate_type_id"
+                                        name="certificate_type_id"
+                                        value={form.data.certificate_type_id}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'certificate_type_id',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className={productControl}
+                                        aria-invalid={
+                                            !!form.errors.certificate_type_id
+                                        }
+                                        aria-describedby="producto-certificado-ayuda"
+                                    >
+                                        <option value="">Ninguno</option>
+                                        {certificados.map((certificado) => (
+                                            <option
+                                                key={certificado.id}
+                                                value={String(certificado.id)}
+                                            >
+                                                {certificado.nombre}
+                                            </option>
+                                        ))}
+                                    </NativeSelect>
+                                    <p
+                                        id="producto-certificado-ayuda"
+                                        className="text-muted-foreground mt-1 text-xs"
+                                    >
+                                        Sale solo al confirmar la venta. Almacén
+                                        completa su ficha técnica una vez.{' '}
+                                        <Link
+                                            href={CertificadosRoutes.create.url(
+                                                {
+                                                    current_team:
+                                                        currentTeam.slug,
+                                                },
+                                                editingProduct
+                                                    ? {
+                                                          query: {
+                                                              producto:
+                                                                  editingProduct.id,
+                                                          },
+                                                      }
+                                                    : undefined,
+                                            )}
+                                            className="text-primary font-medium underline underline-offset-2"
+                                        >
+                                            Crear certificado nuevo
+                                        </Link>
+                                    </p>
+                                    {form.errors.certificate_type_id && (
+                                        <p
+                                            role="alert"
+                                            className="text-destructive-strong mt-1 text-sm dark:text-red-300"
+                                        >
+                                            {form.errors.certificate_type_id}
+                                        </p>
+                                    )}
+                                </div>
                                 <p className="text-muted-foreground text-xs">
                                     El stock entra cuando Almacén recibe la
                                     mercadería.

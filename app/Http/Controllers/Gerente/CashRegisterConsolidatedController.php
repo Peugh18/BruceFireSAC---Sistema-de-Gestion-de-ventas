@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers\Gerente;
 
+use App\Actions\Cash\AutorizarReconteoDeCaja;
 use App\Http\Controllers\Controller;
 use App\Models\CashRegister;
+use App\Models\CashRegisterCount;
+use App\Models\CashRegisterCountLine;
 use App\Models\CashRegisterWithdrawal;
 use App\Models\Sede;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\AuditLogger;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,9 +30,14 @@ class CashRegisterConsolidatedController extends Controller
         $conDiferencia = $request->boolean('con_diferencia', false);
         $fechaDesde = $request->input('fecha_desde');
         $fechaHasta = $request->input('fecha_hasta');
+        // P-008: un rango al revés no deja la lista vacía; se lee en el orden correcto.
+        if ($fechaDesde && $fechaHasta && $fechaDesde > $fechaHasta) {
+            [$fechaDesde, $fechaHasta] = [$fechaHasta, $fechaDesde];
+        }
 
         $query = CashRegister::query()
             ->with(['vendedor:id,name,email', 'sede:id,nombre'])
+            ->withExists(['conteos as esperando_explicacion' => fn ($q) => $q->whereNull('anulado_at')->whereHas('cashRegister', fn ($c) => $c->where('estado', 'abierto'))])
             ->when($vendedorId, fn ($q) => $q->where('vendedor_id', $vendedorId))
             ->when($sedeId, fn ($q) => $q->where('sede_id', $sedeId))
             ->when($estado === 'abierto', fn ($q) => $q->where('estado', 'abierto'))
@@ -60,8 +70,13 @@ class CashRegisterConsolidatedController extends Controller
                 }
             }
 
+            // Turno con el cajón contado que no cuadra: el Gerente ve las dos cifras.
+            $esperando = (bool) $cr->esperando_explicacion;
+            $contadoPendiente = $esperando ? (float) $cr->conteoVigente()?->monto : null;
+
             return [
                 'id' => $cr->id,
+                'esperando_explicacion' => $esperando,
                 'vendedor' => [
                     'id' => $cr->vendedor->id,
                     'name' => $cr->vendedor->name,
@@ -71,11 +86,12 @@ class CashRegisterConsolidatedController extends Controller
                 'fecha_apertura' => $cr->fecha_apertura?->toDateTimeString(),
                 'fecha_cierre' => $cr->fecha_cierre?->toDateTimeString(),
                 'monto_apertura' => (float) $cr->monto_apertura,
-                'monto_contado_cierre' => $cr->monto_contado_cierre !== null ? (float) $cr->monto_contado_cierre : null,
-                'monto_esperado_calculado' => $cr->monto_esperado_calculado !== null ? (float) $cr->monto_esperado_calculado : null,
-                'diferencia' => $dif,
+                'monto_contado_cierre' => $esperando ? $contadoPendiente : ($cr->monto_contado_cierre !== null ? (float) $cr->monto_contado_cierre : null),
+                'monto_esperado_calculado' => $esperando ? $cr->efectivoEsperado() : ($cr->monto_esperado_calculado !== null ? (float) $cr->monto_esperado_calculado : null),
+                'diferencia' => $esperando ? round($contadoPendiente - $cr->efectivoEsperado(), 2) : $dif,
                 'tipo_diferencia' => $tipoDiferencia,
                 'observacion' => $cr->observacion,
+                'revision' => $cr->revisada_at ? ['nota' => $cr->revision_nota, 'fecha' => $cr->revisada_at->toDateTimeString()] : null,
             ];
         });
 
@@ -147,6 +163,15 @@ class CashRegisterConsolidatedController extends Controller
                     'monto_esperado_calculado' => $turno->monto_esperado_calculado !== null ? (float) $turno->monto_esperado_calculado : null,
                     'monto_contado_cierre' => $turno->monto_contado_cierre !== null ? (float) $turno->monto_contado_cierre : null,
                     'diferencia' => $diferencia === 0.0 ? 0.0 : $diferencia,
+                    'conteos' => $turno->conteos()->with(['lineas', 'anuladoPor:id,name'])->get()->map(fn (CashRegisterCount $conteo) => [
+                        'monto' => (float) $conteo->monto,
+                        'fecha' => $conteo->created_at?->toDateTimeString(),
+                        'reconteo_autorizado_por' => $conteo->anuladoPor?->name,
+                        'lineas' => $conteo->lineas->map(fn (CashRegisterCountLine $linea) => [
+                            'denominacion' => (float) $linea->denominacion,
+                            'cantidad' => $linea->cantidad,
+                        ])->values(),
+                    ])->values(),
                     'observacion' => blank($turno->observacion)
                         ? ($diferencia !== null && $diferencia !== 0.0 ? 'Sin explicación (cierre anterior a la regla)' : 'Sin observación')
                         : $turno->observacion,
@@ -170,5 +195,31 @@ class CashRegisterConsolidatedController extends Controller
             'vendedores' => $vendedores,
             'sedes' => $sedes,
         ]);
+    }
+
+    /**
+     * Deja que el vendedor vuelva a contar el cajón; el primer conteo se conserva (E-011).
+     */
+    public function autorizarReconteo(Team $current_team, CashRegister $cash_register, Request $request, AutorizarReconteoDeCaja $action): RedirectResponse
+    {
+        $action->handle($cash_register, $request->user());
+
+        return back();
+    }
+
+    /**
+     * P-006: el Gerente da por revisada la diferencia del cierre con su comentario.
+     */
+    public function revisar(Team $current_team, CashRegister $cash_register, Request $request): RedirectResponse
+    {
+        $datos = $request->validate(['revision_nota' => ['required', 'string', 'min:3', 'max:500']], [
+            'revision_nota.required' => 'Escribe qué se concluyó de la diferencia.',
+        ]);
+        abort_if($cash_register->estado !== 'cerrado', 422, 'Solo se revisa un turno cerrado.');
+
+        $cash_register->update([...$datos, 'revisada_por' => $request->user()->id, 'revisada_at' => now()]);
+        AuditLogger::log(action: 'caja.revisada', entity: $cash_register, newValues: $datos, userId: $request->user()->id);
+
+        return back();
     }
 }

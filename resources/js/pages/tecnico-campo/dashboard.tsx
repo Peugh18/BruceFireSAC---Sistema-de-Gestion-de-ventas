@@ -1,7 +1,6 @@
-import GraficosDashboard, {
-    type DatosGraficos,
-} from '@/components/graficos-dashboard';
-import React, { useState } from 'react';
+import { pageTitleClass } from '@/components/page-header';
+import { TuSemana, type Punto } from '@/components/bi';
+import { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
@@ -56,7 +55,12 @@ interface OrderItem {
 }
 
 interface Props {
-    graficos: DatosGraficos;
+    graficos: {
+        prioridades: Punto[];
+        atrasadas: Punto[];
+        terminadas: Punto[];
+        visitas: Punto[];
+    };
     orders: {
         data: OrderItem[];
         current_page: number;
@@ -178,16 +182,13 @@ export default function TecnicoCampoDashboard({
             <Head title="Ruta y Servicios de Campo" />
 
             <div className="space-y-4">
-                <GraficosDashboard rol="campo" datos={graficos} />
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
                         <p className="text-primary-strong mb-1 text-xs font-bold tracking-wider uppercase">
                             Campo
                         </p>
-                        <h1 className="text-foreground text-2xl font-bold tracking-tight">
-                            Servicios de Campo
-                        </h1>
+                        <h1 className={pageTitleClass}>Servicios de Campo</h1>
                         <p className="text-muted-foreground text-sm">
                             Pendientes de hoy y anteriores. Urgentes primero.
                         </p>
@@ -424,6 +425,8 @@ export default function TecnicoCampoDashboard({
                     )}
                 </div>
                 <PaginacionOrdenes paginas={orders} />
+
+                <TuSemana graficos={graficos} />
             </div>
         </TecnicoCampoLayout>
     );

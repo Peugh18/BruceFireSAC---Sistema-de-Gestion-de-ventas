@@ -76,6 +76,7 @@ test('cotizacion convertida y orden anulada no admiten nuevas lineas', function 
 
 test('la cotizacion abre taller antes de vender y repetir no duplica la orden', function () {
     [$user, $orden, $quote] = adicionalPendiente();
+    aceptarCotizacion($quote);
     $orden->deficiencies()->delete();
     $orden->delete();
     $url = route('vendedor.cotizaciones.orden-taller', [$user->currentTeam, $quote]);
@@ -88,6 +89,7 @@ test('la cotizacion abre taller antes de vender y repetir no duplica la orden', 
 
 test('la lista de cotizaciones dice si puede ir al taller y cuál es su orden', function () {
     [$user, $orden, $quote] = adicionalPendiente();
+    aceptarCotizacion($quote);
     $orden->deficiencies()->delete();
     $orden->delete();
     $this->actingAs($user)->post(route('vendedor.cotizaciones.orden-taller', [$user->currentTeam, $quote]));

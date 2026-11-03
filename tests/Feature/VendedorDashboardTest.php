@@ -29,6 +29,9 @@ if (! function_exists('vendedorUser')) {
 }
 
 test('ventas_hoy solo suma las ventas de HOY del vendedor autenticado', function () {
+    // A mitad de mes: el día 1, «ayer» cae en el mes anterior.
+    $this->travelTo(now()->setDate(2026, 10, 15));
+
     $vendedor = vendedorUser();
     $otroVendedor = vendedorUser();
 
@@ -84,6 +87,24 @@ test('ventas_hoy solo suma las ventas de HOY del vendedor autenticado', function
     expect($ventasHoy['total'])->toEqual(300.00)
         ->and($ventasHoy['count'])->toBe(2)
         ->and($ventasHoy['ticket_promedio'])->toEqual(150.00);
+});
+
+test('el BI del vendedor acumula sus ventas día a día contra el mes anterior, sin las de otros', function () {
+    $this->travelTo(now()->setDate(2026, 10, 15));
+    $vendedor = vendedorUser();
+    foreach ([['2026-10-03', 100], ['2026-10-10', 200], ['2026-09-05', 50]] as [$fecha, $total]) {
+        Sale::factory()->create(['vendedor_id' => $vendedor->id, 'fecha' => $fecha, 'total' => $total, 'estado' => 'confirmada']);
+    }
+    Sale::factory()->create(['vendedor_id' => vendedorUser()->id, 'fecha' => '2026-10-03', 'total' => 999, 'estado' => 'confirmada']);
+
+    $this->actingAs($vendedor)->get(route('vendedor.dashboard', ['current_team' => $vendedor->currentTeam]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('graficos.acumulado', 31)
+            ->where('graficos.acumulado.2.valor', 100)
+            ->where('graficos.acumulado.14.valor', 300)
+            ->where('graficos.acumulado.20.valor', null)
+            ->where('graficos.acumulado.4.secundario', 50)
+            ->where('graficos.acumulado.30.secundario', 50));
 });
 
 test('la respuesta del dashboard NUNCA incluye acumulados mensuales de la empresa ni datos de otros vendedores', function () {

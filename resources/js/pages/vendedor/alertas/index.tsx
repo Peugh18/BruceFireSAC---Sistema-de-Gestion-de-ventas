@@ -25,6 +25,7 @@ import VendedorLayout from '@/layouts/vendedor-layout';
 import rutasAlertas from '@/routes/vendedor/alertas';
 import type { Team } from '@/types';
 import ClientesRoutes from '@/routes/vendedor/clientes';
+import { iniciales } from '@/lib/utils';
 
 export type AlertItem = {
     client_id: number;
@@ -67,16 +68,6 @@ export type Props = {
 
 /** Filtros de la lista de avisos por vencimiento. */
 export type FiltroAlerta = 'todas' | 'vencidas' | 'esta_semana' | 'este_mes';
-
-function initials(value: string | undefined): string {
-    if (!value) return 'CL';
-    return value
-        .split(/\s+/u)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? '')
-        .join('');
-}
 
 export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
@@ -298,7 +289,7 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                               : 'bg-muted text-foreground/80'
                                                     }`}
                                                 >
-                                                    {initials(item.cliente)}
+                                                    {iniciales(item.cliente)}
                                                 </div>
 
                                                 {/* Details */}

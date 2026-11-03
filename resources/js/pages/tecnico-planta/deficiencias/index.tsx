@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowRight, Camera, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -9,6 +10,7 @@ import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
 import DeficienciasRoutes from '@/routes/tecnico-planta/deficiencias';
 import OrdenesRoutes from '@/routes/tecnico-planta/ordenes';
 import type { Team } from '@/types';
+import { hace } from '@/lib/utils';
 
 interface DeficiencyItem {
     id: number;
@@ -74,25 +76,6 @@ const ETIQUETAS: Record<string, { texto: string; clase: string }> = {
     },
 };
 
-function hace(fecha: string | null): string {
-    if (!fecha) {
-        return '';
-    }
-
-    const minutos = Math.max(
-        0,
-        Math.round((Date.now() - new Date(fecha).getTime()) / 60000),
-    );
-
-    if (minutos < 60) {
-        return `hace ${minutos} min`;
-    }
-
-    const horas = Math.round(minutos / 60);
-
-    return horas < 24 ? `hace ${horas} h` : `hace ${Math.round(horas / 24)} d`;
-}
-
 /** Las fallas de todas las órdenes del técnico; cada una lleva a su orden. */
 export default function DeficienciasIndex({
     deficiencies,
@@ -117,9 +100,7 @@ export default function DeficienciasIndex({
 
             <div className="space-y-4">
                 <div>
-                    <h1 className="text-foreground text-lg font-black tracking-tight">
-                        Hallazgos
-                    </h1>
+                    <h1 className={pageTitleClass}>Hallazgos</h1>
                     <p className="text-muted-foreground text-xs">
                         Las fallas de todas tus órdenes. Toca una para ir a su
                         orden.

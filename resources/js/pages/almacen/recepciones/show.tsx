@@ -198,7 +198,7 @@ export default function RecepcionesShow({ reception, current_year }: Props) {
         >
             <Head title={`Recepción #${reception.id} - Almacén`} />
 
-            <div className="mx-auto flex max-w-5xl flex-col gap-6">
+            <div className="flex flex-col gap-6">
                 {/* Top Action Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <Link

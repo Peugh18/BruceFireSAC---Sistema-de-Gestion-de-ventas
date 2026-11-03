@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
+use App\Models\ServiceOrder;
 use App\Services\Ml\CargaHistorico;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
@@ -289,6 +290,9 @@ test('por empresa muestra a cada cliente con todos sus extintores aunque venzan 
 });
 
 test('por empresa cuenta lo vendido sin serie con la recarga estimada al año de la compra', function () {
+    // A mitad de mes: el día 1, «ayer» cae en el mes anterior.
+    $this->travelTo(now()->setDate(2026, 10, 15));
+
     $user = vendedorUser();
     $minera = Client::factory()->create(['razon_social' => 'MINERA SIN SERIE SAC']);
     $recarga = Service::factory()->create(['nombre' => 'RECARGA DE EXTINTOR PQS 6KG']);
@@ -321,4 +325,70 @@ test('por empresa cuenta lo vendido sin serie con la recarga estimada al año de
         ->and($empresa['equipos'][0]['estimado'])->toBeTrue()
         ->and($empresa['equipos'][0]['numero_serie'])->toBeNull()
         ->and($empresa['equipos'][0]['equipo'])->toBe('RECARGA DE EXTINTOR PQS 6KG');
+});
+
+test('la recarga cuenta cada equipo una vez en empresas y alertas aunque la recepcion sea parcial', function (int $cantidad, int $registrados, int $lineas) {
+    $this->travelTo('2026-10-23 12:00:00');
+    $user = vendedorUser();
+    $sale = Sale::factory()->create(['fecha' => '2025-10-22', 'estado' => 'confirmada']);
+    $service = Service::factory()->create(['nombre' => 'RECARGA DE EXTINTOR PQS 6KG']);
+    SaleItem::factory()->count($lineas)->forService($service)->create([
+        'sale_id' => $sale->id,
+        'cantidad' => $cantidad,
+    ]);
+    $order = ServiceOrder::factory()->create([
+        'sale_id' => $sale->id, 'client_id' => $sale->client_id, 'sede_id' => $sale->sede_id,
+        'service_id' => $service->id,
+    ]);
+    $line = $order->lines()->create(['service_id' => $service->id, 'cantidad' => $cantidad * $lineas]);
+    $equipments = Equipment::factory()->count($registrados)->create([
+        'client_id' => $sale->client_id, 'estado' => 'activo',
+        'proxima_fecha_atencion' => '2026-10-22', 'proxima_prueba_hidrostatica' => null,
+    ]);
+    $order->equipments()->attach($equipments->modelKeys(), ['service_order_line_id' => $line->id, 'recibido' => true]);
+
+    $props = $this->actingAs($user)->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]))
+        ->assertOk()->viewData('page')['props'];
+
+    $empresa = collect($props['empresas'])->firstWhere('client_id', $sale->client_id);
+    expect($empresa['extintores'])->toBe($cantidad * $lineas)
+        ->and($empresa['estimados'])->toBe($cantidad * $lineas - $registrados);
+    $alerts = collect($props['alerts']['vencidas'])->where('client_id', $sale->client_id);
+    expect($alerts->sum('cantidad'))->toBe($cantidad * $lineas)
+        ->and($alerts->whereNull('equipment_id')->sum('cantidad'))->toBe($cantidad * $lineas - $registrados);
+})->with([
+    'recarga completa' => [1, 1, 1],
+    'recepcion parcial' => [3, 1, 1],
+    'servicio en dos lineas' => [2, 1, 2],
+]);
+
+test('registrar una recarga no oculta otros servicios ni productos de la misma venta', function () {
+    $this->travelTo('2026-10-23 12:00:00');
+    $user = vendedorUser();
+    $sale = Sale::factory()->create(['fecha' => '2025-10-22', 'estado' => 'confirmada']);
+    $recarga = Service::factory()->create(['nombre' => 'RECARGA DE EXTINTOR PQS 6KG']);
+    $otra = Service::factory()->create(['nombre' => 'RECARGA DE EXTINTOR CO2 10LB']);
+    SaleItem::factory()->forService($recarga)->create(['sale_id' => $sale->id, 'cantidad' => 1]);
+    SaleItem::factory()->forService($otra)->create(['sale_id' => $sale->id, 'cantidad' => 2]);
+    SaleItem::factory()->create([
+        'sale_id' => $sale->id, 'cantidad' => 1,
+        'product_id' => Product::factory()->create(['categoria' => 'extintor'])->id,
+    ]);
+    $order = ServiceOrder::factory()->create([
+        'sale_id' => $sale->id, 'client_id' => $sale->client_id, 'sede_id' => $sale->sede_id,
+        'service_id' => $recarga->id,
+    ]);
+    $line = $order->lines()->create(['service_id' => $recarga->id, 'cantidad' => 1]);
+    $equipment = Equipment::factory()->create([
+        'client_id' => $sale->client_id, 'estado' => 'activo',
+        'proxima_fecha_atencion' => '2026-10-22', 'proxima_prueba_hidrostatica' => null,
+    ]);
+    $order->equipments()->attach($equipment, ['service_order_line_id' => $line->id, 'recibido' => true]);
+
+    $props = $this->actingAs($user)->get(route('vendedor.alertas.index', ['current_team' => $user->currentTeam]))
+        ->assertOk()->viewData('page')['props'];
+
+    $empresa = collect($props['empresas'])->firstWhere('client_id', $sale->client_id);
+    expect($empresa['extintores'])->toBe(4)->and($empresa['estimados'])->toBe(3);
+    expect(collect($props['alerts']['vencidas'])->where('client_id', $sale->client_id)->sum('cantidad'))->toBe(4);
 });

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Gerente\DashboardController;
 use App\Models\Client;
 use App\Models\ClientRetentionScore;
 use App\Models\Sale;
@@ -8,6 +9,7 @@ use App\Services\Ml\CargaHistorico;
 use App\Services\Ml\RetentionModel;
 use Carbon\Carbon;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -142,15 +144,10 @@ test('Dashboard del Gerente maneja estado vacío si no hay scores de retención'
     // Sin registros en client_retention_scores
     ClientRetentionScore::query()->delete();
 
-    $response = $this->actingAs($gerente)
-        ->get(route('gerente.dashboard', ['current_team' => $gerente->currentTeam]));
+    $this->actingAs($gerente);
+    $ia = app(DashboardController::class)->datosMensuales(Request::create('/'))['iaRecompra'];
 
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('gerente/dashboard')
-        ->where('iaRecompra.alta', 0)
-        ->where('iaRecompra.clientes', [])
-    );
+    expect($ia['alta'])->toBe(0)->and($ia['clientes'])->toBe([]);
 });
 
 test('Dashboard del Gerente renderiza la sección de IA con scores activos', function () {
@@ -183,21 +180,14 @@ test('Dashboard del Gerente renderiza la sección de IA con scores activos', fun
         'scored_at' => now(),
     ]);
 
-    $response = $this->actingAs($gerente)
-        ->get(route('gerente.dashboard', ['current_team' => $gerente->currentTeam]));
+    $this->actingAs($gerente);
+    $ia = app(DashboardController::class)->datosMensuales(Request::create('/'))['iaRecompra'];
 
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('gerente/dashboard')
-        ->has('iaRecompra', fn (Assert $ai) => $ai
-            ->where('alta', 1)
-            ->where('media', 0)
-            ->has('clientes', 1)
-            ->where('clientes.0.cliente', 'GRUPO GLORIA S.A.')
-            ->where('clientes.0.porcentaje', 85)
-            ->etc()
-        )
-    );
+    expect($ia['alta'])->toBe(1)
+        ->and($ia['media'])->toBe(0)
+        ->and($ia['clientes'])->toHaveCount(1)
+        ->and($ia['clientes'][0]['cliente'])->toBe('GRUPO GLORIA S.A.')
+        ->and($ia['clientes'][0]['porcentaje'])->toBe(85);
 });
 
 test('RetentionModel calcula un modelo XGBoost exportado y reparte la prediccion entre las variables', function () {

@@ -9,6 +9,7 @@ use App\Models\Reception;
 use App\Models\Team;
 use App\Services\Inventory\StickerPdfService;
 use App\Services\Recepcion\AccesoDeAlmacen;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
@@ -71,7 +72,7 @@ class ReceptionStickerController extends Controller
     /**
      * Reimprime el sticker de una sola unidad, por su serie (BF-EQ-...).
      */
-    public function unidad(Team $current_team, StickerPdfService $stickerPdfService, Request $request): Response
+    public function unidad(Team $current_team, StickerPdfService $stickerPdfService, Request $request): Response|RedirectResponse
     {
         $datos = $request->validate([
             'serie' => ['required', 'string', 'max:50'],
@@ -84,7 +85,9 @@ class ReceptionStickerController extends Controller
             ->where('numero_serie', mb_strtoupper($serie))
             ->when($almacenId, fn ($q) => $q->where('sede_almacen_id', $almacenId))
             ->first();
-        abort_if($unidad === null, 404, 'No se encontró esa serie en tu almacén.');
+        if ($unidad === null) {
+            return $this->noEncontrado("No encontramos la serie {$serie} en tu almacén. Revisa que esté bien escrita.");
+        }
 
         $pdf = $stickerPdfService->generateForUnit($unidad, $datos['formato'] ?? 'rollo');
 
@@ -94,14 +97,28 @@ class ReceptionStickerController extends Controller
         ]);
     }
 
-    public function producto(Team $current_team, StickerPdfService $stickerPdfService, Request $request): Response
+    public function producto(Team $current_team, StickerPdfService $stickerPdfService, Request $request): Response|RedirectResponse
     {
         $datos = $request->validate(['codigo' => ['required', 'string', 'max:50'], 'formato' => ['sometimes', 'required', 'in:rollo,a4']]);
-        $producto = Product::query()->where('codigo', trim($datos['codigo']))->where('serializado', false)->where('activo', true)->firstOrFail();
+        $producto = Product::query()->where('codigo', trim($datos['codigo']))->where('serializado', false)->where('activo', true)->first();
+        if ($producto === null) {
+            return $this->noEncontrado('No encontramos un producto activo sin serie con el código '.trim($datos['codigo']).'.');
+        }
 
         return response($stickerPdfService->generateForProduct($producto, $datos['formato'] ?? 'rollo')->output(), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="sticker-producto-'.$producto->id.'.pdf"',
         ]);
+    }
+
+    /**
+     * El sticker se abre en otra pestaña: si el código no existe, esa pestaña
+     * muestra la misma pantalla con el aviso en vez de una página 404.
+     */
+    private function noEncontrado(string $mensaje): RedirectResponse
+    {
+        Inertia::flash('toast', ['type' => 'error', 'message' => $mensaje]);
+
+        return redirect()->route('almacen.stickers.index');
     }
 }

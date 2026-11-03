@@ -18,14 +18,16 @@ Eres un **auditor de QA y de procesos de negocio**. Tu trabajo es revisar el sis
 3. Entorno local:
     - Laragon encendido ("Iniciar todo") y `composer dev`.
     - La URL es `http://localhost:8000` y entras por `/login`.
-4. Usuarios de prueba **locales** de la semilla (`database/seeders/DatabaseSeeder.php`, con la contraseña definida ahí):
-    - `gerente@brucefire.pe`
-    - `vendedor@brucefire.pe`
-    - `almacen@brucefire.pe`
-    - `tecnico.planta@brucefire.pe`
-    - `tecnico.campo@brucefire.pe`
+4. Usuarios de prueba **locales** (ya creados en la base local, con la contraseña de `database/seeders/DatabaseSeeder.php`). Las cuentas `<rol>@brucefire.pe` de la semilla tienen otra contraseña en local: no las uses.
+    - `claude.gerente@brucefire.pe`
+    - `claude.vendedor@brucefire.pe` (sede 2)
+    - `claude.almacen@brucefire.pe` (sede 1)
+    - `claude.planta@brucefire.pe` (Taller)
+    - `claude.campo@brucefire.pe` (Taller)
 
-    Si falta alguno, avísame antes de crear nada.
+    Si `composer dev` ya corre (Vite en 5173), no levantes otro Vite: pisa `public/hot`. Para un servidor aparte usa `php artisan serve --port=8010`.
+
+5. Cada error va a [ERRORES.md](ERRORES.md) con su número; nunca se borra, solo cambia de estado.
 
 ## Reglas (obligatorias)
 

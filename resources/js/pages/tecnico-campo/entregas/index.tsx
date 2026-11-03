@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowRight,
@@ -8,7 +9,7 @@ import {
     RotateCcw,
     Search,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
@@ -140,7 +141,7 @@ export default function EntregasIndex({
 
             {/* Header Mobile Title */}
             <div className="mb-4">
-                <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
+                <h1 className={`${pageTitleClass} flex items-center gap-2`}>
                     <PackageCheck className="text-foreground size-6" />
                     Entregas y Actas de Conformidad
                 </h1>
@@ -160,7 +161,7 @@ export default function EntregasIndex({
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
-                    <span className="block text-xs font-bold uppercase opacity-80">
+                    <span className="block text-xs font-bold uppercase">
                         Listas
                     </span>
                     <span className="text-warning-strong text-lg font-black">
@@ -175,7 +176,7 @@ export default function EntregasIndex({
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
-                    <span className="block text-xs font-bold uppercase opacity-80">
+                    <span className="block text-xs font-bold uppercase">
                         Entregadas
                     </span>
                     <span className="text-foreground text-lg font-black">
@@ -190,7 +191,7 @@ export default function EntregasIndex({
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
-                    <span className="block text-xs font-bold uppercase opacity-80">
+                    <span className="block text-xs font-bold uppercase">
                         Cerradas
                     </span>
                     <span className="text-success-strong text-lg font-black">
@@ -205,7 +206,7 @@ export default function EntregasIndex({
                             : 'border-border bg-card text-foreground'
                     }`}
                 >
-                    <span className="block text-xs font-bold uppercase opacity-80">
+                    <span className="block text-xs font-bold uppercase">
                         Todas
                     </span>
                     <span className="text-lg font-black">{stats.total}</span>

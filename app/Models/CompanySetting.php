@@ -25,12 +25,13 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $mensaje_agradecimiento
  * @property string|null $condiciones_comprobante
  * @property string|null $cuenta_detraccion
+ * @property int $intervalo_ph_anios
  */
 #[Fillable([
     'razon_social', 'nombre_comercial', 'ruc', 'direccion', 'ubigeo',
     'telefono', 'email', 'sitio_web', 'logo_path', 'color_marca', 'leyenda_pie',
     'mensaje_agradecimiento', 'condiciones_comprobante', 'cuenta_detraccion',
-    'instructor_capacitacion',
+    'instructor_capacitacion', 'intervalo_ph_anios',
 ])]
 class CompanySetting extends Model
 {
@@ -111,6 +112,29 @@ class CompanySetting extends Model
             fn (int $canal) => (int) round($canal + (255 - $canal) * $mezcla),
             $this->rgbMarca(),
         ));
+    }
+
+    /**
+     * Identidad que comparten todos los documentos que emitimos (la «hoja»
+     * de resources/views/pdf/hoja): datos de la empresa, logo y color de la
+     * marca. El Gerente los cambia una vez y se aplican a todos, como el
+     * «Document Layout» de Odoo.
+     *
+     * @return array{company: self, logo: array{src: string, ancho: int, alto: int}|null, marca: array{color: string, texto: string, suave: string, linea: string}, ubicacion: string}
+     */
+    public function identidadPdf(): array
+    {
+        return [
+            'company' => $this,
+            'logo' => $this->logoParaPdf(),
+            'marca' => [
+                'color' => $this->colorMarca(),
+                'texto' => $this->colorTextoSobreMarca(),
+                'suave' => $this->colorMarcaSuave(),
+                'linea' => $this->colorMarcaSuave(0.75),
+            ],
+            'ubicacion' => collect([$this->distrito, $this->provincia, $this->departamento])->filter()->unique()->implode(' - '),
+        ];
     }
 
     /**

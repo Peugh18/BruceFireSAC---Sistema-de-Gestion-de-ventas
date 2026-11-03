@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Form, Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Download } from 'lucide-react';
 
@@ -38,7 +39,7 @@ export default function CounterDelivery({
     return (
         <VendedorLayout title="Entrega en mostrador">
             <Head title={`Entrega en mostrador · ${order.codigo}`} />
-            <div className="mx-auto max-w-2xl space-y-5 p-4 sm:p-6">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
                 <Button variant="ghost" asChild>
                     <Link href={showUrl}>
                         <ArrowLeft className="mr-2 size-4" /> Volver a la orden
@@ -46,7 +47,7 @@ export default function CounterDelivery({
                 </Button>
 
                 <div>
-                    <h1 className="text-2xl font-bold">Entrega en mostrador</h1>
+                    <h1 className={pageTitleClass}>Entrega en mostrador</h1>
                     <p className="text-muted-foreground text-sm">
                         {order.codigo} · {order.client.razon_social}
                     </p>

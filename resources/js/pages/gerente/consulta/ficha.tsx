@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link } from '@inertiajs/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,10 +20,8 @@ export default function FichaGerente({
     return (
         <GerenteLayout title={titulo}>
             <Head title={titulo} />
-            <div className="mx-auto w-full max-w-4xl space-y-4 p-4 sm:p-6">
-                <h1 className="text-foreground text-2xl font-semibold">
-                    {titulo}
-                </h1>
+            <div className="flex flex-col gap-4">
+                <h1 className={pageTitleClass}>{titulo}</h1>
                 <Card className="p-4">
                     <dl className="grid gap-4 sm:grid-cols-2">
                         {Object.entries(campos).map(([nombre, valor]) => (

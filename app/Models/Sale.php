@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -26,6 +27,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property int $vendedor_id
  * @property Carbon $fecha día de negocio de la venta (date); la hora real del registro está en created_at / registro_iniciado_at / confirmada_at
  * @property string $destino
+ * @property list<int>|null $certificados_en_espera tipos de certificado que esperan la ficha técnica de un producto
  * @property string $condicion_pago
  * @property string|null $medio_pago SOLO respaldo histórico / campo de paso del formulario; la fuente de verdad es sale_payments
  * @property string|null $numero_operacion SOLO respaldo histórico / campo de paso del formulario; la fuente de verdad es sale_payments
@@ -50,8 +52,8 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read Collection<int, ElectronicDocument> $electronicDocuments
  */
 #[Fillable([
-    'numero_interno', 'numero_nota_venta', 'quote_id', 'client_id', 'sede_id', 'vehicle_id', 'vendedor_id', 'fecha',
-    'destino', 'referencia', 'condicion_pago', 'medio_pago', 'numero_operacion', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones',
+    'numero_interno', 'numero_nota_venta', 'quote_id', 'corrige_sale_id', 'client_id', 'sede_id', 'vehicle_id', 'vendedor_id', 'fecha',
+    'destino', 'referencia', 'condicion_pago', 'medio_pago', 'numero_operacion', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones', 'certificados_en_espera',
     'registro_iniciado_at', 'confirmada_at',
 ])]
 class Sale extends Model
@@ -176,9 +178,11 @@ class Sale extends Model
     protected function casts(): array
     {
         return [
+            'correccion_desde' => 'datetime',
             'fecha' => 'date',
             'registro_iniciado_at' => 'datetime',
             'confirmada_at' => 'datetime',
+            'certificados_en_espera' => 'array',
             'subtotal' => 'decimal:2',
             'igv' => 'decimal:2',
             'total' => 'decimal:2',
@@ -243,6 +247,26 @@ class Sale extends Model
     }
 
     /**
+     * La venta anulada que esta venta corrige.
+     *
+     * @return BelongsTo<Sale, $this>
+     */
+    public function corrige(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'corrige_sale_id');
+    }
+
+    /**
+     * La venta que corrige a esta.
+     *
+     * @return HasOne<Sale, $this>
+     */
+    public function correccion(): HasOne
+    {
+        return $this->hasOne(self::class, 'corrige_sale_id');
+    }
+
+    /**
      * Dinero devuelto al cliente (venta anulada o rebajada).
      *
      * @return HasMany<SaleRefund, $this>
@@ -266,6 +290,14 @@ class Sale extends Model
     public function electronicDocuments(): HasMany
     {
         return $this->hasMany(ElectronicDocument::class);
+    }
+
+    /**
+     * @return HasMany<DispatchGuide, $this>
+     */
+    public function dispatchGuides(): HasMany
+    {
+        return $this->hasMany(DispatchGuide::class);
     }
 
     /**
@@ -311,15 +343,7 @@ class Sale extends Model
      */
     public function lineasComprobante(): SupportCollection
     {
-        $this->loadMissing('items.product', 'items.service');
-
-        return $this->items
-            ->groupBy(fn (SaleItem $item) => implode('|', [
-                $item->product_id,
-                $item->service_id,
-                $item->precio_unitario,
-                $item->tipo_afectacion_igv,
-            ]))
+        return $this->gruposDeLinea()
             ->map(function (Collection $grupo) {
                 /** @var SaleItem $primero */
                 $primero = $grupo->first();
@@ -340,6 +364,27 @@ class Sale extends Model
 
                 return $linea;
             })
+            ->values()
+            ->toBase();
+    }
+
+    /**
+     * Las líneas de la venta agrupadas como salen en el comprobante, en el
+     * mismo orden: el índice de cada grupo es el de su línea en el XML.
+     *
+     * @return SupportCollection<int, Collection<int, SaleItem>>
+     */
+    public function gruposDeLinea(): SupportCollection
+    {
+        $this->loadMissing('items.product', 'items.service', 'items.inventoryUnit');
+
+        return $this->items
+            ->groupBy(fn (SaleItem $item) => implode('|', [
+                $item->product_id,
+                $item->service_id,
+                $item->precio_unitario,
+                $item->tipo_afectacion_igv,
+            ]))
             ->values()
             ->toBase();
     }

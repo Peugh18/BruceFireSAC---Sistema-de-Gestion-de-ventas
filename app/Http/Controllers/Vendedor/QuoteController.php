@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Cotizaciones\CreateQuote;
+use App\Actions\Cotizaciones\IniciarOrdenDesdeCotizacion;
 use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
@@ -10,15 +11,17 @@ use App\Http\Requests\Cotizaciones\StoreQuoteRequest;
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Models\Sale;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Billing\AfectacionIgv;
 use App\Services\Quotes\QuotePdfService;
-use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,23 +47,29 @@ class QuoteController extends Controller
             })
             ->orderByDesc('created_at')
             ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Quote $quote) => [
-                'id' => $quote->id,
-                'numero' => $quote->numero,
-                'cliente' => $quote->client->razon_social,
-                'client_id' => $quote->client_id,
-                'total' => $quote->total,
-                'vigencia_hasta' => $quote->vigencia_hasta->toDateString(),
-                'estado' => $quote->estado,
-                'whatsapp' => $quote->client->esClientesVarios() ? null : $quote->client->whatsappInternacional(),
-                'puede_guardar_numero' => ! $quote->client->esClientesVarios(),
-                'enlace_pdf' => $pdf->enlacePublico($quote),
-                'venta' => $quote->sale ? ['id' => $quote->sale->id, 'numero' => $quote->sale->numero_interno] : null,
-                // La orden de taller solo existe para cotizaciones con un servicio (recarga, mantenimiento).
-                'tiene_servicio' => (bool) $quote->tiene_servicio,
-                'orden' => ($orden = $quote->serviceOrders->first()) ? ['id' => $orden->id, 'codigo' => $orden->codigo] : null,
-            ]);
+            ->withQueryString();
+
+        // Cada vendedor abre solo sus ventas: de las demás se muestra el número.
+        $ventasVisibles = Sale::query()->visiblePara($request->user())
+            ->whereIn('id', $quotes->getCollection()->pluck('sale.id')->filter())
+            ->pluck('id');
+
+        $quotes->through(fn (Quote $quote) => [
+            'id' => $quote->id,
+            'numero' => $quote->numero,
+            'cliente' => $quote->client->razon_social,
+            'client_id' => $quote->client_id,
+            'total' => $quote->total,
+            'vigencia_hasta' => $quote->vigencia_hasta->toDateString(),
+            'estado' => $quote->estado,
+            'whatsapp' => $quote->client->esClientesVarios() ? null : $quote->client->whatsappInternacional(),
+            'puede_guardar_numero' => ! $quote->client->esClientesVarios(),
+            'enlace_pdf' => $pdf->enlacePublico($quote),
+            'venta' => $quote->sale ? ['id' => $ventasVisibles->contains($quote->sale->id) ? $quote->sale->id : null, 'numero' => $quote->sale->numero_interno] : null,
+            // La orden de taller solo existe para cotizaciones con un servicio (recarga, mantenimiento).
+            'tiene_servicio' => (bool) $quote->tiene_servicio,
+            'orden' => ($orden = $quote->serviceOrders->first()) ? ['id' => $orden->id, 'codigo' => $orden->codigo] : null,
+        ]);
 
         return Inertia::render('vendedor/cotizaciones/index', [
             'quotes' => $quotes,
@@ -100,6 +109,7 @@ class QuoteController extends Controller
         }
 
         return Inertia::render('vendedor/cotizaciones/nueva', [
+            'noGravados' => AfectacionIgv::noGravados(),
             'ordenOrigen' => $ordenOrigen ? [
                 'id' => $ordenOrigen->id, 'codigo' => $ordenOrigen->codigo,
                 'tipo_servicio' => $ordenOrigen->resumenServicios(),
@@ -144,69 +154,18 @@ class QuoteController extends Controller
      * de Nueva Cotización (ver nota en create() sobre por qué no se manda
      * el catálogo completo como prop).
      */
-    public function iniciarOrden(Team $current_team, Quote $quote, Request $request, ServiceOrderNumberGenerator $numeracion): RedirectResponse
+    public function iniciarOrden(Team $current_team, Quote $quote, Request $request, IniciarOrdenDesdeCotizacion $iniciar): RedirectResponse
     {
         $this->asegurarSede($quote->sede_id);
-        $orden = DB::transaction(function () use ($quote, $request, $numeracion): ServiceOrder {
-            $quote = Quote::query()->lockForUpdate()->findOrFail($quote->id);
-            if (! in_array($quote->estado, ['borrador', 'emitida', 'enviada', 'aceptada'], true) || $quote->sale()->exists()) {
-                throw ValidationException::withMessages(['quote_id' => 'Esta cotización ya no puede iniciar una orden antes de la venta.']);
-            }
-            $existente = $quote->serviceOrders()->where('estado', '!=', 'anulada')->first();
-            if ($existente) {
-                return $existente;
-            }
-            $servicios = $quote->items()->with('service')->whereNotNull('service_id')->orderBy('id')->get();
-            $servicio = $servicios->first();
-            if (! $servicio) {
-                throw ValidationException::withMessages(['quote_id' => 'La cotización debe incluir un servicio para abrir una orden de taller.']);
-            }
-            $orden = ServiceOrder::create([
-                'codigo' => $numeracion->next(), 'client_id' => $quote->client_id, 'sede_id' => $quote->sede_id,
-                'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'service_id' => $servicio->service_id,
-                'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'estado' => 'pendiente_recepcion',
-                'observaciones' => 'Trabajo cotizado en '.$quote->numero.'; pendiente de venta al terminar.',
-            ]);
-            foreach ($servicios as $item) {
-                $orden->lines()->create([
-                    'service_id' => $item->service_id,
-                    'cantidad' => (int) $item->cantidad,
-                    'quote_item_id' => $item->id,
-                ]);
-            }
-            $this->attachQuotedEquipments($orden, $quote);
-            $orden->events()->create(['tipo' => 'creada', 'user_id' => $request->user()->id, 'payload' => ['mensaje' => 'Orden iniciada desde cotización, sin generar venta ni cobro.', 'quote_id' => $quote->id]]);
-
-            return $orden;
-        });
+        $opciones = $request->validate([
+            'departamento_tecnico' => ['nullable', 'in:planta,campo'],
+            'fecha' => ['nullable', 'date'],
+            'prioridad' => ['nullable', 'in:normal,alta,urgente'],
+            'observaciones' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $orden = $iniciar->handle($quote, $request->user(), array_filter($opciones));
 
         return redirect()->route('vendedor.ordenes-servicio.show', [$current_team, $orden]);
-    }
-
-    private function attachQuotedEquipments(ServiceOrder $orden, Quote $quote): void
-    {
-        $orden->load('lines.service');
-        $position = 1;
-        $assigned = [];
-
-        foreach ($quote->equipments()->get() as $equipment) {
-            $line = $orden->lines->first(function ($line) use ($equipment, $assigned): bool {
-                return $line->service
-                    && ($assigned[$line->id] ?? 0) < $line->cantidad
-                    && $line->service->incompatibilidadConEquipo($equipment) === null;
-            }) ?? $orden->lines->first();
-
-            if (! $line) {
-                continue;
-            }
-
-            $assigned[$line->id] = ($assigned[$line->id] ?? 0) + 1;
-            $orden->equipments()->attach($equipment->id, [
-                'service_order_line_id' => $line->id,
-                'posicion' => $position++,
-                'recibido' => false,
-            ]);
-        }
     }
 
     public function edit(Team $current_team, Quote $quote): Response
@@ -215,7 +174,7 @@ class QuoteController extends Controller
         abort_unless(in_array($quote->estado, ['borrador', 'emitida', 'enviada', 'aceptada'], true) && ! $quote->sale()->exists(), 422);
         $quote->load('client', 'items.product', 'items.service');
 
-        return Inertia::render('vendedor/cotizaciones/nueva', ['edicion' => [
+        return Inertia::render('vendedor/cotizaciones/nueva', ['noGravados' => AfectacionIgv::noGravados(), 'edicion' => [
             'id' => $quote->id, 'numero' => $quote->numero, 'fecha' => $quote->fecha->toDateString(), 'vigencia_hasta' => $quote->vigencia_hasta->toDateString(),
             'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'referencia' => $quote->referencia,
             'destino' => $quote->destinoResuelto(), 'vehicle_id' => $quote->vehicle_id,
@@ -514,15 +473,32 @@ class QuoteController extends Controller
         return back();
     }
 
-    public function accept(Team $current_team, Quote $quote): RedirectResponse
+    public function accept(Team $current_team, Quote $quote, Request $request): RedirectResponse
     {
         $this->asegurarSede($quote->sede_id);
+        $datos = $request->validate([
+            'aceptada_por' => ['required', 'string', 'max:120'],
+            'aceptada_canal' => ['required', 'in:orden_compra,whatsapp,correo,presencial,llamada'],
+            'orden_compra' => ['nullable', 'required_if:aceptada_canal,orden_compra', 'string', 'max:40'],
+            'orden_compra_archivo' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        ], [
+            'orden_compra.required_if' => 'Escribe el número de la orden de compra del cliente.',
+        ]);
+        $datos['orden_compra_path'] = $request->file('orden_compra_archivo')?->store('cotizaciones/ordenes-compra', 'local');
 
-        app(TransitionQuoteState::class)->handle($quote, 'aceptada');
+        app(TransitionQuoteState::class)->aceptar($quote, $datos);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} aceptada. Ya puedes pasarla a venta."]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => "Cotización {$quote->numero} aceptada por {$datos['aceptada_por']}. Ya puedes pasarla a venta u orden."]);
 
         return back();
+    }
+
+    public function ordenCompra(Team $current_team, Quote $quote): HttpResponse
+    {
+        $this->asegurarSede($quote->sede_id);
+        abort_unless($quote->orden_compra_path && Storage::disk('local')->exists($quote->orden_compra_path), 404);
+
+        return Storage::disk('local')->response($quote->orden_compra_path);
     }
 
     public function reject(Team $current_team, Quote $quote): RedirectResponse

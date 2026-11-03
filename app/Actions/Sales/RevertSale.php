@@ -14,32 +14,33 @@ use Illuminate\Support\Facades\DB;
 class RevertSale
 {
     /**
-     * Anula una venta por una nota de crédito de anulación total: las unidades
-     * vuelven al stock con su movimiento de Kardex, los equipos quedan de baja
-     * y las cuotas sin cobrar se eliminan. Sus certificados quedan anulados
-     * (el QR ya no los muestra como válidos). Los pagos ya registrados no se
-     * tocan: el dinero se devuelve al cliente de forma manual.
+     * Anula una venta: los productos siempre vuelven al stock con su movimiento
+     * de Kardex (los servicios no mueven stock), los equipos quedan de baja y
+     * las cuotas sin cobrar se eliminan. Sus certificados quedan anulados (el
+     * QR ya no los muestra como válidos) y lo cobrado se registra como devuelto.
+     * En una corrección los certificados y las fichas siguen vivos: la venta
+     * queda esperando la que la reemplaza (CorregirVenta).
      */
-    public function handle(Sale $sale, string $motivo = 'por nota de crédito', bool $devolverStock = true): Sale
+    public function handle(Sale $sale, string $motivo = 'por nota de crédito', bool $correccion = false): Sale
     {
         // Bloqueada y releída: dos anulaciones a la vez no deben devolver dos
         // veces el stock ni duplicar la devolución del cobro.
-        return DB::transaction(function () use ($sale, $motivo, $devolverStock): Sale {
+        return DB::transaction(function () use ($sale, $motivo, $correccion): Sale {
             $bloqueada = Sale::query()->lockForUpdate()->findOrFail($sale->id);
 
             if ($bloqueada->estado === 'anulada') {
                 return $bloqueada;
             }
 
-            return $this->revertir($bloqueada, $motivo, $devolverStock);
+            return $this->revertir($bloqueada, $motivo, $correccion);
         });
     }
 
-    protected function revertir(Sale $sale, string $motivo, bool $devolverStock): Sale
+    protected function revertir(Sale $sale, string $motivo, bool $correccion): Sale
     {
         $sale->loadMissing('items.inventoryUnit', 'items.equipment');
 
-        foreach ($devolverStock ? $sale->items : [] as $item) {
+        foreach ($sale->items as $item) {
             /** @var SaleItem $item */
             if ($item->tipo_linea === 'producto' && $item->deficiency_id === null) {
                 $this->devolverProducto($sale, $item, $motivo);
@@ -47,35 +48,14 @@ class RevertSale
                 continue;
             }
 
-            if ($item->tipo_linea !== 'unidad_nueva' || ! $item->inventoryUnit) {
-                continue;
+            if ($item->tipo_linea === 'unidad_nueva') {
+                $this->devolverUnidad($sale, $item, $motivo, darDeBaja: ! $correccion);
             }
-
-            $item->inventoryUnit->update(['estado' => 'disponible']);
-            $item->equipment?->update(['estado' => 'baja']);
-
-            $movement = new InventoryMovement;
-            $movement->inventory_unit_id = $item->inventoryUnit->id;
-            $movement->product_id = $item->inventoryUnit->product_id;
-            $movement->sede_id = $item->inventoryUnit->sede_almacen_id;
-            $movement->tipo = 'ingreso';
-            $movement->cantidad = 1;
-            $movement->referencia_type = $sale->getMorphClass();
-            $movement->referencia_id = $sale->id;
-            $movement->user_id = auth()->id();
-            $movement->observacion = "Anulación de la venta {$sale->numero_interno} {$motivo}";
-            $movement->save();
         }
 
-        Certificate::query()
-            ->where('sale_id', $sale->id)
-            ->whereIn('estado', ['vigente', 'vencido'])
-            ->update([
-                'estado' => 'anulado',
-                'anulado_motivo' => "Venta {$sale->numero_interno} anulada {$motivo}.",
-                'anulado_at' => now(),
-                'anulado_por' => auth()->id(),
-            ]);
+        if (! $correccion) {
+            $this->anularCertificados($sale, "Venta {$sale->numero_interno} anulada {$motivo}.");
+        }
 
         // Una cuota parcialmente cobrada tambien se cierra: si quedara viva
         // sobre la venta anulada seria una deuda fantasma en Cobranzas. Sus
@@ -108,7 +88,7 @@ class RevertSale
 
         $cobroDevuelto = round((float) $devoluciones->sum(), 2);
 
-        $sale->update(['estado' => 'anulada']);
+        $sale->forceFill(['estado' => 'anulada', 'correccion_desde' => $correccion ? now() : null])->save();
 
         AuditLogger::log(
             action: 'venta.anulada',
@@ -120,14 +100,66 @@ class RevertSale
         return $sale;
     }
 
+    public function anularCertificados(Sale $sale, string $motivo): void
+    {
+        Certificate::query()
+            ->where('sale_id', $sale->id)
+            ->whereIn('estado', ['vigente', 'vencido'])
+            ->update([
+                'estado' => 'anulado',
+                'anulado_motivo' => $motivo,
+                'anulado_at' => now(),
+                'anulado_por' => auth()->id(),
+            ]);
+    }
+
+    /**
+     * Regresa un extintor al stock. Si ya volvió por una devolución parcial no
+     * se repite: esa serie pudo venderse otra vez.
+     */
+    public function devolverUnidad(Sale $sale, SaleItem $item, string $motivo, bool $darDeBaja = true): void
+    {
+        if (! $item->inventoryUnit) {
+            return;
+        }
+
+        $yaVolvio = InventoryMovement::query()
+            ->where('inventory_unit_id', $item->inventoryUnit->id)
+            ->where('referencia_type', $sale->getMorphClass())
+            ->where('referencia_id', $sale->id)
+            ->where('tipo', 'ingreso')
+            ->exists();
+
+        if ($yaVolvio) {
+            return;
+        }
+
+        $item->inventoryUnit->update(['estado' => 'disponible']);
+        if ($darDeBaja) {
+            $item->equipment?->update(['estado' => 'baja']);
+        }
+
+        $movement = new InventoryMovement;
+        $movement->inventory_unit_id = $item->inventoryUnit->id;
+        $movement->product_id = $item->inventoryUnit->product_id;
+        $movement->sede_id = $item->inventoryUnit->sede_almacen_id;
+        $movement->tipo = 'ingreso';
+        $movement->cantidad = 1;
+        $movement->referencia_type = $sale->getMorphClass();
+        $movement->referencia_id = $sale->id;
+        $movement->user_id = auth()->id();
+        $movement->observacion = "Anulación de la venta {$sale->numero_interno} {$motivo}";
+        $movement->save();
+    }
+
     /**
      * Devuelve al almacén el stock de un producto sin serie, en la misma sede
-     * de donde salió.
+     * de donde salió. Sin cantidad, lo que falte volver de esa línea.
      */
-    protected function devolverProducto(Sale $sale, SaleItem $item, string $motivo): void
+    public function devolverProducto(Sale $sale, SaleItem $item, string $motivo, ?int $cantidad = null): void
     {
         // Vuelve al mismo almacén y al mismo lote de donde salió.
-        app(StockPorLote::class)->devolver($sale, (int) $item->product_id, (int) $item->cantidad, [
+        app(StockPorLote::class)->devolver($sale, (int) $item->product_id, $cantidad ?? (int) $item->cantidad, [
             'tipo' => 'ingreso',
             'referencia_type' => $sale->getMorphClass(),
             'referencia_id' => $sale->id,

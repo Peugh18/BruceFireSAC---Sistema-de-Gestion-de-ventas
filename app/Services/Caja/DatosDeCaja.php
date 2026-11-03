@@ -46,9 +46,8 @@ class DatosDeCaja
                 'fecha_apertura' => $cr->fecha_apertura->toDateTimeString(),
                 'fecha_cierre' => $cr->fecha_cierre?->toDateTimeString(),
                 'monto_apertura' => $cr->monto_apertura,
+                // Arqueo ciego (E-011): el vendedor no recibe el esperado ni la diferencia.
                 'monto_contado_cierre' => $cr->monto_contado_cierre,
-                'monto_esperado_calculado' => $cr->monto_esperado_calculado,
-                'diferencia' => $cr->diferencia,
                 'observacion' => $cr->observacion,
                 'estado' => $cr->estado,
             ]);
@@ -68,6 +67,7 @@ class DatosDeCaja
                 'abierto_mas_de_24_horas' => $turnoActual->fecha_apertura->lt(now()->subHours(24)),
                 'monto_apertura' => $turnoActual->monto_apertura,
                 'estado' => $turnoActual->estado,
+                'conteo_registrado' => $turnoActual->conteoVigente() !== null,
                 'ventas_por_forma_pago' => $ventasPorFormaPago,
                 'salidas' => $turnoActual->salidas()->latest('id')->get()->map(fn ($salida) => [
                     'id' => $salida->id,

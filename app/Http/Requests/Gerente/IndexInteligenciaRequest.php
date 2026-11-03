@@ -26,6 +26,7 @@ class IndexInteligenciaRequest extends FormRequest
             'buscar' => ['nullable', 'string', 'max:200'],
             'categoria' => ['sometimes', 'in:todas,alta,media,baja'],
             'vigencia' => ['sometimes', 'in:todas,actualizados,desactualizados'],
+            'calendario' => ['sometimes', 'in:todos,fuera'],
             'page' => ['sometimes', 'integer', 'min:1'],
         ];
     }

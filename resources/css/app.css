@@ -137,6 +137,14 @@
     --chart-3: oklch(0.6 0.15 230);
     --chart-4: oklch(0.75 0.18 75);
     --chart-5: oklch(0.45 0.15 290);
+    /* Series del BI: paleta validada para daltonismo (azul, naranja, aqua, ámbar). El rojo queda solo para lo vencido. */
+    --bi-1: #2a78d6;
+    --bi-2: #eb6834;
+    --bi-3: #1baf7a;
+    --bi-4: #eda100;
+    --bi-neutro: #8a8a93;
+    --bi-alerta: #c81e1e;
+    --bi-pista: #e9e9ec;
     --radius: 0.625rem;
 
     /* Sidebar corporativo Bruce Fire (#18181B) */
@@ -200,6 +208,13 @@
     --chart-3: oklch(0.68 0.14 230);
     --chart-4: oklch(0.78 0.16 75);
     --chart-5: oklch(0.6 0.16 290);
+    --bi-1: #3987e5;
+    --bi-2: #d95926;
+    --bi-3: #199e70;
+    --bi-4: #c98500;
+    --bi-neutro: #6b6b75;
+    --bi-alerta: #e5484d;
+    --bi-pista: #2e2e34;
 
     /* Sidebar carbón profundo estilo Apple (#09090B) */
     --sidebar: #09090b;

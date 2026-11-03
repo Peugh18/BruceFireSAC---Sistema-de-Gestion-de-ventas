@@ -17,12 +17,10 @@ class StoreServiceOrderRequest extends FormRequest
      */
     public function rules(): array
     {
+        // D-10: la orden nace de una cotización aceptada; de ella salen el
+        // cliente, el destino, los servicios y los extintores.
         return [
-            'client_id' => ['required', 'integer', 'exists:clients,id'],
-            'sede_id' => ['nullable', 'integer', 'exists:sedes,id'],
-            'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
-            'referencia' => ['nullable', 'string', 'max:150'],
-            'service_id' => ['required', 'integer', 'exists:services,id'],
+            'quote_id' => ['required', 'integer', 'exists:quotes,id'],
             'fecha' => ['required', 'date'],
             'tecnico_id' => ['nullable', 'integer', 'exists:users,id'],
             'departamento_tecnico' => ['nullable', Rule::in(['planta', 'campo'])],

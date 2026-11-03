@@ -10,6 +10,7 @@ use App\Models\ProductCategory;
 use App\Models\User;
 use App\Services\Ml\RetentionModel;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -238,35 +239,69 @@ class ExtintoresPorVencer
      * Recargas y extintores vendidos en este sistema sin un equipo con serie:
      * por cliente y por producto, la última compra.
      *
-     * @return Collection<int, array<string, mixed>>
+     * @return Collection<int, non-empty-array<string, mixed>>
      */
     protected function vendidosSinSerie(CarbonInterface $today, ?int $sedeId = null): Collection
     {
-        return DB::table('sale_items')
-            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->when($sedeId, fn ($query) => $query->where('sales.sede_id', $sedeId))
-            ->leftJoin('services', 'services.id', '=', 'sale_items.service_id')
-            ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
+        return $this->lineasSinSerie($sedeId)
             ->where('sales.estado', 'confirmada')
-            ->whereNull('sale_items.equipment_id')
             ->where(fn ($query) => $query
                 ->where('services.nombre', 'like', '%RECARGA%')
                 ->orWhereIn('products.categoria', ProductCategory::clavesConAlertaDeVencimiento()))
-            ->get([
-                'sales.client_id',
-                'sales.fecha',
-                DB::raw('COALESCE(products.nombre, services.nombre) as nombre'),
-                'sale_items.cantidad',
-            ])
+            ->get()
             ->groupBy(fn (object $linea) => "{$linea->client_id}|{$linea->nombre}")
-            ->map(function (Collection $compras) use ($today): array {
+            ->map(function (Collection $compras) use ($today): ?array {
                 $fecha = (string) $compras->max('fecha');
                 $ultima = $compras->filter(fn (object $linea) => (string) $linea->fecha === $fecha);
                 $primera = $ultima->first();
 
+                if ($ultima->sum('cantidad') <= 0) {
+                    return null;
+                }
+
                 return $this->equipoEstimado($today, (int) $primera->client_id, (string) $primera->nombre, $fecha, (int) round((float) $ultima->sum('cantidad')), 'Sin serie (estimado por la venta)');
             })
+            ->filter()
             ->values();
+    }
+
+    /** Equipos identificados se descuentan una vez por venta y servicio, incluso con líneas repetidas. */
+    protected function lineasSinSerie(?int $sedeId): Builder
+    {
+        $registrados = DB::table('service_order_equipment as recibidos')
+            ->join('service_orders as ordenes', 'ordenes.id', '=', 'recibidos.service_order_id')
+            ->join('sales as ventas', 'ventas.id', '=', 'ordenes.sale_id')
+            ->join('equipment as equipos', 'equipos.id', '=', 'recibidos.equipment_id')
+            ->leftJoin('service_order_lines as lineas', function ($join) {
+                $join->on('lineas.id', '=', 'recibidos.service_order_line_id')
+                    ->on('lineas.service_order_id', '=', 'ordenes.id');
+            })
+            ->where('ordenes.estado', '!=', 'anulada')
+            ->whereColumn('ordenes.client_id', 'ventas.client_id')
+            ->whereColumn('equipos.client_id', 'ventas.client_id')
+            ->whereRaw('ordenes.sede_id <=> ventas.sede_id')
+            ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('sale_items as identificados')
+                ->whereColumn('identificados.sale_id', 'ventas.id')
+                ->whereColumn('identificados.equipment_id', 'equipos.id'))
+            ->selectRaw('ordenes.sale_id, COALESCE(lineas.service_id, ordenes.service_id) as service_id, COUNT(DISTINCT equipos.id) as cantidad')
+            ->groupBy('ordenes.sale_id')
+            ->groupByRaw('COALESCE(lineas.service_id, ordenes.service_id)');
+
+        return DB::table('sale_items')
+            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->join('clients', 'clients.id', '=', 'sales.client_id')
+            ->leftJoin('services', 'services.id', '=', 'sale_items.service_id')
+            ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
+            ->leftJoinSub($registrados, 'registrados', fn ($join) => $join
+                ->on('registrados.sale_id', '=', 'sales.id')
+                ->on('registrados.service_id', '=', 'sale_items.service_id'))
+            ->whereNull('sale_items.equipment_id')
+            ->where('sales.estado', '!=', 'anulada')
+            ->when($sedeId, fn ($query) => $query->where('sales.sede_id', $sedeId))
+            ->select(['sales.client_id', 'sales.fecha', 'clients.razon_social', 'clients.telefono', 'clients.whatsapp'])
+            ->selectRaw('COALESCE(products.nombre, services.nombre) as nombre')
+            ->selectRaw('GREATEST(SUM(sale_items.cantidad) - COALESCE(MAX(registrados.cantidad), 0), 0) as cantidad')
+            ->groupBy('sales.id', 'sales.client_id', 'sales.fecha', 'clients.razon_social', 'clients.telefono', 'clients.whatsapp', 'sale_items.product_id', 'sale_items.service_id', 'products.nombre', 'services.nombre');
     }
 
     /**
@@ -345,11 +380,11 @@ class ExtintoresPorVencer
             // Ambas vencidas: se toma la más antigua para priorizar urgencia
             $fecha = $fechaAtencion->lt($fechaPrueba) ? $fechaAtencion : $fechaPrueba;
             $tipoAlerta = 'recarga_y_ph';
-            $motivoAlerta = 'Recarga anual (1 año) y Prueba Hidrostática PH (5 años) vencidas';
+            $motivoAlerta = 'Recarga anual (1 año) y Prueba Hidrostática PH vencidas';
         } elseif ($vencidaPrueba) {
             $fecha = $fechaPrueba;
             $tipoAlerta = 'prueba_hidrostatica';
-            $motivoAlerta = 'Prueba Hidrostática PH vencida (Ciclo de 5 años)';
+            $motivoAlerta = 'Prueba Hidrostática PH vencida';
         } elseif ($vencidaAtencion) {
             $fecha = $fechaAtencion;
             $tipoAlerta = 'recarga_anual';
@@ -363,7 +398,7 @@ class ExtintoresPorVencer
 
             if ($fecha === $fechaPrueba) {
                 $tipoAlerta = 'prueba_hidrostatica';
-                $motivoAlerta = 'Prueba Hidrostática PH por vencer (Ciclo obligatorio de 5 años)';
+                $motivoAlerta = 'Prueba Hidrostática PH por vencer';
             }
         }
 
@@ -498,13 +533,7 @@ class ExtintoresPorVencer
         // no traer a PHP miles de líneas históricas irrelevantes.
         $limiteSuperior = $today->copy()->addDays(30)->subYear();
 
-        $rows = DB::table('sale_items')
-            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->join('clients', 'clients.id', '=', 'sales.client_id')
-            ->leftJoin('services', 'services.id', '=', 'sale_items.service_id')
-            ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
-            ->where('sales.estado', '!=', 'anulada')
-            ->when($sedeId, fn ($query) => $query->where('sales.sede_id', $sedeId))
+        $rows = $this->lineasSinSerie($sedeId)
             ->where('sales.fecha', '<=', $limiteSuperior->toDateString())
             ->where(function ($query) {
                 $query->where(function ($q) {
@@ -513,15 +542,7 @@ class ExtintoresPorVencer
                         ->where('services.nombre', 'like', '%EXTINTOR%');
                 })->orWhereIn('products.categoria', ProductCategory::clavesConAlertaDeVencimiento());
             })
-            ->select([
-                'sales.client_id',
-                'clients.razon_social',
-                'clients.telefono',
-                'clients.whatsapp',
-                'sales.fecha',
-                DB::raw('COALESCE(products.nombre, services.nombre) as item_nombre'),
-                'sale_items.cantidad',
-            ])
+            ->having('cantidad', '>', 0)
             ->get();
 
         $mapped = $rows
@@ -544,7 +565,7 @@ class ExtintoresPorVencer
                     'client_id' => $row->client_id,
                     'cliente' => $row->razon_social,
                     'equipment_id' => null,
-                    'equipo' => "{$row->item_nombre} (estimado)",
+                    'equipo' => "{$row->nombre} (estimado)",
                     'numero_serie' => null,
                     'fecha' => $proximaFecha->toDateString(),
                     'dias' => $dias,

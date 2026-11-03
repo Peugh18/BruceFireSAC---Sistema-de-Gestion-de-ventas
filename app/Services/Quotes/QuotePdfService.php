@@ -5,7 +5,7 @@ namespace App\Services\Quotes;
 use App\Models\CompanyBankAccount;
 use App\Models\CompanySetting;
 use App\Models\Quote;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\HojaPdf;
 use Barryvdh\DomPDF\PDF as DompdfWrapper;
 use Illuminate\Support\Facades\URL;
 
@@ -21,16 +21,11 @@ class QuotePdfService
 
         $company = CompanySetting::current();
 
-        return Pdf::loadView('pdf.cotizacion', [
+        return HojaPdf::cargar('pdf.cotizacion', [
             'quote' => $quote,
-            'company' => $company,
-            'marca' => [
-                'color' => $company->colorMarca(),
-                'texto' => $company->colorTextoSobreMarca(),
-            ],
-            'logo' => $company->logoParaPdf(),
+            ...$company->identidadPdf(),
             'bankAccounts' => CompanyBankAccount::query()->where('activo', true)->orderBy('orden')->get(),
-        ])->setPaper('a4');
+        ]);
     }
 
     /**

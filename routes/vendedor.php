@@ -22,7 +22,6 @@ use App\Http\Controllers\Vendedor\QuoteController;
 use App\Http\Controllers\Vendedor\RucLookupController;
 use App\Http\Controllers\Vendedor\SaleCertificateController;
 use App\Http\Controllers\Vendedor\SaleController;
-use App\Http\Controllers\Vendedor\SaleItemScanController;
 use App\Http\Controllers\Vendedor\ServiceCertificateController;
 use App\Http\Controllers\Vendedor\ServiceOrderController;
 use App\Http\Controllers\Vendedor\ServiceOrderEquipmentController;
@@ -45,6 +44,7 @@ Route::prefix('vendedor')
         Route::post('clientes', [ClientController::class, 'store'])->name('clientes.store');
         Route::get('clientes/buscar', [ClientController::class, 'search'])->name('clientes.search');
         Route::get('clientes/exportar', [ClientController::class, 'export'])->name('clientes.export');
+        Route::get('clientes/{client}/compras', [ClientController::class, 'comprasExcel'])->name('clientes.compras');
         Route::get('clientes/{client}/ficha', [CatalogoController::class, 'ficha'])->name('clientes.ficha');
         Route::get('catalogo/buscar', [CatalogoController::class, 'buscar'])->name('catalogo.buscar');
         Route::get('catalogo/unidades', [CatalogoController::class, 'unidades'])->name('catalogo.unidades');
@@ -75,12 +75,12 @@ Route::prefix('vendedor')
         Route::post('cotizaciones/{quote}/enviar', [QuoteController::class, 'send'])->middleware('can:quotes.create')->name('cotizaciones.send');
         Route::get('cotizaciones/{quote}/pdf', [QuoteController::class, 'pdf'])->name('cotizaciones.pdf');
         Route::post('cotizaciones/{quote}/aceptar', [QuoteController::class, 'accept'])->middleware('can:quotes.convert')->name('cotizaciones.accept');
+        Route::get('cotizaciones/{quote}/orden-compra', [QuoteController::class, 'ordenCompra'])->name('cotizaciones.orden-compra');
         Route::post('cotizaciones/{quote}/rechazar', [QuoteController::class, 'reject'])->middleware('can:quotes.update')->name('cotizaciones.reject');
 
         Route::get('ventas', [SaleController::class, 'index'])->name('ventas.index');
         Route::get('ventas/nueva', [SaleController::class, 'create'])->middleware('can:sales.create')->name('ventas.create');
         Route::post('ventas', [SaleController::class, 'store'])->middleware('can:sales.create')->name('ventas.store');
-        Route::get('ventas/escanear-serie', [SaleItemScanController::class, 'resolve'])->name('ventas.escanear-serie');
         Route::get('ventas/{sale}', [SaleController::class, 'show'])->name('ventas.show');
         Route::get('ventas/{sale}/editar', [SaleController::class, 'edit'])->middleware('can:sales.create')->name('ventas.edit');
         Route::put('ventas/{sale}', [SaleController::class, 'update'])->middleware('can:sales.create')->name('ventas.update');
@@ -106,6 +106,7 @@ Route::prefix('vendedor')
         Route::post('ordenes-servicio/{service_order}/asignar-tecnico', [ServiceOrderController::class, 'assign'])->name('ordenes-servicio.asignar-tecnico');
         Route::post('ordenes-servicio/{service_order}/asignar-entrega', [ServiceOrderController::class, 'assignDelivery'])->name('ordenes-servicio.asignar-entrega');
         Route::post('ordenes-servicio/{service_order}/equipos', [ServiceOrderEquipmentController::class, 'store'])->name('ordenes-servicio.equipos.store');
+        Route::get('ordenes-servicio/{service_order}/stickers', [ServiceOrderEquipmentController::class, 'stickers'])->name('ordenes-servicio.stickers');
         Route::patch('ordenes-servicio/{service_order}/equipos/reordenar', [ServiceOrderEquipmentController::class, 'reorder'])->name('ordenes-servicio.equipos.reordenar');
         Route::delete('ordenes-servicio/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'destroy'])->name('ordenes-servicio.equipos.destroy');
         Route::patch('ordenes-servicio/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'update'])->name('ordenes-servicio.equipos.update');

@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Vendedor;
 
+use App\Actions\Billing\DevolucionParcial;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Models\ElectronicDocument;
 use App\Models\Sale;
 use App\Models\Team;
 use App\Services\Billing\LineasDelComprobante;
+use App\Services\Cobranzas\CarteraDeCobranzas;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,7 +50,10 @@ class NotaController extends Controller
                 'total' => (float) $sale->total,
             ],
             'porAcreditar' => round(max((float) $sale->total - $acreditado, 0), 2),
-            'lineas' => LineasDelComprobante::de($sale),
+            'lineas' => $this->lineasConDevolucion($sale, $original),
+            'resumen' => CarteraDeCobranzas::resumenDeVenta($sale),
+            // P-026: solo los productos vuelven al stock; un servicio no.
+            'hay_productos' => $sale->items()->whereNotNull('product_id')->exists(),
             'notas' => $sale->electronicDocuments
                 ->whereIn('tipo', ['nota_credito', 'nota_debito'])
                 ->sortByDesc('id')
@@ -62,5 +67,13 @@ class NotaController extends Controller
                     'mensaje' => $nota->sunat_mensaje,
                 ]),
         ]);
+    }
+
+    /** @return list<array<string, mixed>> */
+    protected function lineasConDevolucion(Sale $sale, ElectronicDocument $original): array
+    {
+        $devoluciones = app(DevolucionParcial::class)->porLinea($sale, $original);
+
+        return array_map(fn (array $linea) => $linea + ($devoluciones[$linea['indice']] ?? ['devuelta' => 0.0, 'series' => []]), LineasDelComprobante::de($sale));
     }
 }

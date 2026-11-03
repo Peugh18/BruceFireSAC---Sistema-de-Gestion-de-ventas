@@ -24,6 +24,7 @@ import AuditoriaRoutes from '@/routes/gerente/auditoria';
 import SedesRoutes from '@/routes/gerente/sedes';
 import UsuariosRoutes from '@/routes/gerente/usuarios';
 import EmpresaRoutes from '@/routes/gerente/configuracion/empresa';
+import { normalizePath } from '@/lib/utils';
 
 type SidebarCounts = {
     productosBajoMinimo?: number;
@@ -133,13 +134,6 @@ function buildNavGroups(
             ],
         },
     ];
-}
-
-function normalizePath(path: string): string {
-    const withoutQuery = path.split('?')[0].split('#')[0];
-    const withoutTrailingSlash = withoutQuery.replace(/\/+$/u, '');
-
-    return withoutTrailingSlash === '' ? '/' : withoutTrailingSlash;
 }
 
 function isActivePath(currentPath: string, href: string): boolean {

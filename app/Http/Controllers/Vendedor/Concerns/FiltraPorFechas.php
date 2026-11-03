@@ -13,8 +13,9 @@ use Throwable;
 trait FiltraPorFechas
 {
     /**
-     * Rango del filtro; sin fechas, el día de hoy. Si vienen al revés se
-     * ordenan, y nunca abarca más de un año.
+     * Rango del filtro; sin fechas, el mes en curso hasta hoy, y con solo la
+     * inicial, desde esa fecha hasta hoy. Si vienen al revés se ordenan, y
+     * nunca abarca más de un año.
      *
      * @return array{0: CarbonInterface, 1: CarbonInterface}
      */
@@ -34,8 +35,9 @@ trait FiltraPorFechas
             }
         };
 
-        $desde = $leer('desde') ?? today();
-        $hasta = $leer('hasta') ?? $desde->copy();
+        $hasta = $leer('hasta');
+        $desde = $leer('desde') ?? $hasta?->copy() ?? today()->startOfMonth();
+        $hasta ??= today();
 
         if ($hasta->lt($desde)) {
             [$desde, $hasta] = [$hasta, $desde];

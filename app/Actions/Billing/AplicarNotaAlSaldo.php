@@ -117,7 +117,8 @@ class AplicarNotaAlSaldo
      */
     protected function registrarDevolucion(Sale $sale, ElectronicDocument $nota, float $monto): void
     {
-        $cobrado = $sale->payments()->get()
+        // La detracción no entró a caja: se deposita en el Banco de la Nación.
+        $cobrado = $sale->payments()->where('es_detraccion', false)->get()
             ->groupBy('forma_pago')
             ->map(fn ($pagos) => (float) $pagos->sum('monto'));
         $yaDevuelto = $sale->refunds()->get()

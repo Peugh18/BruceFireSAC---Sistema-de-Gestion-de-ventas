@@ -33,7 +33,14 @@ import {
 import VendedorLayout from '@/layouts/vendedor-layout';
 import cotizaciones from '@/routes/vendedor/cotizaciones';
 import type { Team } from '@/types';
-import { fechaLocal } from '@/lib/utils';
+import {
+    type NoGravados,
+    desglosarIgv,
+    fechaLocal,
+    soles,
+    sumarDias,
+} from '@/lib/utils';
+import { fieldError } from '@/components/error-de-campo';
 
 type QuoteItemForm = {
     key: string;
@@ -73,13 +80,6 @@ type Renovacion = {
 };
 
 /** Fecha `dias` después de `desde` (hoy si no se indica), en formato AAAA-MM-DD. */
-function sumarDias(dias: number, desde?: string) {
-    const date = desde ? new Date(`${desde}T00:00:00`) : new Date();
-    date.setDate(date.getDate() + dias);
-
-    return fechaLocal(date);
-}
-
 /** Días entre dos fechas AAAA-MM-DD. */
 function diasEntre(desde: string, hasta: string) {
     return Math.round(
@@ -87,24 +87,6 @@ function diasEntre(desde: string, hasta: string) {
             new Date(`${desde}T00:00:00`).getTime()) /
             86_400_000,
     );
-}
-
-function money(value: number) {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-    }).format(value || 0);
-}
-
-function fieldError(errors: Partial<Record<string, string>>, key: string) {
-    return errors[key] ? (
-        <p
-            className="text-destructive-strong mt-1 text-xs font-semibold"
-            role="alert"
-        >
-            {errors[key]}
-        </p>
-    ) : null;
 }
 
 let secuencia = 0;
@@ -116,7 +98,9 @@ export default function NuevaCotizacion({
     edicion = null,
     cliente: clientePrecargado = null,
     ordenOrigen = null,
+    noGravados,
 }: {
+    noGravados: NoGravados;
     renovacion?: Renovacion | null;
     edicion?:
         | (Renovacion & { id: number; fecha: string; vigencia_hasta: string })
@@ -152,8 +136,8 @@ export default function NuevaCotizacion({
         client_id: renovacion?.client.id ?? clientePrecargado?.id ?? '',
         destino: renovacion?.destino ?? 'local_cliente',
         vehicle_id: renovacion?.vehicle_id ?? '',
-        fecha: edicion?.fecha ?? sumarDias(0),
-        vigencia_hasta: edicion?.vigencia_hasta ?? sumarDias(15),
+        fecha: edicion?.fecha ?? fechaLocal(),
+        vigencia_hasta: edicion?.vigencia_hasta ?? sumarDias(fechaLocal(), 15),
         referencia: renovacion?.referencia ?? '',
         condicion_pago_propuesta:
             renovacion?.condicion_pago_propuesta ?? 'Contado',
@@ -173,7 +157,10 @@ export default function NuevaCotizacion({
         edicion ? diasEntre(edicion.fecha, edicion.vigencia_hasta) : 15,
     );
 
-    const setItems = (items: QuoteItemForm[]) => form.setData('items', items);
+    const setItems = (items: QuoteItemForm[]) => {
+        form.setData('items', items);
+        if (items.length > 0) form.clearErrors('items');
+    };
 
     const actualizar = (key: string, cambio: Partial<QuoteItemForm>) =>
         setItems(
@@ -212,21 +199,10 @@ export default function NuevaCotizacion({
 
     const elegirVigencia = (dias: number) => {
         setVigenciaDias(dias);
-        form.setData('vigencia_hasta', sumarDias(dias, form.data.fecha));
+        form.setData('vigencia_hasta', sumarDias(form.data.fecha, dias));
     };
 
-    // Precios con IGV incluido: se separa la base línea por línea.
-    let base = 0;
-    let total = 0;
-    for (const item of form.data.items) {
-        const t =
-            Math.round(
-                (item.cantidad * item.precio_unitario - item.descuento) * 100,
-            ) / 100;
-        base += Math.round((t / 1.18) * 100) / 100;
-        total += t;
-    }
-    const igv = Math.round((total - base) * 100) / 100;
+    const { base, igv, total } = desglosarIgv(form.data.items, noGravados);
 
     const submitQuote = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -304,6 +280,7 @@ export default function NuevaCotizacion({
                                         return;
                                     }
                                     setCliente(ficha);
+                                    if (ficha) form.clearErrors('client_id');
                                     form.setData((data) => ({
                                         ...data,
                                         client_id: ficha?.id ?? '',
@@ -601,7 +578,7 @@ export default function NuevaCotizacion({
                                                     />
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-2.5 font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
-                                                    {money(
+                                                    {soles(
                                                         item.cantidad *
                                                             item.precio_unitario -
                                                             item.descuento,
@@ -659,7 +636,7 @@ export default function NuevaCotizacion({
                                     Gravado
                                 </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
-                                    {money(base)}
+                                    {soles(base)}
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -667,7 +644,7 @@ export default function NuevaCotizacion({
                                     IGV 18% (incluido)
                                 </span>
                                 <span className="font-['IBM_Plex_Mono',monospace] font-bold">
-                                    {money(igv)}
+                                    {soles(igv)}
                                 </span>
                             </div>
                             <div className="border-border border-t pt-3">
@@ -676,7 +653,7 @@ export default function NuevaCotizacion({
                                         Total
                                     </span>
                                     <span className="text-foreground font-['Oswald',sans-serif] text-[28px] font-semibold">
-                                        {money(total)}
+                                        {soles(total)}
                                     </span>
                                 </div>
                             </div>

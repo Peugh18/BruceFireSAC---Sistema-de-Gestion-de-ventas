@@ -26,6 +26,7 @@ use App\Services\Tecnico\PasoDelTaller;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -35,8 +36,10 @@ class DashboardController extends Controller
 {
     public function __invoke(Team $current_team, Request $request, SaludDelSistema $saludDelSistema): Response
     {
+        // La recompra por IA vive en su módulo (Recompra e IA); aquí solo va al reporte PDF.
         return Inertia::render('gerente/dashboard', [
-            ...$this->datosMensuales($request),
+            ...Arr::except($this->datosMensuales($request), ['iaRecompra']),
+            'mesActual' => now()->format('Y-m'),
             'sistema' => $saludDelSistema->resumen(),
         ]);
     }
@@ -194,7 +197,63 @@ class DashboardController extends Controller
                 ['nombre' => 'Terminadas', 'valor' => (clone $ordenes)->whereIn('estado', ['entregado', 'cerrado'])->count(), 'secundario' => 0],
             ],
             'vencimientos' => $recompra->map(fn (array $tramo) => ['nombre' => ($tramo['dias'] - 29).'–'.$tramo['dias'].' días', 'valor' => $tramo['cantidad']])->values(),
+            'tendencias' => $this->tendencias($inicio, $sedeIds),
+            'pasos' => $this->ordenesAbiertasPorPaso($filtrar),
         ];
+    }
+
+    /**
+     * Últimos 6 meses (el elegido al final) de los indicadores con mini línea.
+     *
+     * @param  list<int>|null  $sedeIds
+     * @return array{cobrado: list<float>, margenBruto: list<float>, conversionCotizaciones: list<float>}
+     */
+    private function tendencias(CarbonInterface $inicio, ?array $sedeIds): array
+    {
+        $filtrarSede = static fn (Builder $query) => $query->when($sedeIds !== null, fn (Builder $query) => $query->whereIn('sede_id', $sedeIds));
+        $tendencias = ['cobrado' => [], 'margenBruto' => [], 'conversionCotizaciones' => []];
+
+        foreach (range(5, 0) as $atras) {
+            $desde = $inicio->copy()->subMonthsNoOverflow($atras)->startOfMonth();
+            $hasta = $desde->copy()->endOfMonth();
+            $tendencias['cobrado'][] = $this->cobradoNeto($desde, $hasta, $sedeIds);
+            $tendencias['margenBruto'][] = (float) ($this->margenBruto($desde, $hasta, $sedeIds, $this->ventasNetas($desde, $hasta, sedeIds: $sedeIds))['monto'] ?? 0);
+            $tendencias['conversionCotizaciones'][] = (float) ($this->conversionCotizaciones($desde, $hasta, $filtrarSede) ?? 0);
+        }
+
+        return $tendencias;
+    }
+
+    /**
+     * Órdenes abiertas por paso del taller: en plazo (de hoy en adelante) y
+     * atrasadas (de días anteriores), sin contar una orden dos veces.
+     *
+     * @return list<array{nombre: string, valor: int, secundario: int}>
+     */
+    private function ordenesAbiertasPorPaso(callable $filtrar): array
+    {
+        $ordenes = ServiceOrder::query()->whereNotIn('estado', ['entregado', 'cerrado', 'anulada'])->tap($filtrar)
+            ->with(['equipments', 'checklists:id,service_order_id,equipment_id', 'deficiencies:id,service_order_id,estado'])
+            ->get(['id', 'estado', 'fecha', 'sede_id']);
+        $nombres = ['recibir' => 'Por recibir', 'revisar' => 'En revisión', 'hallazgos' => 'Por autorizar', 'reparar' => 'En reparación', 'cierre' => 'Por cerrar'];
+
+        $pasoDe = $ordenes->mapWithKeys(fn (ServiceOrder $orden) => [$orden->id => PasoDelTaller::de($orden)['clave']]);
+
+        return array_map(function (string $paso) use ($ordenes, $pasoDe, $nombres): array {
+            $delPaso = $ordenes->filter(fn (ServiceOrder $orden) => $pasoDe[$orden->id] === $paso);
+            $atrasadas = $delPaso->filter(fn (ServiceOrder $orden) => $orden->fecha->lt(today()))->count();
+
+            return ['nombre' => $nombres[$paso], 'valor' => $delPaso->count() - $atrasadas, 'secundario' => $atrasadas];
+        }, PasoDelTaller::PASOS);
+    }
+
+    private function conversionCotizaciones(CarbonInterface $inicio, CarbonInterface $fin, callable $filtrarSede): ?float
+    {
+        $cotizaciones = Quote::query()->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])->whereNotIn('estado', ['borrador', 'anulada'])->tap($filtrarSede);
+        $totales = (int) (clone $cotizaciones)->count();
+        $ganadas = (int) (clone $cotizaciones)->where(fn (Builder $query) => $query->whereIn('estado', ['convertida', 'aceptada'])->orWhereHas('sale', fn (Builder $sale) => $sale->where('estado', 'confirmada')))->count();
+
+        return $totales > 0 ? round(($ganadas / $totales) * 100, 1) : null;
     }
 
     /**
@@ -207,10 +266,6 @@ class DashboardController extends Controller
         $ventasNetas = $this->ventasNetas($inicio, $fin, sedeIds: $sedeIds);
         $ventasConfirmadas = Sale::query()->where('estado', 'confirmada')->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])->tap($filtrarSede)->count();
         $cobrado = $this->cobradoNeto($inicio, $fin, $sedeIds);
-
-        $cotizaciones = Quote::query()->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])->whereNotIn('estado', ['borrador', 'anulada'])->tap($filtrarSede);
-        $cotizacionesTotales = (int) (clone $cotizaciones)->count();
-        $cotizacionesGanadas = (int) (clone $cotizaciones)->where(fn (Builder $query) => $query->whereIn('estado', ['convertida', 'aceptada'])->orWhereHas('sale', fn (Builder $sale) => $sale->where('estado', 'confirmada')))->count();
 
         $pagos = SalePayment::query()->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])->whereHas('sale', fn (Builder $sale) => $sale->tap($filtrarSede))->with('sale:id,fecha')->get(['id', 'sale_id', 'fecha']);
         $diasCobro = $pagos->map(fn (SalePayment $pago) => max(0, (int) $pago->sale->fecha->diffInDays($pago->fecha)));
@@ -269,7 +324,7 @@ class DashboardController extends Controller
             'ventasNetas' => $ventasNetas,
             'cobrado' => $cobrado,
             'ticketPromedio' => $ventasConfirmadas > 0 ? round($ventasNetas / $ventasConfirmadas, 2) : null,
-            'conversionCotizaciones' => $cotizacionesTotales > 0 ? round(($cotizacionesGanadas / $cotizacionesTotales) * 100, 1) : null,
+            'conversionCotizaciones' => $this->conversionCotizaciones($inicio, $fin, $filtrarSede),
             'diasPromedioCobro' => $diasCobro->isNotEmpty() ? round((float) $diasCobro->avg(), 1) : null,
             'diasPromedioServicio' => $diasServicio->isNotEmpty() ? round((float) $diasServicio->avg(), 1) : null,
             'tasaRenovacion' => $clientesCertificados > 0 ? round(($clientesRenovados / $clientesCertificados) * 100, 1) : null,

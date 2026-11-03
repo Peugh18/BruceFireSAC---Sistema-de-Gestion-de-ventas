@@ -34,10 +34,15 @@ class DesgloseNota
             if (array_diff($tipos, ['10', '20', '30']) !== []) {
                 throw ValidationException::withMessages(['electronic_document_id' => 'El original contiene afectaciones que requieren datos fiscales adicionales. Este formulario solo admite operaciones gravadas, exoneradas o inafectas.']);
             }
+            // Anular o devolver todo: la nota repite los mismos ítems del comprobante
+            // que modifica (SUNAT, oficio 033-2002; Odoo revierte todas las líneas).
+            // ponytail: si antes hubo otra nota, la anulación cubre solo el saldo y va
+            // en una línea (no se reparte entre ítems); IssueCreditNote valida ese saldo.
+            if ($tipo === 'nota_credito' && in_array($motivo, ['01', '02', '06'], true)
+                && abs($importe - (float) $datos['totales']['total']) < 0.01) {
+                return ['cliente' => $datos['cliente'], 'lineas' => $lineas];
+            }
             if (count($tipos) !== 1) {
-                if ($tipo === 'nota_credito' && in_array($motivo, ['01', '02', '06'], true) && abs($importe - $datos['totales']['total']) < 0.009) {
-                    return ['cliente' => $datos['cliente'], 'lineas' => $lineas];
-                }
                 throw ValidationException::withMessages(['importe' => 'El comprobante combina afectaciones. Debes identificar las líneas e importes a ajustar; no se distribuye el importe automáticamente.']);
             }
             $afectacion = $tipos[0];

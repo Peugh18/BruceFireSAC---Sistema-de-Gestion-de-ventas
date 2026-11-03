@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle2, FileText, Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -163,7 +164,7 @@ export default function MantenimientoShow({
 
             <div className="space-y-5">
                 <section className="border-border bg-card rounded-3xl border p-4 shadow-xs">
-                    <h1 className="text-foreground text-base font-black">
+                    <h1 className={pageTitleClass}>
                         {order.client.razon_social}
                     </h1>
                     {order.client.direccion_fiscal && (

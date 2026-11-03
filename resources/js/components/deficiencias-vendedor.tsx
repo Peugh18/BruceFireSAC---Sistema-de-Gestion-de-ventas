@@ -302,82 +302,41 @@ export function useAccionesDeficiencia(teamSlug: string) {
                             </div>
                         </div>
 
-                        {actionModal?.isApproving && (
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <div>
-                                    <Label
-                                        htmlFor="cotizacion_adicional_id"
-                                        className="text-foreground text-sm font-medium"
-                                    >
-                                        Cotización del adicional
-                                    </Label>
-                                    <NativeSelect
-                                        id="cotizacion_adicional_id"
-                                        value={
-                                            authForm.data
-                                                .cotizacion_adicional_id
-                                        }
-                                        onChange={(e) =>
-                                            authForm.setData(
-                                                'cotizacion_adicional_id',
-                                                e.target.value
-                                                    ? Number(e.target.value)
-                                                    : '',
-                                            )
-                                        }
-                                        className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
-                                    >
-                                        <option value="">Sin cotización</option>
-                                        {(
-                                            actionModal.item.cotizaciones ?? []
-                                        ).map((cotizacion) => (
-                                            <option
-                                                key={cotizacion.id}
-                                                value={cotizacion.id}
-                                            >
-                                                {cotizacion.numero} · S/{' '}
-                                                {cotizacion.total.toFixed(2)}
-                                            </option>
-                                        ))}
-                                    </NativeSelect>
-                                </div>
-                                <div>
-                                    <Label
-                                        htmlFor="importe"
-                                        className="text-foreground text-sm font-medium"
-                                    >
-                                        Importe aceptado (S/)
-                                        {actionModal.item.orden_cobrada && ' *'}
-                                    </Label>
-                                    <Input
-                                        id="importe"
-                                        type="number"
-                                        min="0.01"
-                                        step="0.01"
-                                        value={authForm.data.importe}
-                                        onChange={(e) =>
-                                            authForm.setData(
-                                                'importe',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="Total de la cotización"
-                                        className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
-                                    />
-                                    {authForm.errors.importe && (
-                                        <p className="text-destructive-strong mt-1 text-xs font-semibold">
-                                            {authForm.errors.importe}
-                                        </p>
-                                    )}
-                                </div>
-                                {actionModal.item.orden_cobrada && (
-                                    <p className="text-muted-foreground text-xs sm:col-span-2">
-                                        El adicional se cotiza y se convierte a
-                                        una venta aparte, vinculada a la orden.
+                        {actionModal?.isApproving &&
+                            (actionModal.item.cotizacion_linea ? (
+                                <div className="border-border bg-muted rounded-lg border p-3 text-[13px]">
+                                    <p className="text-foreground font-semibold">
+                                        El cliente acepta{' '}
+                                        {
+                                            actionModal.item.cotizacion_linea
+                                                .numero
+                                        }{' '}
+                                        · S/{' '}
+                                        {actionModal.item.cotizacion_linea.importe.toFixed(
+                                            2,
+                                        )}
                                     </p>
-                                )}
-                            </div>
-                        )}
+                                    <p className="text-muted-foreground mt-1 text-xs">
+                                        {
+                                            actionModal.item.cotizacion_linea
+                                                .nombre
+                                        }{' '}
+                                        ×{' '}
+                                        {
+                                            actionModal.item.cotizacion_linea
+                                                .cantidad
+                                        }
+                                        . Para cambiar el precio, cierra y usa
+                                        «Corregir adicional».
+                                    </p>
+                                </div>
+                            ) : (
+                                <p className="border-border bg-muted text-muted-foreground rounded-lg border p-3 text-xs">
+                                    {actionModal.item.orden_cobrada
+                                        ? 'La orden ya se cobró: primero usa «Cotizar adicional» para registrar lo que se cobrará aparte.'
+                                        : 'Se aprueba sin costo extra (va incluido en el servicio). Si tiene costo, cierra y usa «Cotizar adicional».'}
+                                </p>
+                            ))}
 
                         <div>
                             <Label className="text-foreground text-sm font-medium">
@@ -433,8 +392,10 @@ export function useAccionesDeficiencia(teamSlug: string) {
                     <DialogHeader>
                         <DialogTitle>Cotizar adicional</DialogTitle>
                         <DialogDescription>
-                            {cotizarItem?.componente}: el precio incluye IGV y
-                            puede corregirse antes de confirmar con el cliente.
+                            {cotizarItem?.componente}: el precio incluye IGV.
+                            {cotizarItem?.estado === 'autorizada'
+                                ? ' El cliente ya lo autorizó: al corregirlo, su autorización se anula y hay que pedírsela otra vez.'
+                                : ' Puede corregirse antes de confirmar con el cliente.'}
                         </DialogDescription>
                     </DialogHeader>
                     <form

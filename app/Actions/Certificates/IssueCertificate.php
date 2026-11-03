@@ -9,6 +9,7 @@ use App\Models\CertificateType;
 use App\Models\CertificateTypeVersion;
 use App\Models\CertificateUnit;
 use App\Models\Client;
+use App\Models\ClientSite;
 use App\Models\Equipment;
 use App\Models\Sale;
 use App\Models\ServiceOrder;
@@ -84,7 +85,8 @@ class IssueCertificate
                 'fecha_emision' => $fechaEmision,
                 'fecha_vigencia_hasta' => $fechaVigenciaHasta?->toDateString(),
                 'referencia' => $extra['referencia'] ?? $orden?->referencia,
-                'direccion' => $extra['direccion'] ?? $client->direccion_fiscal,
+                // El local elegido en la venta pone su dirección; si no, la fiscal.
+                'direccion' => $extra['direccion'] ?? ClientSite::deReferencia($client, $extra['referencia'] ?? $orden?->referencia)->direccion ?? $client->direccion_fiscal,
                 'tipo_atencion' => $extra['tipo_atencion'] ?? ($orden ? TipoAtencionExtintor::deOrden($orden) : null),
                 'datos' => $extra['datos'] ?? null,
                 'estado' => 'vigente',
@@ -137,6 +139,18 @@ class IssueCertificate
             ]);
 
             if ($unidades !== null) {
+                $anteriores = $certificate->certificateUnits->keyBy('equipment_id');
+                foreach ($unidades as &$unidad) {
+                    $anterior = $anteriores->get($unidad['equipment_id'] ?? 0);
+                    if ($anterior?->fechas_snapshot && blank($unidad['fecha_ultima_ph'] ?? null)) {
+                        $unidad['fecha_ultima_ph'] = $anterior->fecha_ultima_ph?->toDateString();
+                        $unidad['proxima_prueba_hidrostatica'] = $anterior->proxima_prueba_hidrostatica?->toDateString();
+                    }
+                    if ($anterior && ! array_key_exists('fecha_ultima_recarga', $unidad)) {
+                        $unidad['fecha_ultima_recarga'] = $anterior->fecha_ultima_recarga?->toDateString();
+                    }
+                }
+                unset($unidad);
                 $certificate->certificateUnits()->delete();
                 $this->crearUnidades($certificate, $unidades);
             }
@@ -304,10 +318,17 @@ class IssueCertificate
 
         // La prueba hidrostática se hace igual a todos: 600 PSI por 60 segundos.
         $esPh = $certificate->certificateType->codigo === 'prueba_hidrostatica';
+        $intervaloPh = CertificateDateCalculator::intervaloPh();
 
         foreach (array_values($unidades) as $indice => $u) {
             $equipo = $equipos->get($u['equipment_id'] ?? 0);
             $numeroCliente = $u['numero_cliente'] ?? $equipo?->numero_cliente;
+            $ultimaPh = array_key_exists('proxima_prueba_hidrostatica', $u)
+                ? ($u['fecha_ultima_ph'] ?? null)
+                : ($u['fecha_ultima_ph'] ?? $equipo?->fecha_ultima_ph?->toDateString());
+            $proximaPh = array_key_exists('proxima_prueba_hidrostatica', $u)
+                ? $u['proxima_prueba_hidrostatica']
+                : (filled($u['fecha_ultima_ph'] ?? null) ? Carbon::parse($ultimaPh)->addYears($intervaloPh) : $equipo?->proxima_prueba_hidrostatica);
 
             if ($equipo && $numeroCliente !== $equipo->numero_cliente) {
                 $equipo->update(['numero_cliente' => $numeroCliente]);
@@ -324,7 +345,9 @@ class IssueCertificate
                 'marca' => $u['marca'] ?? $equipo?->marca,
                 'tipo_agente' => $u['tipo_agente'] ?? $equipo?->tipo_agente,
                 'anio_fabricacion' => self::anioNumerico($u['anio_fabricacion'] ?? $equipo?->anio_fabricacion),
-                'fecha_ultima_ph' => ! empty($u['fecha_ultima_ph']) ? Carbon::parse($u['fecha_ultima_ph']) : null,
+                'fecha_ultima_ph' => filled($ultimaPh) ? Carbon::parse($ultimaPh) : null,
+                'proxima_prueba_hidrostatica' => $proximaPh,
+                'fechas_snapshot' => true,
                 'fecha_ultima_recarga' => ! empty($u['fecha_ultima_recarga']) ? Carbon::parse($u['fecha_ultima_recarga']) : null,
                 'presion_ph' => $u['presion_ph'] ?? ($esPh ? '600 PSI' : null),
                 'tiempo_ph' => $u['tiempo_ph'] ?? ($esPh ? '60 SEG' : null),

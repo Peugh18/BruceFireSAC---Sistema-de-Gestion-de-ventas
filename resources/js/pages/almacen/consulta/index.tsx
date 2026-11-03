@@ -1,4 +1,5 @@
-﻿import { Head, router, usePage } from '@inertiajs/react';
+import { pageTitleClass } from '@/components/page-header';
+import { Head, router, usePage } from '@inertiajs/react';
 import {
     Barcode,
     Building2,
@@ -21,6 +22,7 @@ import AlmacenLayout from '@/layouts/almacen-layout';
 import type { Team } from '@/types';
 import ConsultaRoutes from '@/routes/almacen/consulta';
 import { NativeSelect } from '@/components/ui/native-select';
+import { fechaHora } from '@/lib/utils';
 
 export type SedeOption = {
     id: number;
@@ -83,17 +85,6 @@ export type Props = {
     unitResult: UnitResult | null;
     productResult: ProductResult | null;
 };
-
-function formatDate(isoString: string): string {
-    const d = new Date(isoString);
-    return d.toLocaleString('es-PE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
 
 function getEstadoBadge(estado: string) {
     switch (estado) {
@@ -177,12 +168,10 @@ export default function ConsultaIndex({
         <AlmacenLayout title="Consulta Rápida por Serie o Código">
             <Head title="Consulta Rápida - Almacén" />
 
-            <div className="mx-auto flex max-w-5xl flex-col gap-6">
+            <div className="flex flex-col gap-6">
                 {/* Title Header */}
                 <div>
-                    <h1 className="text-foreground text-xl font-bold tracking-tight">
-                        Consulta Rápida
-                    </h1>
+                    <h1 className={pageTitleClass}>Consulta Rápida</h1>
                     <p className="text-muted-foreground text-xs">
                         Escaneo y auditoría de unidades serializadas o productos
                         a granel. 100% modo lectura.
@@ -295,7 +284,11 @@ export default function ConsultaIndex({
 
                                 <div className="border-border bg-muted/40 rounded-lg border p-3">
                                     <span className="text-muted-foreground text-xs font-semibold uppercase">
-                                        Ubicación Actual
+                                        {['disponible', 'reservado'].includes(
+                                            unitResult.estado,
+                                        )
+                                            ? 'Ubicación actual'
+                                            : 'Salió de'}
                                     </span>
                                     <div className="text-foreground mt-0.5 flex items-center gap-1 text-xs font-bold">
                                         <Building2 className="text-destructive-strong size-3.5" />
@@ -359,7 +352,7 @@ export default function ConsultaIndex({
                                                         {m.tipo.toUpperCase()}
                                                     </span>
                                                     <span className="text-muted-foreground font-mono text-xs">
-                                                        {formatDate(m.fecha)}
+                                                        {fechaHora(m.fecha)}
                                                     </span>
                                                     <span className="text-foreground">
                                                         en <b>{m.sede}</b>
@@ -456,7 +449,7 @@ export default function ConsultaIndex({
                                     >
                                         <div className="flex items-center gap-2">
                                             <span className="text-muted-foreground font-mono text-xs">
-                                                {formatDate(m.fecha)}
+                                                {fechaHora(m.fecha)}
                                             </span>
                                             <Badge
                                                 variant="secondary"

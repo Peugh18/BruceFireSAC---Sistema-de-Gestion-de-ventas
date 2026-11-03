@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/page-header';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -171,7 +172,7 @@ export default function GuiaForm({
         >
             <Head title="Nueva guía de remisión" />
             <form
-                className="mx-auto max-w-3xl space-y-4 p-4"
+                className="flex flex-col gap-4"
                 onSubmit={(event) => {
                     event.preventDefault();
                     form.post(guias.store.url(teamSlug), {
@@ -183,23 +184,19 @@ export default function GuiaForm({
                     });
                 }}
             >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h1 className="text-xl font-bold">
-                            Nueva guía de remisión
-                        </h1>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                            {origen.descripcion}
-                        </p>
-                    </div>
-                    <Button asChild variant="outline">
-                        <Link href={origen.url}>
-                            {origen.url.endsWith('/guias')
-                                ? 'Volver a guías'
-                                : 'Volver al origen'}
-                        </Link>
-                    </Button>
-                </div>
+                <PageHeader
+                    title="Nueva guía de remisión"
+                    description={origen.descripcion}
+                    actions={
+                        <Button asChild variant="outline">
+                            <Link href={origen.url}>
+                                {origen.url.endsWith('/guias')
+                                    ? 'Volver a guías'
+                                    : 'Volver al origen'}
+                            </Link>
+                        </Button>
+                    }
+                />
                 <p className="text-muted-foreground text-sm">
                     Revisa los bienes, las direcciones y el transporte. Crear la
                     guía la deja sin enviar; el envío a SUNAT se realiza

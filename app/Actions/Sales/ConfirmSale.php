@@ -90,6 +90,7 @@ class ConfirmSale
             $sale->update(['estado' => 'confirmada', 'confirmada_at' => now()]);
 
             $this->emitElectronicDocument->programar($sale);
+            app(CorregirVenta::class)->trasladar($sale);
             $this->emitirCertificados->automaticos($sale);
             $this->registrarCobroAlContado($sale);
 
@@ -133,6 +134,7 @@ class ConfirmSale
                 'numero_nota_venta' => 'NV-'.str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT),
             ]);
 
+            app(CorregirVenta::class)->trasladar($sale);
             $this->emitirCertificados->automaticos($sale);
             $this->registrarCobroAlContado($sale);
 

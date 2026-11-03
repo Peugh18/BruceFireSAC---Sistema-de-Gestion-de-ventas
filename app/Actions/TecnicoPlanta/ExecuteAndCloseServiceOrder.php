@@ -2,10 +2,12 @@
 
 namespace App\Actions\TecnicoPlanta;
 
+use App\Actions\Certificates\EmitirCertificadosDeVenta;
 use App\Actions\Certificates\IssueCertificate;
 use App\Actions\Equipment\RenewEquipmentAttentionDate;
 use App\Models\Certificate;
 use App\Models\CertificateType;
+use App\Models\CompanySetting;
 use App\Models\Deficiency;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
@@ -383,6 +385,18 @@ class ExecuteAndCloseServiceOrder
             ? ['datos' => $extraData['certificate_data'], 'referencia' => $serviceOrder->referencia]
             : [];
 
+        if ($tipoOperatividad->codigo === 'operatividad_garantia') {
+            $destino = $serviceOrder->sale->destino ?? $serviceOrder->quote?->destinoResuelto() ?? ($serviceOrder->vehicle_id ? 'vehiculo' : 'local_cliente');
+            $extra = [
+                'referencia' => $serviceOrder->referencia ?: ($serviceOrder->sale->referencia ?? $serviceOrder->quote?->referencia),
+                'tipo_atencion' => TipoAtencionExtintor::deOrden($serviceOrder),
+                'datos' => [
+                    'destino' => $destino,
+                    'tipos' => EmitirCertificadosDeVenta::tiposPorDestino($destino),
+                ],
+            ];
+        }
+
         $this->issueCertificate->handle(
             $tipoOperatividad,
             $serviceOrder->client,
@@ -392,7 +406,25 @@ class ExecuteAndCloseServiceOrder
             $extra,
         );
 
-        // 2. Los extintores con Prueba Hidrostática llevan además su certificado
+        // 2. En un local va también la capacitación, con los datos de la empresa:
+        //    los participantes se agregan después en "Armar certificados".
+        if (($destino ?? null) === 'local_cliente'
+            && ! ($serviceOrder->sale && EmitirCertificadosDeVenta::tieneCapacitacion($serviceOrder->sale))
+            && ($tipoCapacitacion = CertificateType::query()->where('codigo', 'capacitacion')->first())) {
+            $this->issueCertificate->handle(
+                $tipoCapacitacion,
+                $serviceOrder->client,
+                [],
+                $serviceOrder->sale_id,
+                $serviceOrder->id,
+                [
+                    'referencia' => $extra['referencia'] ?? null,
+                    'datos' => EmitirCertificadosDeVenta::datosDeCapacitacion(null, CompanySetting::current()),
+                ],
+            );
+        }
+
+        // 3. Los extintores con Prueba Hidrostática llevan además su certificado
         if ($conPh !== []) {
             $tipoPH = CertificateType::firstOrCreate(
                 ['codigo' => 'prueba_hidrostatica'],

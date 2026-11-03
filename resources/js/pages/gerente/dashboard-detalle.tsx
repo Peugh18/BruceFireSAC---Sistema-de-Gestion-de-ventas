@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Link, usePage } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
@@ -27,7 +28,7 @@ export default function DashboardDetalle({ titulo, mes, sede, rows }: Props) {
 
     return (
         <GerenteLayout title="Detalle de indicador">
-            <div className="mx-auto max-w-5xl space-y-6">
+            <div className="flex flex-col gap-6">
                 <header>
                     <Link
                         href={volver}
@@ -36,9 +37,7 @@ export default function DashboardDetalle({ titulo, mes, sede, rows }: Props) {
                         <ArrowLeft className="size-4" aria-hidden="true" />
                         Volver al resumen
                     </Link>
-                    <h1 className="text-foreground mt-2 text-2xl font-bold sm:text-3xl">
-                        {titulo}
-                    </h1>
+                    <h1 className={`${pageTitleClass} mt-2`}>{titulo}</h1>
                 </header>
                 <section className="border-border bg-card overflow-hidden rounded-2xl border">
                     <ul className="divide-border divide-y">

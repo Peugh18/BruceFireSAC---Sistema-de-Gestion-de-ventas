@@ -32,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property list<array{clave: string, titulo: string, tipo?: string, unidad?: string|null, obligatorio?: bool}>|null $columnas
  * @property list<array{texto: string, unidad?: string|null, minimo?: float|null, maximo?: float|null}>|null $checklist
  * @property list<array{titulo: string, texto: string}>|null $bloques
+ * @property list<array{tipo: string, titulo?: string|null, texto?: string|null}>|null $composicion
  * @property list<string>|null $logos
  * @property int $fotos_minimas
  * @property bool $requiere_cip
@@ -50,7 +51,7 @@ use Illuminate\Support\Carbon;
     'codigo', 'nombre', 'vigencia_meses', 'generado_por_rol',
     'familia', 'orientacion', 'titulo', 'subtitulo', 'norma', 'declaracion', 'responsabilidad',
     'prefijo', 'digitos', 'incluye_anio', 'columnas', 'checklist', 'bloques', 'logos',
-    'fotos_minimas', 'requiere_cip', 'activo', 'version', 'diseno',
+    'fotos_minimas', 'requiere_cip', 'activo', 'version', 'diseno', 'composicion',
 ])]
 class CertificateType extends Model
 {
@@ -63,12 +64,13 @@ class CertificateType extends Model
     public const CAMPOS_PLANTILLA = [
         'nombre', 'familia', 'orientacion', 'titulo', 'subtitulo', 'norma', 'declaracion', 'responsabilidad',
         'prefijo', 'digitos', 'incluye_anio', 'columnas', 'checklist', 'bloques', 'logos',
-        'fotos_minimas', 'requiere_cip', 'vigencia_meses', 'diseno',
+        'fotos_minimas', 'requiere_cip', 'vigencia_meses', 'diseno', 'composicion',
     ];
 
     protected function casts(): array
     {
         return [
+            'composicion' => 'array',
             'diseno' => 'array',
             'vigencia_meses' => 'integer',
             'digitos' => 'integer',
@@ -114,6 +116,18 @@ class CertificateType extends Model
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);
+    }
+
+    /** @return HasMany<Product, $this> */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    /** @return HasMany<TipoDeServicio, $this> */
+    public function tiposDeServicio(): HasMany
+    {
+        return $this->hasMany(TipoDeServicio::class);
     }
 
     /**

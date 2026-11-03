@@ -28,6 +28,7 @@ test('orden desde cotizacion con dos servicios crea dos lineas', function () {
     $user = vendedorUser();
     $client = Client::factory()->create();
     $quote = Quote::factory()->create(['client_id' => $client->id, 'vendedor_id' => $user->id, 'estado' => 'emitida']);
+    aceptarCotizacion($quote);
     $co2 = servicioOrdenLinea('Recarga CO2 5 lb', 'co2', '5 lb');
     $pqs = servicioOrdenLinea('Recarga PQS 6 kg', 'pqs', '6 kg');
     $itemCo2 = QuoteItem::factory()->forService($co2)->create(['quote_id' => $quote->id, 'cantidad' => 4]);

@@ -1,49 +1,67 @@
-import GraficosDashboard, {
-    type DatosGraficos,
-} from '@/components/graficos-dashboard';
-import { Link, router, usePage } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    ArrowDownRight,
-    ArrowUpRight,
-    FileDown,
-    Minus,
-} from 'lucide-react';
-import type { ReactNode } from 'react';
+import { pageTitleClass } from '@/components/page-header';
+import { router, usePage } from '@inertiajs/react';
+import { Boxes, FileDown, HandCoins, Landmark, Wrench } from 'lucide-react';
 
+import {
+    Anillo,
+    Apilada,
+    Atajos,
+    Atencion,
+    cantidad,
+    cambioPorcentual,
+    Columnas,
+    Indicador,
+    Ranking,
+    Tarjeta,
+    Tendencia,
+    Vacio,
+    type Aviso,
+    type Punto,
+} from '@/components/bi';
 import SaludDelSistema, {
     type SaludDelSistemaData,
 } from '@/components/salud-del-sistema';
 import GerenteLayout from '@/layouts/gerente-layout';
 import { soles } from '@/lib/utils';
+import { dashboard } from '@/routes/gerente';
+import CajasRoutes from '@/routes/gerente/cajas';
 import CobranzasRoutes from '@/routes/gerente/cobranzas';
-import { dashboard, inteligencia } from '@/routes/gerente';
 import { detalle as detalleRuta } from '@/routes/gerente/dashboard';
 import ProductosRoutes from '@/routes/gerente/productos';
-import { cliente as consultaCliente } from '@/routes/gerente/consulta';
 import ReportesRoutes from '@/routes/gerente/reportes';
+import ServiciosRoutes from '@/routes/gerente/servicios';
 
 type Metrica = {
     clave: string;
     etiqueta: string;
     valor: number | null;
-    anterior: number | null;
     variacion: number | null;
     formato: 'moneda' | 'porcentaje' | 'dias';
     detalle: string;
     disponible: boolean;
-    productosSinCosto?: number;
 };
 
 type Props = {
-    graficos: DatosGraficos;
+    graficos: {
+        ventas: Punto[];
+        conversion: Punto[];
+        cobranza: Punto[];
+        servicios: Punto[];
+        pasos: Punto[];
+        tendencias: {
+            cobrado: number[];
+            margenBruto: number[];
+            conversionCotizaciones: number[];
+        };
+    };
     mes: string;
+    mesActual: string;
     periodo: string;
+    sedeNombre: string;
     metricas: Metrica[];
     metrics: {
         vencidoPorCobrar: number;
         cotizacionesPendientes: number;
-        ordenesEnProceso: number;
         stockCritico: number;
         documentosSunatError: number;
         plazoSunat: { por_vencer: number; vencidos: number };
@@ -51,148 +69,61 @@ type Props = {
     sedes: { id: number; nombre: string }[];
     sedeSeleccionada: number | null;
     mostrarComparacionSedes: boolean;
-    comparacionSedes: {
-        id: number;
-        nombre: string;
-        ventasNetas: number;
-        ticketPromedio: number | null;
-        conversionCotizaciones: number | null;
-        cobrado: number;
-    }[];
-    clientesConDeuda: {
-        cliente_id: number;
-        cliente: string;
-        saldo: number;
-        fecha_mas_antigua: string;
-    }[];
-    ordenesPorPaso: { paso: string; cantidad: number }[];
-    recompra: {
-        dias: number;
-        cantidad: number;
-        clientes: number;
-        monto_estimado: number;
-    }[];
-    ventasPorVendedor: { vendedor: string; monto: number }[];
-    serviciosMasVendidos: {
-        servicio: string;
-        cantidad: number;
-        monto: number;
-    }[];
+    comparacionSedes: { id: number; nombre: string; ventasNetas: number }[];
     sistema: SaludDelSistemaData;
-    kpisProyecto: {
-        venta_minutos: number | null;
-        ventas_medidas: number;
-        cotizacion_minutos: number | null;
-        cotizaciones_medidas: number;
-        clientes_recuperados: number;
-    };
-    iaRecompra: {
-        alta: number;
-        media: number;
-        baja: number;
-        calculado: string | null;
-        clientes: {
-            cliente_id: number;
-            cliente: string;
-            porcentaje: number;
-            categoria: string;
-            resumen: string;
-        }[];
-    };
+    kpisProyecto: { venta_minutos: number | null };
 };
 
-/** Para estas métricas, bajar es bueno (menos días). */
-const MENOS_ES_MEJOR = ['diasPromedioCobro', 'diasPromedioServicio'];
+const MESES = [
+    'Ene',
+    'Feb',
+    'Mar',
+    'Abr',
+    'May',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Set',
+    'Oct',
+    'Nov',
+    'Dic',
+];
 
-const PASOS: Record<string, string> = {
-    recibir: 'Por recibir',
-    revisar: 'En revisión',
-    hallazgos: 'Esperando autorización',
-    reparar: 'En reparación',
-    cierre: 'Por cerrar',
-};
+/** "10/2026" → "Oct". */
+function mesCorto(nombre: string): string {
+    return MESES[Number(nombre.split('/')[0]) - 1] ?? nombre;
+}
 
-function formatear(valor: number | null, formato: Metrica['formato']): string {
-    if (valor === null) {
+function formatear(metrica: Metrica | undefined): string {
+    if (!metrica || metrica.valor === null) {
         return 'Sin datos';
     }
-
-    if (formato === 'moneda') {
-        return soles(valor);
+    if (metrica.formato === 'moneda') {
+        return soles(metrica.valor);
     }
 
-    return formato === 'porcentaje' ? `${valor} %` : `${valor} días`;
-}
-
-function Variacion({ metrica }: { metrica: Metrica }) {
-    if (metrica.variacion === null) {
-        return (
-            <span className="text-muted-foreground text-xs">
-                Sin mes anterior para comparar
-            </span>
-        );
-    }
-
-    const sube = metrica.variacion > 0;
-    const bueno = MENOS_ES_MEJOR.includes(metrica.clave) ? !sube : sube;
-    const Icono =
-        metrica.variacion === 0 ? Minus : sube ? ArrowUpRight : ArrowDownRight;
-
-    return (
-        <span
-            className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
-                metrica.variacion === 0
-                    ? 'text-muted-foreground'
-                    : bueno
-                      ? 'text-success-strong'
-                      : 'text-destructive-strong'
-            }`}
-        >
-            <Icono className="size-3.5" aria-hidden="true" />
-            {Math.abs(metrica.variacion)} % vs. mes anterior
-        </span>
-    );
-}
-
-function Tarjeta({
-    titulo,
-    children,
-}: {
-    titulo: string;
-    children: ReactNode;
-}) {
-    return (
-        <section className="border-border bg-card rounded-2xl border p-5">
-            <h2 className="text-foreground text-base font-semibold">
-                {titulo}
-            </h2>
-            <div className="mt-3">{children}</div>
-        </section>
-    );
+    return metrica.formato === 'porcentaje'
+        ? `${metrica.valor} %`
+        : `${metrica.valor}`;
 }
 
 /**
- * Resumen del mes para el gerente: métricas comparadas con el mes anterior,
- * lo que requiere atención y el reporte en PDF. Con 2 o más sedes de venta
- * aparece solo la comparación entre sedes.
+ * BI del gerente: lo que requiere atención, 4 indicadores con su tendencia y
+ * los gráficos del mes. La recompra y la IA viven en su propio módulo.
  */
 export default function GerenteDashboard({
     graficos,
     mes,
+    mesActual,
     periodo,
+    sedeNombre,
     metricas,
     metrics,
     sedes,
     sedeSeleccionada,
     mostrarComparacionSedes,
     comparacionSedes,
-    clientesConDeuda,
-    ordenesPorPaso,
-    recompra,
-    ventasPorVendedor,
-    serviciosMasVendidos,
     sistema,
-    iaRecompra,
     kpisProyecto,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: { slug: string } | null }>()
@@ -200,6 +131,7 @@ export default function GerenteDashboard({
     const equipo = currentTeam?.slug ?? '';
     const filtros = {
         mes,
+        mesActual,
         ...(sedeSeleccionada ? { sede: sedeSeleccionada } : {}),
     };
     const cambiar = (cambios: Record<string, string | number | null>) =>
@@ -208,70 +140,150 @@ export default function GerenteDashboard({
             { ...filtros, ...cambios },
             { preserveScroll: true, preserveState: true },
         );
-    const detalle = (
-        tipo: string,
-        extra: Record<string, string | number> = {},
-    ) => detalleRuta.url(equipo, { query: { tipo, ...filtros, ...extra } });
-    const pdf = ReportesRoutes.comercial.pdf.url(equipo, { query: filtros });
-    const atencion = [
+    const detalle = (tipo: string) =>
+        detalleRuta.url(equipo, { query: { tipo, ...filtros } });
+    const metrica = (clave: string) => metricas.find((m) => m.clave === clave);
+
+    const avisos: Aviso[] = [
         {
-            texto: 'Productos bajo el mínimo',
+            valor: metrics.plazoSunat.vencidos,
+            texto: `${cantidad(metrics.plazoSunat.vencidos, 'comprobante vencido', 'comprobantes vencidos')} en SUNAT`,
+            accion: 'Revisar',
+            href: detalle('sunat_vencidos'),
+            alerta: true,
+        },
+        {
+            valor: metrics.documentosSunatError,
+            texto: `${cantidad(metrics.documentosSunatError, 'comprobante', 'comprobantes')} con error en SUNAT`,
+            accion: 'Corregir',
+            href: detalle('sunat'),
+            alerta: true,
+        },
+        {
+            valor: metrics.vencidoPorCobrar,
+            texto: `${soles(metrics.vencidoPorCobrar)} de deuda vencida`,
+            accion: 'Cobranzas',
+            href: CobranzasRoutes.index.url(equipo),
+        },
+        {
             valor: metrics.stockCritico,
+            texto: `${cantidad(metrics.stockCritico, 'producto', 'productos')} bajo el mínimo`,
+            accion: 'Stock',
             href: ProductosRoutes.index.url(equipo, {
                 query: { bajo_minimo: 1 },
             }),
         },
         {
-            texto: 'Comprobantes con error en SUNAT',
-            valor: metrics.documentosSunatError,
-            href: detalle('sunat'),
-        },
-        {
-            texto: 'Comprobantes vencidos en SUNAT',
-            valor: metrics.plazoSunat.vencidos,
-            href: detalle('sunat_vencidos'),
-        },
-        {
-            texto: 'Cotizaciones sin respuesta hace más de 7 días',
             valor: metrics.cotizacionesPendientes,
+            texto: `${cantidad(metrics.cotizacionesPendientes, 'cotización', 'cotizaciones')} sin respuesta`,
+            accion: 'Ver',
             href: detalle('cotizaciones'),
         },
-    ].filter((item) => item.valor > 0);
+    ]
+        .filter((aviso) => aviso.valor > 0)
+        .map(({ valor: _valor, ...aviso }) => aviso);
+
+    const ventas = graficos.ventas.map((punto) => ({
+        ...punto,
+        nombre: mesCorto(punto.nombre),
+    }));
+    const [cobrado, pendiente, vencido] = graficos.cobranza.map(
+        (punto) => punto.valor,
+    );
+    const totalCobranza = cobrado + pendiente + vencido;
+    const servicios = [...graficos.servicios].sort((a, b) => b.valor - a.valor);
+    const hayOrdenes = graficos.pasos.some(
+        (paso) => paso.valor + (paso.secundario ?? 0) > 0,
+    );
+    const atrasadas = graficos.pasos.reduce(
+        (suma, paso) => suma + (paso.secundario ?? 0),
+        0,
+    );
+    const totalTiendas = comparacionSedes.reduce(
+        (suma, sede) => suma + sede.ventasNetas,
+        0,
+    );
+    const margen = metrica('margenBruto');
+    const ventasNetas = metrica('ventasNetas');
+    const indicadores = [
+        {
+            metrica: ventasNetas,
+            serie: graficos.ventas.map((p) => p.valor),
+        },
+        {
+            metrica: metrica('cobrado'),
+            serie: graficos.tendencias.cobrado,
+        },
+        {
+            metrica: margen,
+            serie: graficos.tendencias.margenBruto,
+            detalle:
+                margen?.disponible && ventasNetas?.valor
+                    ? `${Math.round(((margen.valor ?? 0) / ventasNetas.valor) * 100)} % de la venta`
+                    : margen?.detalle,
+        },
+        {
+            metrica: metrica('conversionCotizaciones'),
+            serie: graficos.tendencias.conversionCotizaciones,
+        },
+    ];
+    const tiempos = [
+        {
+            etiqueta: 'Días de cobro',
+            valor: metrica('diasPromedioCobro')?.valor,
+        },
+        {
+            etiqueta: 'Días por orden',
+            valor: metrica('diasPromedioServicio')?.valor,
+        },
+        {
+            etiqueta: 'Renovación',
+            valor: metrica('tasaRenovacion')?.valor,
+            sufijo: ' %',
+        },
+        {
+            etiqueta: 'Registrar venta',
+            valor: kpisProyecto.venta_minutos,
+            sufijo: ' min',
+        },
+    ];
     const hayAlertasSistema =
         !sistema.programadorActivo ||
         (sistema.respaldo !== null && !sistema.respaldo.ok) ||
         sistema.problemas.length > 0;
-    const maxVendedor = Math.max(...ventasPorVendedor.map((v) => v.monto), 1);
 
     return (
         <GerenteLayout title="Resumen de la empresa">
-            <div className="space-y-6">
+            <div className="flex flex-col gap-5">
                 <header className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">
-                            Resumen de {periodo}
+                        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase">
+                            Gerencia
+                        </p>
+                        <h1 className={`${pageTitleClass} mt-1 capitalize`}>
+                            {periodo}
                         </h1>
                         <p className="text-muted-foreground mt-1 text-sm">
-                            Cada número se compara con el mes anterior.
+                            {sedeNombre} · comparado con el mes anterior
                         </p>
                     </div>
-                    <div className="flex flex-wrap items-end gap-2">
-                        <label className="text-muted-foreground text-xs font-medium">
+                    <div className="flex flex-wrap items-end gap-2.5">
+                        <label className="text-muted-foreground flex flex-col gap-1.5 text-xs font-medium">
                             Mes
                             <input
                                 type="month"
                                 value={mes}
-                                max={new Date().toISOString().slice(0, 7)}
+                                max={mesActual}
                                 onChange={(e) =>
                                     e.target.value &&
                                     cambiar({ mes: e.target.value })
                                 }
-                                className="border-border bg-card text-foreground mt-1 block h-10 rounded-xl border px-3 text-sm"
+                                className="border-border bg-card text-foreground h-11 rounded-xl border px-3 text-sm"
                             />
                         </label>
                         {mostrarComparacionSedes && (
-                            <label className="text-muted-foreground text-xs font-medium">
-                                Sede
+                            <label className="text-muted-foreground flex flex-col gap-1.5 text-xs font-medium">
+                                Tienda
                                 <select
                                     value={sedeSeleccionada ?? ''}
                                     onChange={(e) =>
@@ -279,9 +291,9 @@ export default function GerenteDashboard({
                                             sede: e.target.value || null,
                                         })
                                     }
-                                    className="border-border bg-card text-foreground mt-1 block h-10 rounded-xl border px-3 text-sm"
+                                    className="border-border bg-card text-foreground h-11 rounded-xl border px-3 text-sm"
                                 >
-                                    <option value="">Toda la empresa</option>
+                                    <option value="">Todas las tiendas</option>
                                     {sedes.map((sede) => (
                                         <option key={sede.id} value={sede.id}>
                                             {sede.nombre}
@@ -291,374 +303,219 @@ export default function GerenteDashboard({
                             </label>
                         )}
                         <a
-                            href={pdf}
-                            className="bg-primary text-primary-foreground focus-visible:ring-ring inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                            href={ReportesRoutes.comercial.pdf.url(equipo, {
+                                query: filtros,
+                            })}
+                            className="bg-primary text-primary-foreground focus-visible:ring-ring inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                         >
                             <FileDown className="size-4" aria-hidden="true" />
-                            Descargar reporte del mes (PDF)
+                            Reporte del mes (PDF)
                         </a>
                     </div>
                 </header>
-                <GraficosDashboard rol="gerente" datos={graficos} />
+
+                <Atajos
+                    atajos={[
+                        {
+                            texto: 'Productos',
+                            href: ProductosRoutes.index.url(equipo),
+                            icono: Boxes,
+                        },
+                        {
+                            texto: 'Servicios',
+                            href: ServiciosRoutes.index.url(equipo),
+                            icono: Wrench,
+                        },
+                        {
+                            texto: 'Caja consolidada',
+                            href: CajasRoutes.index.url(equipo),
+                            icono: Landmark,
+                        },
+                        {
+                            texto: 'Cobranzas',
+                            href: CobranzasRoutes.index.url(equipo),
+                            icono: HandCoins,
+                        },
+                    ]}
+                />
 
                 {hayAlertasSistema && <SaludDelSistema salud={sistema} />}
 
-                <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    {metricas
-                        .filter((metrica) => metrica.clave !== 'ticketPromedio')
-                        .map((metrica) => (
-                            <li
-                                key={metrica.clave}
-                                className="border-border bg-card rounded-2xl border p-4"
-                            >
-                                <p className="text-muted-foreground text-sm">
-                                    {metrica.etiqueta}
-                                </p>
-                                <p className="text-foreground mt-1 text-2xl font-bold tabular-nums">
-                                    {formatear(metrica.valor, metrica.formato)}
-                                </p>
-                                <div className="mt-1">
-                                    <Variacion metrica={metrica} />
-                                </div>
-                                {metrica.detalle && (
-                                    <p className="text-muted-foreground mt-1 text-xs">
-                                        {metrica.detalle}
-                                    </p>
-                                )}
-                            </li>
-                        ))}
-                </ul>
+                <Atencion avisos={avisos} />
 
-                {atencion.length > 0 && (
-                    <section
-                        aria-labelledby="atencion-titulo"
-                        className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4"
-                    >
-                        <h2
-                            id="atencion-titulo"
-                            className="text-warning-strong flex items-center gap-2 text-sm font-bold"
-                        >
-                            <AlertTriangle
-                                className="size-4"
-                                aria-hidden="true"
+                <section
+                    aria-label="Indicadores del mes"
+                    className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3.5"
+                >
+                    {indicadores.map(({ metrica: m, serie, detalle: texto }) =>
+                        m ? (
+                            <Indicador
+                                key={m.clave}
+                                etiqueta={m.etiqueta}
+                                valor={formatear(m)}
+                                serie={m.valor === null ? [] : serie}
+                                cambio={cambioPorcentual(m.variacion)}
+                                detalle={texto}
                             />
-                            Requiere atención
-                        </h2>
-                        <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-                            {atencion.map((item) => (
-                                <li key={item.texto}>
-                                    <Link
-                                        href={item.href}
-                                        className="bg-card text-foreground hover:bg-accent flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm"
-                                    >
-                                        <span>{item.texto}</span>
-                                        <span className="font-bold tabular-nums">
-                                            {item.valor}
-                                        </span>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
-                )}
-
-                <Tarjeta titulo="IA de recompra (toda la empresa): a quién llamar primero">
-                    <Link
-                        className="text-primary mb-3 inline-flex rounded py-2 text-sm font-medium underline underline-offset-4"
-                        href={inteligencia.url({ current_team: equipo })}
-                    >
-                        Abrir Recompra e IA
-                    </Link>
-                    <p className="text-muted-foreground mb-3 text-xs">
-                        Probabilidad de que el cliente vuelva a comprar, según
-                        su historial. Alta: {iaRecompra.alta} · Media:{' '}
-                        {iaRecompra.media} · Baja: {iaRecompra.baja}
-                        {iaRecompra.calculado
-                            ? ` · Calculado el ${iaRecompra.calculado.slice(0, 10)}`
-                            : ''}
-                    </p>
-                    {iaRecompra.clientes.length === 0 ? (
-                        <p className="text-muted-foreground text-sm">
-                            La IA todavía no tiene clientes con probabilidad
-                            alta o media.
-                        </p>
-                    ) : (
-                        <ul className="divide-border divide-y text-sm">
-                            {iaRecompra.clientes.map((c) => (
-                                <li key={c.cliente_id}>
-                                    <Link
-                                        href={consultaCliente.url({
-                                            current_team: equipo,
-                                            client: c.cliente_id,
-                                        })}
-                                        className="hover:bg-accent flex items-start justify-between gap-3 rounded-lg px-1 py-2"
-                                    >
-                                        <span className="min-w-0">
-                                            <span className="text-foreground block font-medium">
-                                                {c.cliente}
-                                            </span>
-                                            <span className="text-muted-foreground block text-xs">
-                                                {c.resumen}
-                                            </span>
-                                        </span>
-                                        <span
-                                            className={
-                                                c.categoria === 'alta'
-                                                    ? 'text-success-strong shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-bold'
-                                                    : 'text-warning-strong shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold'
-                                            }
-                                        >
-                                            {c.porcentaje} %
-                                        </span>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
+                        ) : null,
                     )}
-                </Tarjeta>
+                </section>
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                    <Tarjeta titulo="Recompra: extintores que vencen pronto">
-                        <ul className="grid grid-cols-3 gap-2">
-                            {recompra.map((tramo) => (
-                                <li key={tramo.dias}>
-                                    <Link
-                                        href={detalle('recompra', {
-                                            tramo: tramo.dias,
-                                        })}
-                                        className="bg-muted/50 hover:bg-accent block rounded-xl p-3"
-                                    >
-                                        <span className="text-muted-foreground block text-xs">
-                                            En {tramo.dias} días
-                                        </span>
-                                        <span className="text-foreground block text-xl font-bold tabular-nums">
-                                            {tramo.cantidad}
-                                        </span>
-                                        <span className="text-muted-foreground block text-xs">
-                                            {tramo.clientes} clientes ·{' '}
-                                            {soles(tramo.monto_estimado)}
-                                        </span>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </Tarjeta>
-
-                    <Tarjeta titulo="Clientes que más deben">
-                        <p className="text-muted-foreground mb-2 text-xs">
-                            Vencido por cobrar:{' '}
-                            {soles(metrics.vencidoPorCobrar)}
-                        </p>
-                        {clientesConDeuda.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">
-                                Nadie tiene deuda vencida.
-                            </p>
+                <div className="grid gap-3.5 lg:grid-cols-3">
+                    <Tarjeta
+                        titulo="Ventas netas · últimos 6 meses"
+                        className="lg:col-span-2"
+                    >
+                        {ventas.some((p) => p.valor !== 0) ? (
+                            <Tendencia
+                                titulo="Ventas netas por mes"
+                                datos={ventas}
+                                series={['Ventas netas']}
+                                moneda
+                            />
                         ) : (
-                            <ul className="divide-border divide-y text-sm">
-                                {clientesConDeuda.slice(0, 5).map((c) => (
-                                    <li key={c.cliente_id}>
-                                        <Link
-                                            href={CobranzasRoutes.index.url(
-                                                equipo,
-                                            )}
-                                            className="hover:bg-accent flex justify-between gap-3 rounded-lg px-1 py-2"
-                                        >
-                                            <span className="min-w-0 truncate">
-                                                {c.cliente}
-                                                <span className="text-muted-foreground block text-xs">
-                                                    Debe desde{' '}
-                                                    {c.fecha_mas_antigua}
-                                                </span>
-                                            </span>
-                                            <span className="text-foreground shrink-0 font-semibold tabular-nums">
-                                                {soles(c.saldo)}
-                                            </span>
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
+                            <Vacio>Aún no hay ventas en estos 6 meses.</Vacio>
                         )}
                     </Tarjeta>
-
-                    <Tarjeta titulo="Ventas por vendedor">
-                        {ventasPorVendedor.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">
-                                Sin ventas este mes.
-                            </p>
+                    <Tarjeta titulo="Cobranza de lo vendido">
+                        {totalCobranza > 0 ? (
+                            <>
+                                <div className="flex items-center gap-4">
+                                    <Anillo
+                                        porcentaje={
+                                            (cobrado / totalCobranza) * 100
+                                        }
+                                        etiqueta="cobrado"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                        <Apilada
+                                            moneda
+                                            partes={[
+                                                {
+                                                    nombre: 'Cobrado',
+                                                    valor: cobrado,
+                                                    color: 'bi-1',
+                                                },
+                                                {
+                                                    nombre: 'A tiempo',
+                                                    valor: pendiente,
+                                                    color: 'bi-2',
+                                                },
+                                                {
+                                                    nombre: 'Vencido',
+                                                    valor: vencido,
+                                                    color: 'bi-alerta',
+                                                },
+                                            ]}
+                                        />
+                                    </div>
+                                </div>
+                            </>
                         ) : (
-                            <ul className="space-y-2 text-sm">
-                                {ventasPorVendedor.map((v) => (
-                                    <li key={v.vendedor}>
-                                        <div className="flex justify-between gap-3">
-                                            <span>{v.vendedor}</span>
-                                            <span className="font-semibold tabular-nums">
-                                                {soles(v.monto)}
-                                            </span>
-                                        </div>
-                                        <div
-                                            className="bg-muted mt-1 h-2 rounded-full"
-                                            aria-hidden="true"
-                                        >
-                                            <div
-                                                className="bg-primary h-2 rounded-full"
-                                                style={{
-                                                    width: `${(v.monto / maxVendedor) * 100}%`,
-                                                }}
-                                            />
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
+                            <Vacio>Sin ventas este mes.</Vacio>
                         )}
-                    </Tarjeta>
-
-                    <Tarjeta titulo="Servicios más vendidos">
-                        {serviciosMasVendidos.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">
-                                Sin servicios vendidos este mes.
-                            </p>
-                        ) : (
-                            <ul className="divide-border divide-y text-sm">
-                                {serviciosMasVendidos.slice(0, 6).map((s) => (
-                                    <li
-                                        key={s.servicio}
-                                        className="flex justify-between gap-3 py-2"
-                                    >
-                                        <span className="min-w-0 truncate">
-                                            {s.servicio}
-                                        </span>
-                                        <span className="text-muted-foreground shrink-0 tabular-nums">
-                                            {s.cantidad} · {soles(s.monto)}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </Tarjeta>
-
-                    <Tarjeta titulo="Tiempos de atención">
-                        <ul className="grid grid-cols-3 gap-2 text-sm">
-                            <li className="bg-muted/50 rounded-xl p-3">
-                                <span className="text-muted-foreground block text-xs">
-                                    Registrar una venta
-                                </span>
-                                <span className="text-foreground text-lg font-bold tabular-nums">
-                                    {kpisProyecto.venta_minutos === null
-                                        ? 'Sin datos'
-                                        : `${kpisProyecto.venta_minutos} min`}
-                                </span>
-                                <span className="text-muted-foreground block text-xs">
-                                    {kpisProyecto.ventas_medidas} ventas medidas
-                                </span>
-                            </li>
-                            <li className="bg-muted/50 rounded-xl p-3">
-                                <span className="text-muted-foreground block text-xs">
-                                    Emitir una cotización
-                                </span>
-                                <span className="text-foreground text-lg font-bold tabular-nums">
-                                    {kpisProyecto.cotizacion_minutos === null
-                                        ? 'Sin datos'
-                                        : `${kpisProyecto.cotizacion_minutos} min`}
-                                </span>
-                                <span className="text-muted-foreground block text-xs">
-                                    {kpisProyecto.cotizaciones_medidas}{' '}
-                                    cotizaciones
-                                </span>
-                            </li>
-                            <li className="bg-muted/50 rounded-xl p-3">
-                                <span className="text-muted-foreground block text-xs">
-                                    Clientes recuperados
-                                </span>
-                                <span className="text-foreground text-lg font-bold tabular-nums">
-                                    {kpisProyecto.clientes_recuperados}
-                                </span>
-                                <span className="text-muted-foreground block text-xs">
-                                    por alertas de vencimiento
-                                </span>
-                            </li>
-                        </ul>
-                    </Tarjeta>
-
-                    <Tarjeta titulo="Órdenes de servicio en curso">
-                        <p className="text-muted-foreground mb-2 text-xs">
-                            {metrics.ordenesEnProceso} órdenes abiertas
-                        </p>
-                        <ul className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-                            {ordenesPorPaso.map((p) => (
-                                <li key={p.paso}>
-                                    <Link
-                                        href={detalle('ordenes', {
-                                            paso: p.paso,
-                                        })}
-                                        className="bg-muted/50 hover:bg-accent block rounded-xl p-3"
-                                    >
-                                        <span className="text-muted-foreground block text-xs">
-                                            {PASOS[p.paso] ?? p.paso}
-                                        </span>
-                                        <span className="text-foreground text-lg font-bold tabular-nums">
-                                            {p.cantidad}
-                                        </span>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
                     </Tarjeta>
                 </div>
 
-                {mostrarComparacionSedes && (
-                    <Tarjeta titulo="Comparación entre sedes">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="text-muted-foreground text-left text-xs">
-                                    <tr>
-                                        <th className="py-2 pr-3 font-medium">
-                                            Sede
-                                        </th>
-                                        <th className="py-2 pr-3 text-right font-medium">
-                                            Ventas
-                                        </th>
-                                        <th className="py-2 pr-3 text-right font-medium">
-                                            Ticket
-                                        </th>
-                                        <th className="py-2 pr-3 text-right font-medium">
-                                            Conversión
-                                        </th>
-                                        <th className="py-2 text-right font-medium">
-                                            Cobrado
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-border divide-y">
-                                    {comparacionSedes.map((s) => (
-                                        <tr key={s.id}>
-                                            <td className="py-2 pr-3">
-                                                {s.nombre}
-                                            </td>
-                                            <td className="py-2 pr-3 text-right tabular-nums">
-                                                {soles(s.ventasNetas)}
-                                            </td>
-                                            <td className="py-2 pr-3 text-right tabular-nums">
-                                                {formatear(
-                                                    s.ticketPromedio,
-                                                    'moneda',
-                                                )}
-                                            </td>
-                                            <td className="py-2 pr-3 text-right tabular-nums">
-                                                {formatear(
-                                                    s.conversionCotizaciones,
-                                                    'porcentaje',
-                                                )}
-                                            </td>
-                                            <td className="py-2 text-right tabular-nums">
-                                                {soles(s.cobrado)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+                    <Tarjeta titulo="De cotización a venta">
+                        {graficos.conversion[0]?.valor ? (
+                            <Ranking datos={graficos.conversion} embudo />
+                        ) : (
+                            <Vacio>Sin cotizaciones enviadas este mes.</Vacio>
+                        )}
                     </Tarjeta>
-                )}
+                    <Tarjeta titulo="Servicios vendidos por tipo">
+                        {servicios.length > 0 ? (
+                            <Ranking datos={servicios.slice(0, 6)} />
+                        ) : (
+                            <Vacio>Sin servicios vendidos este mes.</Vacio>
+                        )}
+                    </Tarjeta>
+                    <Tarjeta
+                        titulo="Órdenes por paso del taller"
+                        extra={
+                            hayOrdenes
+                                ? cantidad(atrasadas, 'atrasada', 'atrasadas')
+                                : undefined
+                        }
+                    >
+                        {hayOrdenes ? (
+                            <Columnas
+                                titulo="Órdenes abiertas por paso"
+                                datos={graficos.pasos}
+                                series={['En plazo', 'Atrasadas']}
+                            />
+                        ) : (
+                            <Vacio>No hay órdenes abiertas.</Vacio>
+                        )}
+                    </Tarjeta>
+                </div>
+
+                <div className="grid gap-3.5 lg:grid-cols-3">
+                    {mostrarComparacionSedes && (
+                        <Tarjeta
+                            titulo="Ventas por tienda"
+                            className="lg:col-span-2"
+                        >
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
+                                {comparacionSedes.map((sede, indice) => (
+                                    <div
+                                        key={sede.id}
+                                        className="bg-muted/60 flex flex-col gap-2 rounded-xl p-3.5"
+                                    >
+                                        <span className="text-muted-foreground text-sm">
+                                            {sede.nombre}
+                                        </span>
+                                        <b className="text-xl tabular-nums">
+                                            {soles(sede.ventasNetas)}
+                                        </b>
+                                        <span
+                                            aria-hidden="true"
+                                            className="block h-2 rounded-full"
+                                            style={{
+                                                background: 'var(--bi-pista)',
+                                            }}
+                                        >
+                                            <span
+                                                className="block h-2 rounded-full"
+                                                style={{
+                                                    width: `${totalTiendas ? (sede.ventasNetas / totalTiendas) * 100 : 0}%`,
+                                                    background: `var(--bi-${(indice % 4) + 1})`,
+                                                }}
+                                            />
+                                        </span>
+                                        <span className="text-muted-foreground text-xs">
+                                            {totalTiendas
+                                                ? `${Math.round((sede.ventasNetas / totalTiendas) * 100)} % del total`
+                                                : 'Sin ventas'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </Tarjeta>
+                    )}
+                    <Tarjeta titulo="Tiempos de atención">
+                        <dl className="grid grid-cols-2 gap-2.5">
+                            {tiempos.map((tiempo) => (
+                                <div
+                                    key={tiempo.etiqueta}
+                                    className="bg-muted/60 rounded-xl p-3"
+                                >
+                                    <dt className="text-muted-foreground text-xs">
+                                        {tiempo.etiqueta}
+                                    </dt>
+                                    <dd className="text-xl font-bold tabular-nums">
+                                        {tiempo.valor === null ||
+                                        tiempo.valor === undefined
+                                            ? 'Sin datos'
+                                            : `${tiempo.valor}${tiempo.sufijo ?? ''}`}
+                                    </dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </Tarjeta>
+                </div>
             </div>
         </GerenteLayout>
     );

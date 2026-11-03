@@ -46,6 +46,7 @@ class UpdateClientRequest extends FormRequest
             ],
             'razon_social' => ['required', 'string', 'max:255'],
             'nombre_comercial' => ['nullable', 'string', 'max:255'],
+            'certificado_con' => ['nullable', 'in:razon_social,nombre_comercial'],
             'telefono' => ['nullable', new TelefonoPeru],
             'whatsapp' => ['nullable', new CelularPeru],
             'email' => ['nullable', 'email', 'max:255'],
@@ -81,7 +82,7 @@ class UpdateClientRequest extends FormRequest
         $expectedLength = $this->input('tipo_documento') === 'dni' ? 8 : 11;
 
         if (mb_strlen((string) $this->input('numero_documento')) !== $expectedLength) {
-            $validator->errors()->add('numero_documento', "El numero de documento debe tener {$expectedLength} caracteres.");
+            $validator->errors()->add('numero_documento', "El número de documento debe tener {$expectedLength} caracteres.");
         }
     }
 

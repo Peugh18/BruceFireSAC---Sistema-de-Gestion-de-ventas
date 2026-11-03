@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { pageTitleClass } from '@/components/page-header';
+import { useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoPlantaLayout from '@/layouts/tecnico-planta-layout';
@@ -78,9 +79,7 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-                            Recepción en Planta
-                        </h1>
+                        <h1 className={pageTitleClass}>Recepción en Planta</h1>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400">
                             Ingreso y verificación de equipos en taller
                         </p>

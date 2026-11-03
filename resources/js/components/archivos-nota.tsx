@@ -3,17 +3,19 @@ import { FileCode2, FileText, ShieldCheck } from 'lucide-react';
 import facturacion from '@/routes/vendedor/facturacion';
 
 /**
- * Imprimir, XML y CDR de un comprobante (factura, boleta o nota). El CDR es
- * la constancia de SUNAT: solo existe cuando SUNAT ya lo aceptó.
+ * Imprimir, XML y CDR de un comprobante (factura, boleta o nota). El XML vale
+ * cuando ya se envió a SUNAT y el CDR, su constancia, cuando SUNAT lo aceptó.
  */
 export default function ArchivosNota({
     teamSlug,
     id,
     aceptada,
+    enviada = aceptada,
 }: {
     teamSlug: string;
     id: number;
     aceptada: boolean;
+    enviada?: boolean;
 }) {
     const args = { current_team: teamSlug, electronic_document: id };
     const enlace =
@@ -30,10 +32,12 @@ export default function ArchivosNota({
                 <FileText className="size-3.5" />
                 Imprimir
             </a>
-            <a href={facturacion.xml.url(args)} className={enlace}>
-                <FileCode2 className="size-3.5" />
-                XML
-            </a>
+            {enviada ? (
+                <a href={facturacion.xml.url(args)} className={enlace}>
+                    <FileCode2 className="size-3.5" />
+                    XML
+                </a>
+            ) : null}
             {aceptada ? (
                 <a href={facturacion.cdr.url(args)} className={enlace}>
                     <ShieldCheck className="size-3.5" />

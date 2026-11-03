@@ -6,8 +6,10 @@ use App\Models\Certificate;
 use App\Models\CertificateParticipant;
 use App\Models\CertificateType;
 use App\Models\CertificateUnit;
+use App\Models\ClientSite;
 use App\Models\CompanySetting;
 use App\Models\Signer;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
@@ -44,6 +46,8 @@ class CertificateDocumentData
         $client = $certificate->client;
         $pruebas = $this->pruebas($tipo['checklist'] ?? [], $datos['pruebas'] ?? []);
         $filas = ! empty($datos['filas']) ? array_values($datos['filas']) : $this->filasDeEquipos($certificate);
+        $conNombreComercial = $client->certificado_con === 'nombre_comercial' && filled($client->nombre_comercial);
+        $local = ClientSite::deReferencia($client, $certificate->referencia);
 
         return [
             'empresa' => $this->empresa(),
@@ -52,9 +56,13 @@ class CertificateDocumentData
                 'numero' => $participant?->numero() ?? $certificate->numero,
                 'emision' => $certificate->fecha_emision?->format('d/m/Y'),
                 'vencimiento' => $certificate->fecha_vigencia_hasta?->format('d/m/Y'),
-                'vigencia' => ($certificate->certificateType->vigencia_meses ?? 0) > 0 ? $certificate->certificateType->vigencia_meses.' meses' : null,
-                'orden' => $certificate->serviceOrder?->codigo,
+                // La vigencia repite el vencimiento y la orden es interna: no se imprimen.
+                'vigencia' => null,
+                'orden' => null,
+                // Sin orden, el certificado se une a la venta por su comprobante.
+                'comprobante' => $certificate->serviceOrder === null ? $certificate->sale?->numeroComprobante() : null,
                 'tipo_atencion' => $certificate->tipo_atencion ? Str::ucfirst($certificate->tipo_atencion) : null,
+                'titulo_datos' => $certificate->tipo_atencion !== null || $certificate->service_order_id !== null ? 'Datos del servicio' : 'Datos del certificado',
                 'estado' => $participant?->anulado_at
                     ? ['clave' => 'anulado', 'texto' => 'ANULADO', 'fecha' => $participant->anulado_at->format('d/m/Y')]
                     : $this->estado($certificate),
@@ -63,12 +71,13 @@ class CertificateDocumentData
                 'anulado_motivo' => $certificate->anulado_motivo,
             ],
             'cliente' => [
-                'razon_social' => $participant?->nombres ?? $client?->razon_social,
+                'razon_social' => $participant?->nombres ?? ($conNombreComercial ? $client->nombre_comercial : $client?->razon_social),
                 'documento_tipo' => $participant ? ($participant->dni ? 'DNI' : '') : strtoupper((string) ($client?->tipo_documento ?: 'RUC')),
                 'documento' => $participant?->dni ?? $client?->numero_documento,
-                'nombre_comercial' => $client?->nombre_comercial,
-                'direccion' => $certificate->direccion ?: $client?->direccion_fiscal,
-                'referencia' => $this->referencia($certificate->referencia),
+                'nombre_comercial' => $conNombreComercial ? null : $client?->nombre_comercial,
+                // Un local elegido en la venta pone su dirección; su nombre ya no hace falta como referencia.
+                'direccion' => $certificate->direccion ?: ($local?->direccion ?: $client?->direccion_fiscal),
+                'referencia' => $local ? null : $this->referencia($certificate->referencia),
             ],
             'filas' => $filas,
             'pruebas' => $pruebas,
@@ -107,9 +116,11 @@ class CertificateDocumentData
                 'numero' => $this->numeros->proximo($tipo),
                 'emision' => now()->format('d/m/Y'),
                 'vencimiento' => $tipo->vigencia_meses > 0 ? now()->addMonths($tipo->vigencia_meses)->format('d/m/Y') : null,
-                'vigencia' => $tipo->vigencia_meses > 0 ? $tipo->vigencia_meses.' meses' : null,
-                'orden' => 'OS-'.now()->year.'-0142',
+                'vigencia' => null,
+                'orden' => null,
+                'comprobante' => null,
                 'tipo_atencion' => null,
+                'titulo_datos' => 'Datos del servicio',
                 'estado' => $tipo->vigencia_meses > 0
                     ? ['clave' => 'vigente', 'texto' => 'VIGENTE HASTA', 'fecha' => now()->addMonths($tipo->vigencia_meses)->format('d/m/Y')]
                     : ['clave' => 'vigente', 'texto' => 'CERTIFICADO VÁLIDO', 'fecha' => null],
@@ -146,22 +157,58 @@ class CertificateDocumentData
         $configuracion = $certificate->typeVersion?->configuracion
             ?? $certificate->certificateType->configuracionActual();
 
-        if ($certificate->certificateUnits->contains(fn (CertificateUnit $unit) => filled($unit->codigo_interno))
-            && ! in_array('codigo_interno', array_column($configuracion['columnas'] ?? [], 'clave'), true)) {
-            $columnas = [];
-            foreach ($configuracion['columnas'] ?? [] as $columna) {
-                if ($columna['clave'] === 'serie') {
-                    $columna['titulo'] = 'Serie fabricante';
-                }
-                $columnas[] = $columna;
-                if ($columna['clave'] === 'serie') {
-                    $columnas[] = ['clave' => 'codigo_interno', 'titulo' => 'Código BF-EQ', 'tipo' => 'texto', 'ancho' => 14];
-                }
-            }
-            $configuracion['columnas'] = $columnas;
+        // El código BF-EQ es interno de la empresa: el cliente ve la serie de
+        // fábrica. Si un formato antiguo lo tenía como columna, se retira.
+        $configuracion['columnas'] = array_values(array_filter(
+            $configuracion['columnas'] ?? [],
+            fn (array $columna) => $columna['clave'] !== 'codigo_interno',
+        ));
+
+        // Nuevos y recargados en un mismo certificado: cada fila dice su atención.
+        if (str_contains((string) $certificate->tipo_atencion, '/') && $configuracion['columnas'] !== []) {
+            $configuracion['columnas'][] = ['clave' => 'atencion', 'titulo' => 'Atención', 'tipo' => 'texto', 'ancho' => 10];
+        }
+
+        if ($certificate->certificateType->codigo === 'operatividad_garantia') {
+            $configuracion = $this->segunLaAtencion($configuracion, $certificate);
         }
 
         return ['codigo' => $certificate->certificateType->codigo, ...$configuracion];
+    }
+
+    /**
+     * E-069: el texto fijo dice lo que de verdad se hizo. Una recarga no es solo
+     * mantenimiento, un extintor nuevo no se recargó, y el párrafo de las
+     * mangueras de CO2 solo va si hay algún CO2. Un texto que el Gerente
+     * reescribió (sin la frase original) se respeta.
+     *
+     * @param  array<string, mixed>  $configuracion
+     * @return array<string, mixed>
+     */
+    protected function segunLaAtencion(array $configuracion, Certificate $certificate): array
+    {
+        $atencion = mb_strtolower((string) $certificate->tipo_atencion);
+        $nuevo = $atencion === 'nuevo' || ($certificate->service_order_id === null && $atencion === '');
+        $agentes = $certificate->certificateUnits->map(fn (CertificateUnit $unit) => mb_strtoupper((string) $unit->equipment?->tipo_agente))->filter();
+        $hayCo2 = $agentes->contains(fn (string $agente) => str_contains($agente, 'CO2'));
+
+        $original = 'han sido sometidos a mantenimiento';
+        $configuracion['declaracion'] = match (true) {
+            $nuevo => str_replace($original, 'son nuevos, se encuentran operativos y cuentan con garantía de fábrica,', (string) ($configuracion['declaracion'] ?? '')),
+            $atencion === 'recarga' => str_replace($original, 'han sido sometidos a recarga y mantenimiento', (string) ($configuracion['declaracion'] ?? '')),
+            default => $configuracion['declaracion'] ?? null,
+        };
+
+        $configuracion['bloques'] = array_values(array_filter(
+            $configuracion['bloques'] ?? [],
+            fn (array $bloque) => match (mb_strtolower((string) ($bloque['titulo'] ?? ''))) {
+                'prueba de conductividad' => $hayCo2,
+                'porcentaje de carga pqs' => ! $nuevo,
+                default => true,
+            },
+        ));
+
+        return $configuracion;
     }
 
     /**
@@ -200,6 +247,7 @@ class CertificateDocumentData
                 'capacidad' => $unit->capacidad ?: $unit->equipment?->capacidad,
                 'serie' => $unit->numero_serie_snapshot,
                 'codigo_interno' => $unit->codigo_interno,
+                'atencion' => $this->atencionDeLaFila($certificate, $unit),
                 'marca' => $unit->marca ?: $unit->equipment?->marca,
                 'tipo' => $unit->tipo_agente ?: '—',
                 'anio' => (string) ($unit->anio_fabricacion ?: $unit->equipment?->anio_fabricacion),
@@ -210,6 +258,22 @@ class CertificateDocumentData
                 'resultado' => 'operativo',
             ])
             ->all());
+    }
+
+    /**
+     * Nuevo si el extintor se vendió en este certificado; si no, la atención
+     * del servicio (recarga o mantenimiento).
+     */
+    protected function atencionDeLaFila(Certificate $certificate, CertificateUnit $unit): ?string
+    {
+        if (! str_contains((string) $certificate->tipo_atencion, '/')) {
+            return null;
+        }
+
+        $nuevo = $certificate->sale?->items()->where('tipo_linea', 'unidad_nueva')->where('equipment_id', $unit->equipment_id)->exists();
+        $servicio = collect(explode('/', (string) $certificate->tipo_atencion))->map(fn (string $parte) => trim($parte))->reject(fn (string $parte) => $parte === 'nuevo')->first();
+
+        return Str::ucfirst($nuevo ? 'nuevo' : ($servicio ?? 'recarga'));
     }
 
     /**
@@ -274,6 +338,10 @@ class CertificateDocumentData
      */
     protected function capacitacion(array $datos, CarbonInterface $fecha, ?CertificateParticipant $participant = null, ?string $empresaCliente = null): array
     {
+        if (! empty($datos['fecha'])) {
+            $fecha = Carbon::parse($datos['fecha']);
+        }
+
         $meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
 
         return [
@@ -421,11 +489,14 @@ class CertificateDocumentData
 
     protected function proximaPh(Certificate $certificate, CertificateUnit $unit): ?CarbonInterface
     {
+        if ($unit->fechas_snapshot) {
+            return $unit->proxima_prueba_hidrostatica;
+        }
         if ($unit->fecha_ultima_ph) {
             return $unit->fecha_ultima_ph->copy()->addYears(5);
         }
 
-        return $unit->equipment?->proxima_prueba_hidrostatica ?? $certificate->fecha_emision->copy()->addYears(5);
+        return $unit->equipment?->proxima_prueba_hidrostatica;
     }
 
     protected function mesAnio(?CarbonInterface $fecha): string

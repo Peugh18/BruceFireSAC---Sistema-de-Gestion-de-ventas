@@ -16,6 +16,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $codigo_interno
  * @property string $numero_serie_snapshot
  * @property Carbon|null $fecha_ultima_ph
+ * @property Carbon|null $proxima_prueba_hidrostatica
+ * @property bool $fechas_snapshot
  * @property Carbon|null $fecha_ultima_recarga
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -33,6 +35,8 @@ use Illuminate\Support\Carbon;
     'tipo_agente',
     'anio_fabricacion',
     'fecha_ultima_ph',
+    'proxima_prueba_hidrostatica',
+    'fechas_snapshot',
     'fecha_ultima_recarga',
     'presion_ph',
     'tiempo_ph',
@@ -48,6 +52,8 @@ class CertificateUnit extends Model
         return [
             'equipment_id' => 'integer',
             'fecha_ultima_ph' => 'date',
+            'proxima_prueba_hidrostatica' => 'date',
+            'fechas_snapshot' => 'boolean',
             'fecha_ultima_recarga' => 'date',
         ];
     }

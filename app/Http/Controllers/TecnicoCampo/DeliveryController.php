@@ -173,6 +173,7 @@ class DeliveryController extends Controller
             $serviceOrder->update([
                 'estado' => $debeCerrar ? 'cerrado' : 'entregado',
             ]);
+            $serviceOrder->marcarEquiposEntregados();
 
             AuditLogger::log(
                 action: 'orden.entregada',

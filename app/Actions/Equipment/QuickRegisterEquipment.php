@@ -9,6 +9,7 @@ use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\ServiceOrderLine;
 use App\Models\User;
+use App\Services\Equipment\FechasDelEquipo;
 use App\Services\Inventory\InventorySequenceGenerator;
 use App\Services\ServiceOrders\CasillerosDeLaOrden;
 use Illuminate\Database\Eloquent\Builder;
@@ -73,6 +74,7 @@ class QuickRegisterEquipment
             $service = $line?->service;
             $case = 'A_existente';
             $datosPendientes = (bool) ($data['datos_tecnicos_pendientes'] ?? false);
+            $fechas = FechasDelEquipo::paraGuardar($data, $equipment);
 
             if ($equipment) {
                 $equipment->update(array_filter([
@@ -83,6 +85,7 @@ class QuickRegisterEquipment
                     'anio_fabricacion' => $data['anio_fabricacion'] ?? null,
                     'notas' => $data['notas'] ?? null,
                 ], fn (mixed $value): bool => $value !== null && $value !== ''));
+                $equipment->update($fechas);
             } else {
                 $case = 'B_nuevo';
                 $equipment = Equipment::create([
@@ -95,10 +98,11 @@ class QuickRegisterEquipment
                     'anio_fabricacion' => $this->valueOrUnreadable($data['anio_fabricacion'] ?? null),
                     'ubicacion_actual' => 'Planta - Taller',
                     'estado' => 'en_servicio',
-                    'fecha_venta' => $datosPendientes ? null : now(),
-                    'proxima_fecha_atencion' => $datosPendientes ? null : now()->addYear(),
-                    'proxima_prueba_hidrostatica' => $datosPendientes ? null : now()->addYears(5),
+                    'fecha_venta' => null,
+                    'proxima_fecha_atencion' => null,
+                    'proxima_prueba_hidrostatica' => null,
                     'notas' => $data['notas'] ?? null,
+                    ...$fechas,
                 ]);
             }
 

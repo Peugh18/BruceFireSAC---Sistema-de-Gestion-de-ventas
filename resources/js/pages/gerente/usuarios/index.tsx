@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { router, usePage } from '@inertiajs/react';
 import { CheckCircle2, Search, ShieldQuestion, Users } from 'lucide-react';
 import { useState } from 'react';
@@ -214,9 +215,7 @@ export default function UsuariosIndex() {
             <div className="space-y-6 pb-24 sm:pb-0">
                 <header className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                        <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
-                            Usuarios y roles
-                        </h1>
+                        <h1 className={pageTitleClass}>Usuarios y roles</h1>
                         <p className="text-muted-foreground mt-1 text-sm">
                             Administra los datos, el acceso y la sede de tu
                             equipo. Los cambios de acceso requieren

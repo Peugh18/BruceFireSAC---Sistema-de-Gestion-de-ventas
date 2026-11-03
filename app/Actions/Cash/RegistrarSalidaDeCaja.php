@@ -24,6 +24,10 @@ class RegistrarSalidaDeCaja
                 throw ValidationException::withMessages(['monto' => 'La caja ya está cerrada.']);
             }
 
+            if ($cashRegister->conteoVigente()) {
+                throw ValidationException::withMessages(['monto' => 'Ya contaste el cajón para cerrar: termina el cierre antes de sacar dinero.']);
+            }
+
             $disponible = $cashRegister->efectivoEsperado();
             if (round($monto, 2) > $disponible) {
                 throw ValidationException::withMessages([

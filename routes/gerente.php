@@ -18,7 +18,6 @@ use App\Http\Controllers\Gerente\ServiceController;
 use App\Http\Controllers\Gerente\SignerController;
 use App\Http\Controllers\Gerente\SunatCodigoProductoController;
 use App\Http\Controllers\Gerente\TipoDeServicioController;
-use App\Http\Controllers\Gerente\TransporteController;
 use App\Http\Controllers\Gerente\UserController;
 use App\Http\Controllers\Vendedor\CollectionController as VendedorCollectionController;
 use Illuminate\Support\Facades\Route;
@@ -37,13 +36,6 @@ Route::prefix('gerente')
         Route::get('consulta/ordenes/{service_order}', [ConsultaController::class, 'orden'])->middleware('can:service_orders.view')->name('consulta.orden');
         Route::get('consulta/clientes/{client}', [ConsultaController::class, 'cliente'])->middleware('can:clients.view')->name('consulta.cliente');
 
-        // Rutas antiguas bloqueadas: el vendedor agrega transporte dentro de la guía.
-        Route::get('transporte', [TransporteController::class, 'index'])->middleware('role:Vendedor')->name('transporte.index');
-        Route::post('transporte/vehiculos', [TransporteController::class, 'storeVehiculo'])->middleware('role:Vendedor')->name('transporte.vehiculos.store');
-        Route::patch('transporte/vehiculos/{vehiculo}/toggle', [TransporteController::class, 'toggleVehiculo'])->middleware('role:Vendedor')->name('transporte.vehiculos.toggle');
-        Route::post('transporte/conductores', [TransporteController::class, 'storeConductor'])->middleware('role:Vendedor')->name('transporte.conductores.store');
-        Route::patch('transporte/conductores/{conductor}/toggle', [TransporteController::class, 'toggleConductor'])->middleware('role:Vendedor')->name('transporte.conductores.toggle');
-
         // Catálogo de Productos y Servicios (§86.4.2)
         Route::resource('productos', ProductController::class)->except(['create', 'edit', 'show']);
         Route::patch('productos/{producto}/toggle-status', [ProductController::class, 'toggleStatus'])->name('productos.toggle-status');
@@ -59,6 +51,8 @@ Route::prefix('gerente')
 
         // Caja consolidada (§77.2 punto 4)
         Route::get('cajas', [CashRegisterConsolidatedController::class, 'index'])->name('cajas.index');
+        Route::post('cajas/{cash_register}/reconteo', [CashRegisterConsolidatedController::class, 'autorizarReconteo'])->name('cajas.reconteo');
+        Route::post('cajas/{cash_register}/revisar', [CashRegisterConsolidatedController::class, 'revisar'])->name('cajas.revisar');
 
         // Cobranzas consolidadas (§32)
         Route::get('cobranzas', [CollectionConsolidatedController::class, 'index'])->name('cobranzas.index');

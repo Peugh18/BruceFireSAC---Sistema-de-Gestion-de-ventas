@@ -23,6 +23,7 @@ import facturacion from '@/routes/vendedor/facturacion';
 import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
 import ventas from '@/routes/vendedor/ventas';
 import type { Auth } from '@/types';
+import { normalizePath } from '@/lib/utils';
 
 type SidebarCounts = {
     clientes: number;
@@ -120,13 +121,6 @@ function buildNavGroups(
             ],
         },
     ];
-}
-
-function normalizePath(path: string): string {
-    const withoutQuery = path.split('?')[0].split('#')[0];
-    const withoutTrailingSlash = withoutQuery.replace(/\/+$/u, '');
-
-    return withoutTrailingSlash === '' ? '/' : withoutTrailingSlash;
 }
 
 function isActivePath(currentPath: string, href: string): boolean {

@@ -52,7 +52,7 @@ test('a certificate preserves internal and manufacturer identifiers independentl
     $document = app(CertificateDocumentData::class)->desde($certificate->fresh());
     expect($document['filas'][0]['serie'])->toBe('FAB-987')
         ->and($document['filas'][0]['codigo_interno'])->toBe('BF-EQ-000123')
-        ->and(array_column($document['tipo']['columnas'], 'clave'))->toContain('serie', 'codigo_interno');
+        ->and(array_column($document['tipo']['columnas'], 'clave'))->toContain('serie')->not->toContain('codigo_interno');
     // generate() ya dibuja el PDF y dompdf libera su árbol: se revisa el
     // HTML que recibe el motor con los mismos datos.
     $datosDeLaVista = [];
@@ -62,7 +62,7 @@ test('a certificate preserves internal and manufacturer identifiers independentl
     $pdf = app(CertificatePdfService::class)->generate($certificate->fresh());
     $renderedText = strip_tags(view('pdf.certificado-operatividad', $datosDeLaVista)->render());
     $contenido = $pdf->output();
-    expect($renderedText)->toContain('FAB-987', 'BF-EQ-000123')
+    expect($renderedText)->toContain('FAB-987')->not->toContain('BF-EQ-000123')
         ->and($contenido)->toStartWith('%PDF');
 });
 

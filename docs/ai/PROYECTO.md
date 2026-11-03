@@ -1,5 +1,6 @@
 # Bruce Fire SAC v2 — Prompt maestro
 
+> **Punto de entrada para todas las IA: [START_HERE.md](START_HERE.md).**
 > Léelo antes de cualquier tarea. Es la fuente de verdad del proyecto para todos los agentes (Claude, Codex, MiMo).
 > Última actualización: 2026-10-18
 

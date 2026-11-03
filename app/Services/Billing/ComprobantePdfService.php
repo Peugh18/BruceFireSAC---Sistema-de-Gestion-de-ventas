@@ -13,7 +13,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Service;
 use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\HojaPdf;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -178,7 +178,7 @@ class ComprobantePdfService
         $document->setRelation('sale', $sale);
         $this->olvidarPlantillaCompilada();
 
-        return Pdf::loadView('pdf.comprobante', $this->datos($document, null))->setPaper('a4')->output();
+        return $this->dibujar($this->datos($document, null));
     }
 
     /**
@@ -188,7 +188,15 @@ class ComprobantePdfService
     {
         $this->olvidarPlantillaCompilada();
 
-        return Pdf::loadView('pdf.comprobante', $this->datos($document, $xmlSigned, $medioPago))->setPaper('a4')->output();
+        return $this->dibujar($this->datos($document, $xmlSigned, $medioPago));
+    }
+
+    /**
+     * @param  array<string, mixed>  $datos
+     */
+    protected function dibujar(array $datos): string
+    {
+        return HojaPdf::cargar('pdf.comprobante', $datos)->output();
     }
 
     /**
@@ -286,14 +294,7 @@ class ComprobantePdfService
             'document' => $document,
             'sale' => $sale,
             'anulado' => in_array($document->tipo, ['factura', 'boleta', 'nota_venta'], true) && $sale->estado === 'anulada',
-            'company' => $company,
-            'marca' => [
-                'color' => $company->colorMarca(),
-                'texto' => $company->colorTextoSobreMarca(),
-                'suave' => $company->colorMarcaSuave(),
-                'linea' => $company->colorMarcaSuave(0.75),
-            ],
-            'logo' => $company->logoParaPdf(),
+            ...$company->identidadPdf(),
             'lineas' => $lineas,
             'unidades' => $lineas->mapWithKeys(fn (SaleItem $item, int $index) => [$index => $this->unidadImpresa($item)]),
             'mostrarCodigo' => $lineas->contains(fn (SaleItem $item) => filled(($item->product ?? $item->service)?->codigo)),
@@ -335,10 +336,22 @@ class ComprobantePdfService
      */
     protected function olvidarPlantillaCompilada(): void
     {
-        $compilada = app('blade.compiler')->getCompiledPath(resource_path('views/pdf/comprobante.blade.php'));
-        if (is_file($compilada)) {
-            @unlink($compilada);
+        foreach (self::vistas() as $vista) {
+            $compilada = app('blade.compiler')->getCompiledPath($vista);
+            if (is_file($compilada)) {
+                @unlink($compilada);
+            }
         }
+    }
+
+    /**
+     * La plantilla del comprobante y las piezas de la hoja única que incluye.
+     *
+     * @return list<string>
+     */
+    protected static function vistas(): array
+    {
+        return [resource_path('views/pdf/comprobante.blade.php'), ...glob(resource_path('views/pdf/hoja/*.blade.php')) ?: []];
     }
 
     /**
@@ -350,7 +363,7 @@ class ComprobantePdfService
         $empresa = CompanySetting::current();
         $cuentas = CompanyBankAccount::query()->orderBy('id')->get(['id', 'updated_at', 'activo']);
         $firma = hash('sha256', implode('|', [
-            (string) @file_get_contents(resource_path('views/pdf/comprobante.blade.php')),
+            ...array_map(fn (string $vista) => (string) @file_get_contents($vista), self::vistas()),
             (string) @file_get_contents(__FILE__),
             $empresa->updated_at?->toIso8601String(),
             $cuentas->toJson(),

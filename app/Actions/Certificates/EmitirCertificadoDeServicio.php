@@ -6,6 +6,7 @@ use App\Models\Certificate;
 use App\Models\CertificateType;
 use App\Models\Sale;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class EmitirCertificadoDeServicio
@@ -35,12 +36,55 @@ class EmitirCertificadoDeServicio
     {
         return CertificateType::query()
             ->whereNotIn('codigo', self::TIPOS_DE_EXTINTORES)
-            ->whereNotNull('columnas')
-            ->when($sale !== null, fn ($query) => $query->whereHas('services.saleItems', fn ($items) => $items->where('sale_id', $sale->id)))
+            ->where('activo', true)
+            ->where(fn ($query) => $query->whereNotNull('columnas')->orWhereNotNull('composicion'))
+            ->when($sale !== null, fn ($query) => $query->where(fn ($catalogo) => $catalogo
+                ->whereHas('services.saleItems', fn ($items) => $items->where('sale_id', $sale->id))
+                ->orWhereHas('products.saleItems', fn ($items) => $items->where('sale_id', $sale->id))))
             ->orderBy('nombre')
             ->get()
-            ->filter(fn (CertificateType $tipo) => ! empty($tipo->columnas))
+            ->filter(fn (CertificateType $tipo) => self::esFormulario($tipo))
             ->values();
+    }
+
+    public static function esFormulario(CertificateType $tipo): bool
+    {
+        return ! in_array($tipo->codigo, self::TIPOS_DE_EXTINTORES, true)
+            && ($tipo->composicion !== null || ! empty($tipo->columnas));
+    }
+
+    public static function usaBloque(CertificateType $tipo, string $bloque): bool
+    {
+        return $tipo->composicion === null
+            ? in_array($bloque, ['tabla', 'pruebas'], true)
+            : in_array($bloque, array_column($tipo->composicion, 'tipo'), true);
+    }
+
+    public static function correspondeAVenta(Sale $sale, CertificateType $tipo): bool
+    {
+        return $sale->items()->where(fn ($items) => $items
+            ->whereHas('service', fn ($query) => $query->where('certificate_type_id', $tipo->id))
+            ->orWhereHas('product', fn ($query) => $query->where('certificate_type_id', $tipo->id)))->exists();
+    }
+
+    public static function existente(Sale $sale, CertificateType $tipo): ?Certificate
+    {
+        return $sale->certificates()->with('typeVersion')
+            ->where('certificate_type_id', $tipo->id)->where('estado', 'vigente')->latest('id')->first();
+    }
+
+    public static function plantillaParaVenta(Sale $sale, CertificateType $tipo): CertificateType
+    {
+        $configuracion = self::existente($sale, $tipo)?->typeVersion?->configuracion;
+        if ($configuracion === null) {
+            return $tipo;
+        }
+
+        $historica = clone $tipo;
+        $historica->fill(array_intersect_key($configuracion, array_flip(CertificateType::CAMPOS_PLANTILLA)));
+        $historica->composicion = $configuracion['composicion'] ?? null;
+
+        return $historica;
     }
 
     /**
@@ -56,38 +100,50 @@ class EmitirCertificadoDeServicio
             throw ValidationException::withMessages(['filas' => 'Solo se certifica un servicio de una venta confirmada.']);
         }
 
-        if (in_array($tipo->codigo, self::TIPOS_DE_EXTINTORES, true) || empty($tipo->columnas)) {
+        $existente = self::existente($sale, $tipo);
+        $plantilla = self::plantillaParaVenta($sale, $tipo);
+        if (! self::esFormulario($plantilla) || (! $tipo->activo && $existente === null)) {
             throw ValidationException::withMessages(['tipo' => 'Este tipo de certificado no se llena con formulario.']);
         }
 
-        if (! $sale->items()->whereHas('service', fn ($query) => $query->where('certificate_type_id', $tipo->id))->exists()) {
-            throw ValidationException::withMessages(['tipo' => 'Esta venta no incluye el servicio correspondiente a este certificado.']);
+        if (! self::correspondeAVenta($sale, $tipo)) {
+            throw ValidationException::withMessages(['tipo' => 'Esta venta no incluye el producto o servicio correspondiente a este certificado.']);
         }
 
-        $filas = $this->filas($tipo, $datos['filas'] ?? []);
-        $pruebas = $this->pruebas($tipo, $datos['pruebas'] ?? []);
+        $filas = $this->filas($plantilla, $datos['filas'] ?? []);
+        $pruebas = $this->pruebas($plantilla, $datos['pruebas'] ?? []);
+        // Un resultado sin nada evaluado no puede declarar "operativo".
+        if (self::usaBloque($plantilla, 'resultado') && $filas === []
+            && $pruebas !== [] && collect($pruebas)->every(fn (array $prueba) => $prueba['estado'] === 'NA')) {
+            throw ValidationException::withMessages(['pruebas' => 'Marca al menos una prueba como conforme o no conforme: con todas en «No aplica» no hay resultado que certificar.']);
+        }
+        $capacitacion = [];
+        if (self::usaBloque($plantilla, 'diploma')) {
+            $validado = Validator::make($datos, [
+                'capacitacion.curso' => ['required', 'string', 'max:255'],
+                'capacitacion.horas' => ['required', 'integer', 'min:1', 'max:10000'],
+                'capacitacion.instructor' => ['required', 'string', 'max:255'],
+                'capacitacion.fecha' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            ])->validate();
+            $capacitacion = [...$validado['capacitacion'], 'horas' => (int) $validado['capacitacion']['horas'], 'fotos' => $existente?->datos['fotos'] ?? []];
+        }
 
         $extra = [
             'referencia' => $datos['referencia'] ?? $sale->referencia,
             'direccion' => $datos['direccion'] ?? null,
-            'tipo_atencion' => in_array($datos['tipo_atencion'] ?? null, self::ATENCIONES, true) ? $datos['tipo_atencion'] : 'mantenimiento',
+            // Un producto vendido no es una atención: se pide null explícito.
+            'tipo_atencion' => array_key_exists('tipo_atencion', $datos) && $datos['tipo_atencion'] === null
+                ? null
+                : (in_array($datos['tipo_atencion'] ?? null, self::ATENCIONES, true) ? $datos['tipo_atencion'] : 'mantenimiento'),
             'datos' => [
+                ...$capacitacion,
                 'filas' => $filas,
                 'pruebas' => $pruebas,
                 'observaciones' => trim((string) ($datos['observaciones'] ?? '')) ?: null,
             ],
         ];
 
-        $existente = Certificate::query()
-            ->where('sale_id', $sale->id)
-            ->where('certificate_type_id', $tipo->id)
-            ->where('estado', 'vigente')
-            ->latest('id')
-            ->first();
-
         if ($existente) {
-            $existente->update(['tipo_atencion' => $extra['tipo_atencion']]);
-
             return $this->issueCertificate->corregir($existente, [], $extra, 'Datos del servicio corregidos', $userId);
         }
 
@@ -103,6 +159,9 @@ class EmitirCertificadoDeServicio
      */
     public function filas(CertificateType $tipo, array $filas): array
     {
+        if (! self::usaBloque($tipo, 'tabla')) {
+            return [];
+        }
         if ($filas === []) {
             throw ValidationException::withMessages(['filas' => 'Agrega al menos una fila al certificado.']);
         }
@@ -156,9 +215,21 @@ class EmitirCertificadoDeServicio
      */
     public function pruebas(CertificateType $tipo, array $pruebas): array
     {
+        if (! self::usaBloque($tipo, 'pruebas')) {
+            return [];
+        }
+
         return collect($tipo->checklist ?? [])
             ->values()
-            ->map(function (array $item, int $i) use ($pruebas) {
+            ->map(function (array $item, int $i) use ($pruebas, $tipo) {
+                if ($tipo->composicion !== null) {
+                    if (! in_array($pruebas[$i]['estado'] ?? null, self::ESTADOS_PRUEBA, true)) {
+                        throw ValidationException::withMessages(["pruebas.{$i}.estado" => 'Registra el resultado real de esta prueba.']);
+                    }
+                    if (! empty($item['unidad']) && $pruebas[$i]['estado'] !== 'NA' && ! is_numeric(str_replace(',', '.', (string) ($pruebas[$i]['valor'] ?? '')))) {
+                        throw ValidationException::withMessages(["pruebas.{$i}.valor" => 'Registra la medición numérica de esta prueba.']);
+                    }
+                }
                 $estado = $pruebas[$i]['estado'] ?? 'C';
                 $valor = trim((string) ($pruebas[$i]['valor'] ?? ''));
 

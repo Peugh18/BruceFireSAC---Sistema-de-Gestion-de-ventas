@@ -14,15 +14,17 @@ import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 
 import FirmasDelCertificado from '@/components/certificados/firmas-del-certificado';
+import EditorDinamicoCertificado from '@/components/certificados/editor-dinamico-certificado';
+import type {
+    BloqueCertificado,
+    RelacionCertificado,
+} from '@/components/certificados/composicion-certificado';
 import type {
     FirmaDelCertificado,
     Firmante,
 } from '@/components/certificados/firmas-del-certificado';
 import HojaCertificado from '@/components/certificados/hoja-certificado';
-import type {
-    DisenoCertificado,
-    ZonaCertificado,
-} from '@/components/certificados/hoja-certificado';
+import type { ZonaCertificado } from '@/components/certificados/hoja-certificado';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -57,7 +59,10 @@ type Formato = {
     vigencia_meses: number;
     orientacion: Orientacion;
     familia: string;
-    diseno?: DisenoCertificado | null;
+    composicion?: BloqueCertificado[] | null;
+    bloques?: { titulo: string; texto: string }[] | null;
+    product_ids?: number[];
+    tipo_de_servicio_ids?: number[];
     columnas: Columna[];
     tiene_item: boolean;
     tiene_resultado: boolean;
@@ -97,7 +102,46 @@ function MensajeError({ mensaje }: { mensaje?: string }) {
  * Crear o cambiar un certificado: a la izquierda sus partes; a la derecha la
  * hoja como va quedando. Hacer clic en una parte de la hoja abre su sección.
  */
-export default function CertificadoEditor({
+type EditorProps = {
+    certificado: Certificado | null;
+    bases: Formato[];
+    maximoColumnas: Record<Orientacion, number>;
+    maximoFirmantes: number;
+    firmantesDisponibles: Firmante[];
+    productosDisponibles?: RelacionCertificado[];
+    tiposDeServicioDisponibles?: RelacionCertificado[];
+    productoInicial?: number | null;
+};
+
+export default function CertificadoEditor(props: EditorProps) {
+    const [porBloques, setPorBloques] = useState(false);
+    if (!props.certificado || props.certificado.composicion || porBloques) {
+        return <EditorDinamicoCertificado {...props} />;
+    }
+
+    return (
+        <>
+            {!props.certificado.formato_fijo && (
+                <div className="border-border bg-card flex flex-wrap items-center justify-between gap-3 border-b p-3">
+                    <p className="text-muted-foreground text-sm">
+                        Esta plantilla usa la distribución anterior. Puedes
+                        conservar sus datos y editarla por bloques.
+                    </p>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setPorBloques(true)}
+                    >
+                        Editar por bloques
+                    </Button>
+                </div>
+            )}
+            <EditorClasico {...props} />
+        </>
+    );
+}
+
+function EditorClasico({
     certificado,
     bases,
     maximoColumnas,
@@ -129,7 +173,6 @@ export default function CertificadoEditor({
         columnas: (inicial?.columnas ?? []) as Columna[],
         checklist: (inicial?.checklist ?? []) as Prueba[],
         firmantes: inicial?.firmantes ?? [],
-        diseno: inicial?.diseno ?? ({} as DisenoCertificado),
     });
     const [formato, setFormato] = useState<Formato | undefined>(inicial);
     const [abierta, setAbierta] = useState<ZonaCertificado | null>(
@@ -175,7 +218,6 @@ export default function CertificadoEditor({
             columnas: base.columnas,
             checklist: base.checklist,
             firmantes: base.firmantes,
-            diseno: base.diseno ?? {},
         }));
     };
     const cambiarColumna = (i: number, cambio: Partial<Columna>) =>
@@ -833,79 +875,6 @@ export default function CertificadoEditor({
                                 </a>
                             )}
                         </div>
-                        <div className="bg-card flex flex-wrap items-center gap-3 border-b p-3 text-xs">
-                            <span>
-                                Escribe sobre el texto. Mueve el bloque elegido:
-                            </span>
-                            {(['x', 'y'] as const).map((eje) => (
-                                <label
-                                    key={eje}
-                                    className="flex items-center gap-2"
-                                >
-                                    {eje === 'x' ? 'Horizontal' : 'Vertical'}{' '}
-                                    (pt)
-                                    <Input
-                                        type="number"
-                                        min={-24}
-                                        max={24}
-                                        step={1}
-                                        className="min-h-10 w-20"
-                                        disabled={!abierta}
-                                        value={
-                                            abierta
-                                                ? (d.diseno[abierta]?.[eje] ??
-                                                  0)
-                                                : 0
-                                        }
-                                        onChange={(evento) => {
-                                            if (abierta) {
-                                                const posicion = d.diseno[
-                                                    abierta
-                                                ] ?? { x: 0, y: 0 };
-                                                form.setData('diseno', {
-                                                    ...d.diseno,
-                                                    [abierta]: {
-                                                        ...posicion,
-                                                        [eje]: Math.max(
-                                                            -24,
-                                                            Math.min(
-                                                                24,
-                                                                Number(
-                                                                    evento
-                                                                        .target
-                                                                        .value,
-                                                                ),
-                                                            ),
-                                                        ),
-                                                    },
-                                                });
-                                            }
-                                        }}
-                                    />
-                                </label>
-                            ))}
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={!abierta}
-                                onClick={() =>
-                                    abierta &&
-                                    form.setData('diseno', {
-                                        ...d.diseno,
-                                        [abierta]: { x: 0, y: 0 },
-                                    })
-                                }
-                            >
-                                Restablecer bloque
-                            </Button>
-                            <MensajeError
-                                mensaje={
-                                    Object.entries(e).find(([clave]) =>
-                                        clave.startsWith('diseno'),
-                                    )?.[1]
-                                }
-                            />
-                        </div>
                         <div className="relative mx-4 mb-4 min-h-0 flex-1">
                             <HojaCertificado
                                 zonaActiva={abierta}
@@ -922,15 +891,8 @@ export default function CertificadoEditor({
                                 onCambiarPrueba={
                                     formatoFijo ? undefined : cambiarPrueba
                                 }
-                                onMover={(zona, posicion) =>
-                                    form.setData('diseno', {
-                                        ...d.diseno,
-                                        [zona]: posicion,
-                                    })
-                                }
                                 datos={{
                                     familia: formato?.familia,
-                                    diseno: d.diseno,
                                     titulo: d.titulo,
                                     subtitulo: d.subtitulo,
                                     norma: d.norma,

@@ -24,6 +24,7 @@ class StoreSaleRequest extends FormRequest
             'sede_id' => ['nullable', 'integer', 'exists:sedes,id'],
             'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'quote_id' => ['nullable', 'integer', 'exists:quotes,id'],
+            'corrige_sale_id' => ['nullable', 'integer', 'exists:sales,id'],
             'service_order_id' => ['nullable', 'integer', 'exists:service_orders,id'],
             // La fecha de la venta es de hoy o de hasta dos días atrás (SUNAT
             // recibe el comprobante dentro de los 3 días): nunca de mañana.

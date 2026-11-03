@@ -1,3 +1,5 @@
+import { pageTitleClass } from '@/components/page-header';
+import { cn } from '@/lib/utils';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowRight,
@@ -147,7 +149,12 @@ export default function InspeccionesIndex({
             {/* Header Mobile Title */}
             <div className="mb-4 flex items-center justify-between">
                 <div>
-                    <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
+                    <h1
+                        className={cn(
+                            pageTitleClass,
+                            'flex items-center gap-2',
+                        )}
+                    >
                         <ClipboardCheck className="text-foreground size-6" />
                         Inspecciones de Campo
                     </h1>

@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { router, useForm, usePage } from '@inertiajs/react';
 import {
     Building2,
@@ -40,6 +41,7 @@ type Company = {
     condiciones_comprobante: string | null;
     cuenta_detraccion: string | null;
     logo_url: string | null;
+    intervalo_ph_anios: number;
 };
 
 type BankAccount = {
@@ -104,6 +106,7 @@ export default function EmpresaConfiguracion({
 
     const form = useForm({
         razon_social: company.razon_social,
+        intervalo_ph_anios: company.intervalo_ph_anios,
         nombre_comercial: company.nombre_comercial ?? '',
         ruc: company.ruc,
         direccion: company.direccion ?? '',
@@ -232,9 +235,7 @@ export default function EmpresaConfiguracion({
                         <Building2 className="size-5" />
                     </div>
                     <div>
-                        <h1 className="text-foreground font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
-                            Datos de la empresa
-                        </h1>
+                        <h1 className={pageTitleClass}>Datos de la empresa</h1>
                         <p className="text-muted-foreground text-[12px]">
                             Se usan en todos los comprobantes (Factura, Boleta,
                             Nota) y certificados.
@@ -294,6 +295,30 @@ export default function EmpresaConfiguracion({
                             </div>
                         </div>
 
+                        <div>
+                            <Label htmlFor="intervalo-ph">
+                                Intervalo de prueba hidrostática (años)
+                            </Label>
+                            <Input
+                                id="intervalo-ph"
+                                type="number"
+                                min={1}
+                                max={12}
+                                value={form.data.intervalo_ph_anios}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'intervalo_ph_anios',
+                                        Number(e.target.value),
+                                    )
+                                }
+                            />
+                            <p className="text-muted-foreground mt-1 text-xs">
+                                Política de Bruce Fire: 5 años desde la prueba
+                                real. Los certificados emitidos conservan sus
+                                fechas.
+                            </p>
+                            {field(form.errors, 'intervalo_ph_anios')}
+                        </div>
                         <div className="grid gap-3 md:grid-cols-2">
                             <div>
                                 <Label
@@ -464,14 +489,15 @@ export default function EmpresaConfiguracion({
                             <div className="flex items-center gap-2">
                                 <Palette className="text-primary-strong size-4" />
                                 <h2 className="font-['Oswald',sans-serif] text-[16px] font-semibold uppercase">
-                                    Diseño del comprobante
+                                    Diseño de los documentos
                                 </h2>
                             </div>
                             <p className="text-muted-foreground -mt-2 text-[12px]">
-                                Vale para todas las facturas y boletas. Los
-                                datos de cada venta (cliente, productos,
-                                referencia, observaciones) salen solos de la
-                                venta o cotización.
+                                Vale para todo lo que se emite: facturas,
+                                boletas, notas, guías, cotizaciones, constancias
+                                y actas. Los certificados tienen su propio
+                                diseño. Los datos de cada documento salen solos
+                                de la venta o la orden.
                             </p>
                             <div>
                                 <Label className="text-foreground text-sm font-medium">

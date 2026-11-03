@@ -4,7 +4,10 @@ use App\Actions\Certificates\GuardarFirmante;
 use App\Actions\Certificates\IssueCertificate;
 use App\Models\CertificateType;
 use App\Models\Client;
+use App\Models\Product;
+use App\Models\Service;
 use App\Models\Signer;
+use App\Models\TipoDeServicio;
 use App\Models\User;
 use App\Services\Certificates\CertificateDocumentData;
 use App\Services\Certificates\CertificatePdfService;
@@ -84,31 +87,29 @@ test('editar los textos sube la versión: lo ya emitido conserva la suya', funct
         ->and($tipo->fresh()->codigo)->toBe('operatividad_garantia');
 });
 
-test('la distribucion visual se guarda versionada tambien en formatos fijos y conserva el formato anterior', function () {
+test('el marco es fijo: no se aceptan posiciones manuales y al guardar se borran las de antes', function () {
     $tipo = CertificateType::query()->where('codigo', 'operatividad_garantia')->sole();
-    $anterior = $tipo->versions()->create(['version' => $tipo->version, 'configuracion' => $tipo->configuracionActual()]);
-    $diseno = ['encabezado' => ['x' => 4, 'y' => 8], 'firmas' => ['x' => -5, 'y' => 3]];
+    $tipo->update(['diseno' => ['encabezado' => ['x' => 4, 'y' => 8]]]);
     $datos = $tipo->only(['nombre', 'titulo', 'prefijo', 'vigencia_meses']);
+    $ruta = route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $tipo]);
 
-    $this->actingAs($this->gerente)->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $tipo]), [...$datos, 'diseno' => $diseno])
-        ->assertSessionHasNoErrors();
+    $this->actingAs($this->gerente)->put($ruta, [...$datos, 'diseno' => ['firmas' => ['x' => -5, 'y' => 3]]])
+        ->assertSessionHasErrors('diseno');
+    $this->put($ruta, $datos)->assertSessionHasNoErrors();
 
-    expect($tipo->fresh()->diseno)->toEqual($diseno)
-        ->and($tipo->fresh()->configuracionActual()['diseno'])->toEqual($diseno)
-        ->and($tipo->fresh()->version)->toBe($anterior->version + 1)
-        ->and($anterior->fresh()->configuracion['diseno'] ?? null)->toBeNull();
+    expect($tipo->fresh()->diseno)->toBeNull();
     $this->get(route('gerente.configuracion.certificados.edit', [...$this->equipo, 'certificado' => $tipo]))
-        ->assertInertia(fn (Assert $page) => $page->where('certificado.diseno.encabezado.x', 4)->where('certificado.diseno.firmas.x', -5));
+        ->assertInertia(fn (Assert $page) => $page->missing('certificado.diseno'));
 });
 
-test('el PDF usa la distribucion guardada en cada familia sin alterar versiones emitidas', function (string $codigo) {
+test('el PDF ignora posiciones manuales guardadas antes y entra en una hoja', function (string $codigo) {
     $tipo = CertificateType::query()->where('codigo', $codigo)->sole();
     $tipo->update(['diseno' => ['encabezado' => ['x' => 4, 'y' => 8], 'firmas' => ['x' => -5, 'y' => 3]]]);
-    $pdf = app(CertificatePdfService::class)->muestra($tipo);
-    $html = $pdf->getDomPDF()->getDom()->saveHTML();
-    $pdf->output();
-    expect($html)->toContain($codigo === 'capacitacion' ? 'translate(4pt, 8pt)' : 'left: 4pt; top: 8pt;');
-    expect($pdf->getDomPDF()->getCanvas()->get_page_count())->toBe(1);
+    $servicio = app(CertificatePdfService::class);
+    $datos = app(CertificateDocumentData::class)->muestra($tipo);
+
+    expect($servicio->html($datos))->not->toContain('translate(4pt, 8pt)')->not->toContain('left: 4pt; top: 8pt;')
+        ->and(tap($servicio->muestra($tipo))->output()->getDomPDF()->getCanvas()->get_page_count())->toBe(1);
 })->with(['operatividad_garantia', 'luces_emergencia', 'capacitacion']);
 
 test('un certificado emitido conserva el nombre CIP y firma aunque se actualice la persona', function () {
@@ -128,16 +129,6 @@ test('un certificado emitido conserva el nombre CIP y firma aunque se actualice 
     expect($despues['cip'])->toBe('12345');
     expect($despues['firma'])->not->toBeNull();
     expect($tipo->fresh()->version)->toBeGreaterThan($emitido->typeVersion->version);
-});
-
-test('la distribucion visual rechaza posiciones fuera de la hoja y zonas desconocidas', function () {
-    $tipo = CertificateType::query()->where('codigo', 'luces_emergencia')->sole();
-    $datos = $tipo->only(['nombre', 'titulo', 'prefijo', 'vigencia_meses']);
-
-    $this->actingAs($this->gerente)->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $tipo]), [...$datos, 'diseno' => ['firmas' => ['x' => 9999, 'y' => 0]]])
-        ->assertSessionHasErrors('diseno.firmas.x');
-    $this->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $tipo]), [...$datos, 'diseno' => ['script' => ['x' => 0, 'y' => 0]]])
-        ->assertSessionHasErrors('diseno');
 });
 
 test('el editor abre para crear uno nuevo con los formatos base y para editar', function () {
@@ -235,4 +226,136 @@ test('quién firma y en qué orden se elige en el editor y sube la versión', fu
     $this->actingAs($this->gerente)
         ->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $tipo]), [...$datos, 'firmantes' => []])
         ->assertSessionHasErrors('firmantes');
+});
+
+test('creador dinamico crea desde cero y relaciona productos y tipos de servicio', function () {
+    $producto = Product::factory()->create();
+    $tipoServicio = TipoDeServicio::create(['nombre' => 'Garantía de mangueras', 'activo' => true]);
+    $servicio = Service::factory()->create(['tipo_de_servicio_id' => $tipoServicio->id]);
+    $firmante = Signer::query()->where('activo', true)->firstOrFail();
+    $composicion = [['tipo' => 'datos'], ['tipo' => 'texto', 'titulo' => 'Garantía', 'texto' => 'Cobertura de doce meses.']];
+
+    $this->actingAs($this->gerente)->post(route('gerente.configuracion.certificados.store', $this->equipo), [
+        'nombre' => 'Garantía dinámica', 'titulo' => 'CERTIFICADO', 'prefijo' => 'GDM', 'vigencia_meses' => 12,
+        'composicion' => $composicion, 'columnas' => [], 'firmantes' => [['id' => $firmante->id, 'cargo' => 'Responsable']],
+        'product_ids' => [$producto->id], 'tipo_de_servicio_ids' => [$tipoServicio->id],
+    ])->assertSessionHasNoErrors();
+
+    $nuevo = CertificateType::query()->where('prefijo', 'GDM')->sole();
+    expect($nuevo->composicion)->toEqual($composicion)
+        ->and($nuevo->familia)->toBe('operatividad')
+        ->and($producto->fresh()->certificate_type_id)->toBe($nuevo->id)
+        ->and($tipoServicio->fresh()->certificate_type_id)->toBe($nuevo->id)
+        ->and($servicio->fresh()->certificate_type_id)->toBe($nuevo->id);
+    $emitido = app(IssueCertificate::class)->handle($nuevo, Client::factory()->create(), []);
+    $this->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $nuevo]), [
+        'nombre' => $nuevo->nombre, 'titulo' => $nuevo->titulo, 'prefijo' => $nuevo->prefijo, 'vigencia_meses' => 12,
+        'composicion' => [['tipo' => 'texto', 'texto' => 'Nueva cobertura']], 'product_ids' => [], 'tipo_de_servicio_ids' => [],
+    ])->assertSessionHasNoErrors();
+    expect($emitido->fresh()->typeVersion->configuracion['composicion'])->toEqual($composicion)
+        ->and($producto->fresh()->certificate_type_id)->toBeNull()
+        ->and($servicio->fresh()->certificate_type_id)->toBeNull();
+});
+
+test('creador dinamico rechaza bloques desconocidos repetidos y marco desplazado', function (array $extra, string $error) {
+    $tipo = CertificateType::query()->where('codigo', 'luces_emergencia')->sole();
+    $datos = $tipo->only(['nombre', 'titulo', 'prefijo', 'vigencia_meses']);
+    $this->actingAs($this->gerente)->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $tipo]), [
+        ...$datos, 'composicion' => [['tipo' => 'datos']], ...$extra,
+    ])->assertSessionHasErrors($error);
+})->with([
+    'tipo desconocido' => [['composicion' => [['tipo' => 'script']]], 'composicion.0.tipo'],
+    'datos repetidos' => [['composicion' => [['tipo' => 'datos'], ['tipo' => 'datos']]], 'composicion'],
+    'clave desconocida' => [['composicion' => [['tipo' => 'texto', 'html' => '<script>']]], 'composicion.0'],
+    'marco protegido' => [['diseno' => ['encabezado' => ['x' => 2, 'y' => 0]]], 'diseno'],
+]);
+
+test('creador dinamico no roba relaciones de otra plantilla y no guarda cambios parciales', function () {
+    $tipo = CertificateType::query()->where('codigo', 'luces_emergencia')->sole();
+    $otro = CertificateType::query()->where('codigo', 'lamina_seguridad')->first() ?? CertificateType::query()->where('id', '!=', $tipo->id)->firstOrFail();
+    $producto = Product::factory()->create(['certificate_type_id' => $otro->id]);
+    $datos = $tipo->only(['nombre', 'titulo', 'prefijo', 'vigencia_meses']);
+
+    $this->actingAs($this->gerente)->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $tipo]), [
+        ...$datos, 'titulo' => 'Cambio que no debe guardarse', 'composicion' => [['tipo' => 'datos']], 'product_ids' => [$producto->id],
+    ])->assertSessionHasErrors('product_ids');
+    expect($tipo->fresh()->titulo)->toBe($datos['titulo'])
+        ->and($producto->fresh()->certificate_type_id)->toBe($otro->id);
+});
+
+test('creador dinamico exige diploma horizontal y mantiene fijos los formatos originales', function () {
+    $firmante = Signer::query()->where('activo', true)->firstOrFail();
+    $datos = ['nombre' => 'Reconocimiento', 'titulo' => 'CERTIFICADO', 'prefijo' => 'RDM', 'vigencia_meses' => 0,
+        'familia' => 'diploma', 'orientacion' => 'vertical', 'composicion' => [['tipo' => 'diploma']],
+        'firmantes' => [['id' => $firmante->id]]];
+    $this->actingAs($this->gerente)->post(route('gerente.configuracion.certificados.store', $this->equipo), $datos)
+        ->assertSessionHasErrors('orientacion');
+    $this->post(route('gerente.configuracion.certificados.store', $this->equipo), [...$datos, 'orientacion' => 'horizontal', 'composicion' => [['tipo' => 'datos']]])
+        ->assertSessionHasErrors('composicion');
+    $this->post(route('gerente.configuracion.certificados.store', $this->equipo), [...$datos, 'orientacion' => 'horizontal'])
+        ->assertSessionHasNoErrors();
+    expect(CertificateType::query()->where('prefijo', 'RDM')->sole()->familia)->toBe('diploma');
+
+    $fijo = CertificateType::query()->where('codigo', 'capacitacion')->sole();
+    $this->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $fijo]), [
+        ...$fijo->only(['nombre', 'titulo', 'vigencia_meses']), 'prefijo' => 'FDM', 'composicion' => [['tipo' => 'texto', 'texto' => 'Otro formato']],
+    ])->assertSessionHasErrors('composicion');
+});
+
+test('creador dinamico expone relaciones y bloques del editor sin ofrecer recursos inactivos', function () {
+    $tipo = CertificateType::query()->where('codigo', 'luces_emergencia')->sole();
+    $producto = Product::factory()->create(['certificate_type_id' => $tipo->id]);
+    Product::factory()->create(['activo' => false]);
+    $servicio = TipoDeServicio::create(['nombre' => 'Inspección dinámica', 'certificate_type_id' => $tipo->id, 'activo' => true]);
+    TipoDeServicio::create(['nombre' => 'Inspección anterior', 'activo' => false]);
+
+    $this->actingAs($this->gerente)->get(route('gerente.configuracion.certificados.edit', [...$this->equipo, 'certificado' => $tipo]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('certificado.composicion', null)
+            ->where('certificado.product_ids', [$producto->id])
+            ->where('certificado.tipo_de_servicio_ids', [$servicio->id])
+            ->where('productosDisponibles', fn ($items) => collect($items)->pluck('id')->all() === [$producto->id])
+            ->where('tiposDeServicioDisponibles', fn ($items) => collect($items)->pluck('id')->all() === [$servicio->id]));
+});
+
+test('creador dinamico valida contenido necesario y limites de mediciones', function (array $extra, string $error) {
+    $firmante = Signer::query()->where('activo', true)->firstOrFail();
+    $this->actingAs($this->gerente)->post(route('gerente.configuracion.certificados.store', $this->equipo), [
+        'nombre' => 'Contenido dinámico', 'titulo' => 'CERTIFICADO', 'prefijo' => 'CDM', 'vigencia_meses' => 12,
+        'composicion' => [['tipo' => 'datos']], 'firmantes' => [['id' => $firmante->id]], ...$extra,
+    ])->assertSessionHasErrors($error);
+})->with([
+    'tabla sin columnas' => [['composicion' => [['tipo' => 'tabla']]], 'columnas'],
+    'texto en blanco' => [['composicion' => [['tipo' => 'texto', 'texto' => '   ']]], 'composicion.0.texto'],
+    'pruebas sin puntos' => [['composicion' => [['tipo' => 'pruebas']]], 'checklist'],
+    'resultado sin evaluacion' => [['composicion' => [['tipo' => 'resultado']]], 'composicion'],
+    'limites invertidos' => [['checklist' => [['texto' => 'Presión', 'minimo' => 10, 'maximo' => 2]]], 'checklist.0.maximo'],
+]);
+
+test('creador dinamico desde cero exige composicion y firmantes', function () {
+    $this->actingAs($this->gerente)->post(route('gerente.configuracion.certificados.store', $this->equipo), [
+        'nombre' => 'Plantilla incompleta', 'titulo' => 'CERTIFICADO', 'prefijo' => 'INC', 'vigencia_meses' => 12,
+    ])->assertSessionHasErrors(['composicion', 'firmantes']);
+});
+
+test('creador dinamico incluye resultado obligatorio en la tabla evaluada', function () {
+    $firmante = Signer::query()->where('activo', true)->firstOrFail();
+    $this->actingAs($this->gerente)->post(route('gerente.configuracion.certificados.store', $this->equipo), [
+        'nombre' => 'Evaluación dinámica', 'titulo' => 'CERTIFICADO', 'prefijo' => 'EDM', 'vigencia_meses' => 12,
+        'composicion' => [['tipo' => 'tabla'], ['tipo' => 'resultado']], 'firmantes' => [['id' => $firmante->id]],
+        'columnas' => [['titulo' => 'Equipo', 'tipo' => 'texto', 'obligatorio' => true]],
+    ])->assertSessionHasNoErrors();
+
+    $tipo = CertificateType::query()->where('prefijo', 'EDM')->sole();
+    expect(collect($tipo->columnas)->firstWhere('clave', 'resultado'))
+        ->toMatchArray(['tipo' => 'resultado', 'obligatorio' => true]);
+});
+
+test('el diploma original conserva el prefijo BF-UME al editar sus textos', function () {
+    $tipo = CertificateType::query()->where('codigo', 'capacitacion')->sole();
+    $this->actingAs($this->gerente)->put(route('gerente.configuracion.certificados.update', [...$this->equipo, 'certificado' => $tipo]), [
+        ...$tipo->only(['nombre', 'titulo', 'prefijo', 'vigencia_meses']), 'declaracion' => 'Constancia de participación actualizada.',
+    ])->assertSessionHasNoErrors();
+    expect($tipo->fresh()->prefijo)->toBe('BF-UME')
+        ->and($tipo->fresh()->declaracion)->toBe('Constancia de participación actualizada.');
 });

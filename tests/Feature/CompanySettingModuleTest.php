@@ -48,6 +48,7 @@ test('gerente puede ver y actualizar los datos de la empresa incluyendo el logo'
             'razon_social' => 'BRUCE FIRE & SAFETY S.A.C.',
             'ruc' => '20616376528',
             'direccion' => 'CAL. FELIPE PARDO Y ALIAGA 207',
+            'intervalo_ph_anios' => 4,
             'logo' => $logo,
         ])
         ->assertRedirect();
@@ -56,6 +57,7 @@ test('gerente puede ver y actualizar los datos de la empresa incluyendo el logo'
 
     expect($company->razon_social)->toBe('BRUCE FIRE & SAFETY S.A.C.')
         ->and($company->ruc)->toBe('20616376528')
+        ->and($company->intervalo_ph_anios)->toBe(4)
         ->and($company->logo_path)->not->toBeNull();
 
     Storage::disk('public')->assertExists($company->logo_path);

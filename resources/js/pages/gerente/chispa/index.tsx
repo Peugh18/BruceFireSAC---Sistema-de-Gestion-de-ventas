@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { router } from '@inertiajs/react';
 import { Inbox, MessageCircleQuestion } from 'lucide-react';
 
@@ -40,9 +41,7 @@ export default function ChispaIndex({ preguntas, resumen }: Props) {
         <GerenteLayout title="Chispa">
             <div className="space-y-6">
                 <div>
-                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
-                        Preguntas a Chispa
-                    </h1>
+                    <h1 className={pageTitleClass}>Preguntas a Chispa</h1>
                     <p className="text-muted-foreground mt-1 text-sm">
                         Lo que Chispa no supo responder o no le sirvió al
                         usuario. De aquí salen las secciones que faltan en los

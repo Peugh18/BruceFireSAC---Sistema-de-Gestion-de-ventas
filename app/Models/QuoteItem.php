@@ -66,6 +66,14 @@ class QuoteItem extends Model
         return $this->belongsTo(Service::class);
     }
 
+    /**
+     * @return BelongsTo<Deficiency, $this>
+     */
+    public function deficiency(): BelongsTo
+    {
+        return $this->belongsTo(Deficiency::class);
+    }
+
     public function getItemAttribute(): Product|Service|null
     {
         return $this->product ?? $this->service;

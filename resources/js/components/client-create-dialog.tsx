@@ -24,6 +24,8 @@ export type ClientFormData = {
     numero_documento: string;
     razon_social: string;
     nombre_comercial: string;
+    certificado_con: 'razon_social' | 'nombre_comercial';
+    locales: { nombre: string; direccion: string }[];
     telefono: string;
     whatsapp: string;
     email: string;
@@ -47,6 +49,8 @@ const emptyClientForm: ClientFormData = {
     numero_documento: '',
     razon_social: '',
     nombre_comercial: '',
+    certificado_con: 'razon_social',
+    locales: [],
     telefono: '',
     whatsapp: '',
     email: '',
@@ -131,7 +135,7 @@ function ClientFormFields({
                     htmlFor={`${formId}-numero_documento`}
                     className="text-foreground text-sm font-medium"
                 >
-                    Numero
+                    Número
                 </Label>
                 <div className="relative">
                     <Input
@@ -173,7 +177,7 @@ function ClientFormFields({
                 >
                     {data.tipo_documento === 'dni'
                         ? 'Nombres y apellidos'
-                        : 'Razon social'}
+                        : 'Razón social'}
                 </Label>
                 <Input
                     id={`${formId}-razon_social`}
@@ -206,6 +210,37 @@ function ClientFormFields({
                         className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                     />
                     <FieldError message={errors.nombre_comercial} />
+                </div>
+            )}
+            {data.tipo_documento === 'ruc' && (
+                <div className="sm:col-span-2">
+                    <Label
+                        htmlFor={`${formId}-certificado_con`}
+                        className="text-foreground text-sm font-medium"
+                    >
+                        En sus certificados sale con
+                    </Label>
+                    <NativeSelect
+                        id={`${formId}-certificado_con`}
+                        value={data.certificado_con}
+                        onChange={(event) =>
+                            setData(
+                                'certificado_con',
+                                event.target.value as
+                                    | 'razon_social'
+                                    | 'nombre_comercial',
+                            )
+                        }
+                        className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
+                    >
+                        <option value="razon_social">Razón social</option>
+                        <option
+                            value="nombre_comercial"
+                            disabled={!data.nombre_comercial.trim()}
+                        >
+                            Nombre comercial
+                        </option>
+                    </NativeSelect>
                 </div>
             )}
 
@@ -324,6 +359,90 @@ function ClientFormFields({
             </div>
 
             {data.tipo_documento === 'ruc' && (
+                <fieldset className="space-y-2 sm:col-span-2">
+                    <legend className="text-foreground text-sm font-medium">
+                        Locales{' '}
+                        <span className="text-muted-foreground font-normal">
+                            (opcional · cada uno con su dirección)
+                        </span>
+                    </legend>
+                    {data.locales.map((local, indice) => (
+                        <div
+                            key={indice}
+                            className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]"
+                        >
+                            <Input
+                                aria-label={`Nombre del local ${indice + 1}`}
+                                placeholder="Ej: Tienda Centro"
+                                value={local.nombre}
+                                onChange={(event) =>
+                                    setData(
+                                        'locales',
+                                        data.locales.map((l, i) =>
+                                            i === indice
+                                                ? {
+                                                      ...l,
+                                                      nombre: event.target
+                                                          .value,
+                                                  }
+                                                : l,
+                                        ),
+                                    )
+                                }
+                                className="border-border bg-card h-9 rounded-lg text-[13px]"
+                            />
+                            <Input
+                                aria-label={`Dirección del local ${indice + 1}`}
+                                placeholder="Dirección"
+                                value={local.direccion}
+                                onChange={(event) =>
+                                    setData(
+                                        'locales',
+                                        data.locales.map((l, i) =>
+                                            i === indice
+                                                ? {
+                                                      ...l,
+                                                      direccion:
+                                                          event.target.value,
+                                                  }
+                                                : l,
+                                        ),
+                                    )
+                                }
+                                className="border-border bg-card h-9 rounded-lg text-[13px]"
+                            />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setData(
+                                        'locales',
+                                        data.locales.filter(
+                                            (_, i) => i !== indice,
+                                        ),
+                                    )
+                                }
+                                className="text-muted-foreground hover:text-destructive-strong min-h-9 px-2 text-xs font-semibold"
+                            >
+                                Quitar
+                            </button>
+                        </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setData('locales', [
+                                ...data.locales,
+                                { nombre: '', direccion: '' },
+                            ])
+                        }
+                        className="text-primary-strong min-h-9 text-xs font-semibold hover:underline"
+                    >
+                        + Agregar local
+                    </button>
+                </fieldset>
+            )}
+
+            {data.tipo_documento === 'ruc' && (
                 <>
                     <div>
                         <Label
@@ -350,7 +469,7 @@ function ClientFormFields({
                             htmlFor={`${formId}-condicion_domicilio`}
                             className="text-foreground text-sm font-medium"
                         >
-                            Condicion{' '}
+                            Condición{' '}
                             <span className="text-muted-foreground font-normal normal-case">
                                 (según consulta)
                             </span>

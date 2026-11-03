@@ -42,8 +42,7 @@ it('permite crear una orden sin técnico y la deja visible para el área elegida
 
     $this->actingAs($vendedor)
         ->post(route('vendedor.ordenes-servicio.store', ['current_team' => $vendedor->currentTeam]), [
-            'client_id' => $client->id,
-            'service_id' => Service::factory()->create(['nombre' => 'Recarga y mantenimiento'])->id,
+            'quote_id' => cotizacionAceptada(Service::factory()->create(['nombre' => 'Recarga y mantenimiento']), ['client_id' => $client->id, 'sede_id' => $sede->id])->id,
             'fecha' => now()->toDateString(),
             'departamento_tecnico' => 'planta',
             'observaciones' => 'Coordinar recojo por la mañana.',

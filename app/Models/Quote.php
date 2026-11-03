@@ -45,6 +45,7 @@ use Illuminate\Support\Carbon;
     'numero', 'vendedor_id', 'client_id', 'sede_id', 'vehicle_id', 'destino', 'referencia', 'fecha', 'vigencia_hasta',
     'condicion_pago_propuesta', 'subtotal', 'igv', 'total', 'observaciones', 'estado',
     'emitida_at', 'origen_alerta_equipment_id',
+    'aceptada_por', 'aceptada_canal', 'aceptada_at', 'orden_compra', 'orden_compra_path',
 ])]
 class Quote extends Model
 {
@@ -58,8 +59,9 @@ class Quote extends Model
      * @var array<string, list<string>>
      */
     public const TRANSITIONS = [
-        'borrador' => ['emitida', 'anulada'],
-        'emitida' => ['enviada', 'vencida', 'anulada'],
+        // El cliente puede aceptar en tienda o por teléfono sin que se le haya enviado.
+        'borrador' => ['emitida', 'aceptada', 'anulada'],
+        'emitida' => ['enviada', 'aceptada', 'vencida', 'anulada'],
         'enviada' => ['aceptada', 'rechazada', 'vencida', 'anulada'],
         'aceptada' => ['convertida'],
         'rechazada' => [],
@@ -74,6 +76,7 @@ class Quote extends Model
             'fecha' => 'date',
             'vigencia_hasta' => 'date',
             'emitida_at' => 'datetime',
+            'aceptada_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'igv' => 'decimal:2',
             'total' => 'decimal:2',

@@ -3,6 +3,7 @@ export type FormularioCertificadoCampo = {
     codigo: string;
     nombre: string;
     version: number;
+    requiere_tabla?: boolean;
     mediciones?: {
         filas: Record<string, string>[];
         pruebas: { estado: string; valor: string | null }[];
@@ -30,11 +31,14 @@ export function iniciarMediciones(
     return tipos.map((tipo) => ({
         tipo_id: tipo.id,
         version: tipo.version,
-        filas: tipo.mediciones?.filas ?? [
-            Object.fromEntries(
-                tipo.columnas.map((columna) => [columna.clave, '']),
-            ),
-        ],
+        filas:
+            tipo.requiere_tabla === false
+                ? []
+                : (tipo.mediciones?.filas ?? [
+                      Object.fromEntries(
+                          tipo.columnas.map((columna) => [columna.clave, '']),
+                      ),
+                  ]),
         pruebas:
             tipo.mediciones?.pruebas.map((p) => ({
                 estado: p.estado,
@@ -101,169 +105,178 @@ export default function MedicionesCertificadoCampo({
                                 {errors[`${prefijo}.version`]}
                             </p>
                         )}
-                        {dato.filas.map((fila, j) => (
-                            <div
-                                key={j}
-                                className="border-border space-y-3 border-b pb-3"
-                            >
-                                <p className="text-sm font-semibold">
-                                    Registro {j + 1}
-                                </p>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {tipo.columnas
-                                        .filter((c) => c.clave !== 'item')
-                                        .map((columna) => {
-                                            const clave = `${prefijo}.filas.${j}.${columna.clave}`;
-                                            const cambiar = (valor: string) =>
-                                                actualizar(i, {
-                                                    filas: dato.filas.map(
-                                                        (f, pos) =>
-                                                            pos === j
-                                                                ? {
-                                                                      ...f,
-                                                                      [columna.clave]:
-                                                                          valor,
-                                                                  }
-                                                                : f,
-                                                    ),
-                                                });
-                                            return (
-                                                <div
-                                                    key={columna.clave}
-                                                    className="space-y-1"
-                                                >
-                                                    <label
-                                                        htmlFor={clave}
-                                                        className="text-sm"
+                        {tipo.requiere_tabla !== false &&
+                            dato.filas.map((fila, j) => (
+                                <div
+                                    key={j}
+                                    className="border-border space-y-3 border-b pb-3"
+                                >
+                                    <p className="text-sm font-semibold">
+                                        Registro {j + 1}
+                                    </p>
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        {tipo.columnas
+                                            .filter((c) => c.clave !== 'item')
+                                            .map((columna) => {
+                                                const clave = `${prefijo}.filas.${j}.${columna.clave}`;
+                                                const cambiar = (
+                                                    valor: string,
+                                                ) =>
+                                                    actualizar(i, {
+                                                        filas: dato.filas.map(
+                                                            (f, pos) =>
+                                                                pos === j
+                                                                    ? {
+                                                                          ...f,
+                                                                          [columna.clave]:
+                                                                              valor,
+                                                                      }
+                                                                    : f,
+                                                        ),
+                                                    });
+                                                return (
+                                                    <div
+                                                        key={columna.clave}
+                                                        className="space-y-1"
                                                     >
-                                                        {columna.titulo}
-                                                        {columna.unidad
-                                                            ? ` (${columna.unidad})`
-                                                            : ''}
-                                                        {columna.obligatorio
-                                                            ? ' *'
-                                                            : ''}
-                                                    </label>
-                                                    {columna.tipo ===
-                                                    'resultado' ? (
-                                                        <select
-                                                            id={clave}
-                                                            value={
-                                                                fila[
-                                                                    columna
-                                                                        .clave
-                                                                ] ?? ''
-                                                            }
-                                                            onChange={(e) =>
-                                                                cambiar(
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            required={
-                                                                columna.obligatorio
-                                                            }
-                                                            className="border-border bg-background min-h-11 w-full rounded-lg border p-2"
+                                                        <label
+                                                            htmlFor={clave}
+                                                            className="text-sm"
                                                         >
-                                                            <option value="">
-                                                                Selecciona el
-                                                                resultado
-                                                            </option>
-                                                            <option value="operativo">
-                                                                Operativo
-                                                            </option>
-                                                            <option value="observado">
-                                                                Observado
-                                                            </option>
-                                                            <option value="no_operativo">
-                                                                No operativo
-                                                            </option>
-                                                        </select>
-                                                    ) : (
-                                                        <input
-                                                            id={clave}
-                                                            value={
-                                                                fila[
-                                                                    columna
-                                                                        .clave
-                                                                ] ?? ''
-                                                            }
-                                                            onChange={(e) =>
-                                                                cambiar(
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            inputMode={
-                                                                columna.tipo ===
-                                                                'numero'
-                                                                    ? 'decimal'
-                                                                    : 'text'
-                                                            }
-                                                            required={
-                                                                columna.obligatorio
-                                                            }
-                                                            maxLength={1000}
-                                                            aria-invalid={
-                                                                !!errors[clave]
-                                                            }
-                                                            aria-describedby={
-                                                                errors[clave]
-                                                                    ? `${clave}-error`
-                                                                    : undefined
-                                                            }
-                                                            className="border-border bg-background min-h-11 w-full rounded-lg border p-2"
-                                                        />
-                                                    )}
-                                                    {errors[clave] && (
-                                                        <p
-                                                            id={`${clave}-error`}
-                                                            className="text-destructive-strong text-sm"
-                                                        >
-                                                            {errors[clave]}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
+                                                            {columna.titulo}
+                                                            {columna.unidad
+                                                                ? ` (${columna.unidad})`
+                                                                : ''}
+                                                            {columna.obligatorio
+                                                                ? ' *'
+                                                                : ''}
+                                                        </label>
+                                                        {columna.tipo ===
+                                                        'resultado' ? (
+                                                            <select
+                                                                id={clave}
+                                                                value={
+                                                                    fila[
+                                                                        columna
+                                                                            .clave
+                                                                    ] ?? ''
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiar(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                required={
+                                                                    columna.obligatorio
+                                                                }
+                                                                className="border-border bg-background min-h-11 w-full rounded-lg border p-2"
+                                                            >
+                                                                <option value="">
+                                                                    Selecciona
+                                                                    el resultado
+                                                                </option>
+                                                                <option value="operativo">
+                                                                    Operativo
+                                                                </option>
+                                                                <option value="observado">
+                                                                    Observado
+                                                                </option>
+                                                                <option value="no_operativo">
+                                                                    No operativo
+                                                                </option>
+                                                            </select>
+                                                        ) : (
+                                                            <input
+                                                                id={clave}
+                                                                value={
+                                                                    fila[
+                                                                        columna
+                                                                            .clave
+                                                                    ] ?? ''
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiar(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                inputMode={
+                                                                    columna.tipo ===
+                                                                    'numero'
+                                                                        ? 'decimal'
+                                                                        : 'text'
+                                                                }
+                                                                required={
+                                                                    columna.obligatorio
+                                                                }
+                                                                maxLength={1000}
+                                                                aria-invalid={
+                                                                    !!errors[
+                                                                        clave
+                                                                    ]
+                                                                }
+                                                                aria-describedby={
+                                                                    errors[
+                                                                        clave
+                                                                    ]
+                                                                        ? `${clave}-error`
+                                                                        : undefined
+                                                                }
+                                                                className="border-border bg-background min-h-11 w-full rounded-lg border p-2"
+                                                            />
+                                                        )}
+                                                        {errors[clave] && (
+                                                            <p
+                                                                id={`${clave}-error`}
+                                                                className="text-destructive-strong text-sm"
+                                                            >
+                                                                {errors[clave]}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                    {dato.filas.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                actualizar(i, {
+                                                    filas: dato.filas.filter(
+                                                        (_, pos) => pos !== j,
+                                                    ),
+                                                })
+                                            }
+                                            className="text-destructive-strong min-h-11 text-sm"
+                                        >
+                                            Quitar registro {j + 1}
+                                        </button>
+                                    )}
                                 </div>
-                                {dato.filas.length > 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            actualizar(i, {
-                                                filas: dato.filas.filter(
-                                                    (_, pos) => pos !== j,
-                                                ),
-                                            })
-                                        }
-                                        className="text-destructive-strong min-h-11 text-sm"
-                                    >
-                                        Quitar registro {j + 1}
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-                        <button
-                            type="button"
-                            disabled={dato.filas.length >= 200}
-                            onClick={() =>
-                                actualizar(i, {
-                                    filas: [
-                                        ...dato.filas,
-                                        Object.fromEntries(
-                                            tipo.columnas.map((c) => [
-                                                c.clave,
-                                                '',
-                                            ]),
-                                        ),
-                                    ],
-                                })
-                            }
-                            className="border-border min-h-11 rounded-lg border px-3 text-sm"
-                        >
-                            Agregar registro
-                        </button>
+                            ))}
+                        {tipo.requiere_tabla !== false && (
+                            <button
+                                type="button"
+                                disabled={dato.filas.length >= 200}
+                                onClick={() =>
+                                    actualizar(i, {
+                                        filas: [
+                                            ...dato.filas,
+                                            Object.fromEntries(
+                                                tipo.columnas.map((c) => [
+                                                    c.clave,
+                                                    '',
+                                                ]),
+                                            ),
+                                        ],
+                                    })
+                                }
+                                className="border-border min-h-11 rounded-lg border px-3 text-sm"
+                            >
+                                Agregar registro
+                            </button>
+                        )}
                         {(tipo.checklist ?? []).map((prueba, j) => {
                             const clave = `${prefijo}.pruebas.${j}`;
                             const cambiar = (

@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/page-header';
 import { Pasos } from '@/components/progreso';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
@@ -52,7 +53,7 @@ type Guia = {
         url: string | null;
         crear_url: string | null;
     };
-    documentos: { xml?: string; cdr?: string };
+    documentos: { pdf: string; xml?: string; cdr?: string };
     lista_para_trasladar: boolean;
     puede_editar: boolean;
     puede_enviar: boolean;
@@ -150,27 +151,30 @@ export default function GuiaShow({
             ]}
         >
             <Head title={`Guía ${guia.numero}`} />
-            <div className="mx-auto max-w-4xl space-y-4 p-4">
-                <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="font-mono text-xl font-bold">
-                        {guia.numero}
-                    </h1>
-                    <Badge
-                        variant={
-                            guia.lista_para_trasladar ? 'default' : 'outline'
-                        }
-                    >
-                        {guia.lista_para_trasladar
-                            ? 'Lista para trasladar'
-                            : ESTADOS[guia.estado_sunat]}
-                    </Badge>
-                    <div className="flex-1" />
-                    <Button asChild variant="outline" size="sm">
-                        <Link href={guias.index.url(teamSlug)}>
-                            Volver al historial
-                        </Link>
-                    </Button>
-                </div>
+            <div className="flex flex-col gap-4">
+                <PageHeader
+                    title={`Guía ${guia.numero}`}
+                    description={
+                        <Badge
+                            variant={
+                                guia.lista_para_trasladar
+                                    ? 'default'
+                                    : 'outline'
+                            }
+                        >
+                            {guia.lista_para_trasladar
+                                ? 'Lista para trasladar'
+                                : ESTADOS[guia.estado_sunat]}
+                        </Badge>
+                    }
+                    actions={
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={guias.index.url(teamSlug)}>
+                                Volver al historial
+                            </Link>
+                        </Button>
+                    }
+                />
 
                 {flash?.success ? (
                     <p role="status" className="text-success-strong text-sm">
@@ -267,6 +271,15 @@ export default function GuiaShow({
                                 Consultar CDR
                             </Button>
                         ) : null}
+                        <Button asChild size="sm" variant="outline">
+                            <a
+                                href={guia.documentos.pdf}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Ver PDF
+                            </a>
+                        </Button>
                         {guia.documentos.xml ? (
                             <Button asChild size="sm" variant="outline">
                                 <a href={guia.documentos.xml}>Descargar XML</a>

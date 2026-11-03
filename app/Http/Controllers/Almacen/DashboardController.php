@@ -207,8 +207,10 @@ class DashboardController extends Controller
         $movimientos = InventoryMovement::query()
             ->when($almacenId, fn ($query) => $query->where('sede_id', $almacenId))
             ->whereBetween('created_at', [$inicio, now()])
-            ->selectRaw('DATE(created_at) as dia, SUM(CASE WHEN cantidad > 0 THEN cantidad ELSE 0 END) as entradas, SUM(CASE WHEN cantidad < 0 THEN -cantidad ELSE 0 END) as salidas')
+            ->selectRaw('DATE(created_at) as dia, COUNT(*) as total, SUM(CASE WHEN cantidad > 0 THEN cantidad ELSE 0 END) as entradas, SUM(CASE WHEN cantidad < 0 THEN -cantidad ELSE 0 END) as salidas')
             ->groupByRaw('DATE(created_at)')->get();
+        $totalPorDia = $movimientos->mapWithKeys(fn (InventoryMovement $fila) => [(string) $fila->getAttribute('dia') => (int) $fila->getAttribute('total')]);
+        $desdeMapa = today()->startOfWeek()->subWeeks(5);
 
         return [
             'categorias' => $productos->groupBy(fn (Product $producto) => $producto->categoriaDelCatalogo->nombre ?? 'Sin categoría')
@@ -223,6 +225,12 @@ class DashboardController extends Controller
 
                 return ['nombre' => $desde->format('d/m'), 'valor' => (int) $filas->sum('entradas'), 'secundario' => (int) $filas->sum('salidas')];
             }),
+            // Mapa de calor: movimientos por día de las últimas 6 semanas, hasta hoy.
+            'dias' => collect(range(0, (int) $desdeMapa->diffInDays(today())))->map(function (int $dia) use ($desdeMapa, $totalPorDia): array {
+                $fecha = $desdeMapa->copy()->addDays($dia)->toDateString();
+
+                return ['fecha' => $fecha, 'valor' => $totalPorDia->get($fecha, 0)];
+            })->all(),
         ];
     }
 }

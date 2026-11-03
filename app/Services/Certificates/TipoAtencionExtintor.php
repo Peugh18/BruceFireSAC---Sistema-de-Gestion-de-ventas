@@ -29,6 +29,12 @@ class TipoAtencionExtintor
                 : self::deServicio($item->service))
             ->all();
 
+        foreach (CertificadosDeVenta::ordenesTerminadas($sale) as $order) {
+            foreach ($order->equipments->whereIn('id', $equipmentIds) as $equipo) {
+                $atenciones[] = self::deEquipoEnOrden($order, $equipo);
+            }
+        }
+
         return implode(' / ', array_intersect(['nuevo', 'recarga', 'mantenimiento'], $atenciones));
     }
 

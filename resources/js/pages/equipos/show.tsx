@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head } from '@inertiajs/react';
 
 import { Badge } from '@/components/ui/badge';
@@ -47,10 +48,8 @@ export default function EquipoShow({
             breadcrumbs={[{ title: equipment.numero_serie, href: '#' }]}
         >
             <Head title={`Equipo ${equipment.numero_serie}`} />
-            <div className="mx-auto max-w-4xl space-y-4 p-4">
-                <h1 className="font-mono text-xl font-bold">
-                    {equipment.numero_serie}
-                </h1>
+            <div className="flex flex-col gap-4">
+                <h1 className={pageTitleClass}>{equipment.numero_serie}</h1>
 
                 <Card className="space-y-3 p-4 text-sm">
                     <h2 className="font-semibold">

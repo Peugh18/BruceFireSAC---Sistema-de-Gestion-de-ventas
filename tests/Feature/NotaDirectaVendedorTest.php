@@ -89,6 +89,31 @@ test('sin el permiso no se emiten notas ni se abre la pantalla', function () {
     expect(ElectronicDocument::whereIn('tipo', ['nota_credito', 'nota_debito'])->exists())->toBeFalse();
 });
 
+test('corregir un comprobante equivocado libera el extintor para rehacer la venta', function () {
+    $unidad = $this->sale->items()->sole()->inventoryUnit;
+    expect($unidad->estado)->not->toBe('disponible');
+
+    $this->actingAs($this->vendedor)
+        ->post(route('vendedor.notas-credito.store', $this->team), [
+            'electronic_document_id' => $this->factura->id,
+            'motivo_catalogo' => '01',
+            'detalle' => 'Anulación de la operación',
+            'importe' => (float) $this->sale->total,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($this->sale->fresh()->estado)->toBe('anulada')
+        ->and($unidad->fresh()->estado)->toBe('disponible');
+
+    $this->actingAs($this->vendedor)
+        ->get(route('vendedor.ventas.create', [...$this->team, 'rehacer' => $this->sale->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('venta.id', null)
+            ->where('venta.client.id', $this->sale->client_id)
+            ->where('venta.items.0.numero_serie', $unidad->numero_serie));
+});
+
 test('retirar la aprobacion conserva solicitudes pendientes y revisadas en el archivo', function () {
     $migracion = require database_path('migrations/2026_10_12_225648_drop_note_requests_table.php');
     $migracion->down();

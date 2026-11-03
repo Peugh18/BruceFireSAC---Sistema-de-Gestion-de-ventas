@@ -40,6 +40,9 @@ use Illuminate\Support\Facades\DB;
  * @property int $factor_compra
  * @property int|null $stock_minimo
  * @property bool $activo
+ * @property int|null $certificate_type_id
+ * @property array<string, string>|null $ficha_tecnica valores de los campos que pide su certificado; los llena Almacén
+ * @property-read CertificateType|null $certificateType
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, InventoryUnit> $units
@@ -70,6 +73,8 @@ use Illuminate\Support\Facades\DB;
     'factor_compra',
     'stock_minimo',
     'activo',
+    'certificate_type_id',
+    'ficha_tecnica',
 ])]
 class Product extends Model
 {
@@ -80,10 +85,17 @@ class Product extends Model
     /** @use HasFactory<ProductFactory> */
     use AuditaElCatalogo, HasFactory, TieneCodigoCorrelativo;
 
+    /** @return BelongsTo<CertificateType, $this> */
+    public function certificateType(): BelongsTo
+    {
+        return $this->belongsTo(CertificateType::class);
+    }
+
     protected function casts(): array
     {
         return [
             'precio_venta' => 'decimal:2',
+            'ficha_tecnica' => 'array',
             'peso_kg' => 'decimal:3',
             'costo_promedio' => 'decimal:4',
             'aplica_igv' => 'boolean',

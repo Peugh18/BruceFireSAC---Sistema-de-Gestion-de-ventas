@@ -200,8 +200,11 @@ test('un sticker se reimprime por su serie en el rollo de 80 mm', function () {
 
     $this->actingAs($gerente)->get(route('almacen.stickers.unidad', [...$team, 'serie' => 'bf-eq-000777']))
         ->assertOk()->assertHeader('Content-Type', 'application/pdf');
+    // P-010: la pestaña nueva vuelve a Stickers con el aviso, no a una página 404.
     $this->actingAs($gerente)->get(route('almacen.stickers.unidad', [...$team, 'serie' => 'BF-EQ-NO-EXISTE']))
-        ->assertNotFound();
+        ->assertRedirect(route('almacen.stickers.index', $team));
+    $this->actingAs($gerente)->get(route('almacen.stickers.producto', [...$team, 'codigo' => 'NO-EXISTE']))
+        ->assertRedirect(route('almacen.stickers.index', $team));
 });
 
 // A7 paginación en la base de datos

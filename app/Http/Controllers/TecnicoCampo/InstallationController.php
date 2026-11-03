@@ -38,7 +38,8 @@ class InstallationController extends Controller
         $servicioInstalable = fn (Builder $service) => $service
             ->where('nombre', 'not like', '%mantenim%')
             ->where(fn (Builder $servicio) => $servicio->where('nombre', 'like', '%instalac%')->orWhere('nombre', 'like', '%pozo%')
-                ->orWhereHas('certificateType', fn (Builder $tipo) => $tipo->whereNotIn('codigo', EmitirCertificadoDeServicio::TIPOS_DE_EXTINTORES)->whereNotNull('columnas')));
+                ->orWhereHas('certificateType', fn (Builder $tipo) => $tipo->whereNotIn('codigo', EmitirCertificadoDeServicio::TIPOS_DE_EXTINTORES)
+                    ->where(fn (Builder $plantilla) => $plantilla->whereNotNull('columnas')->orWhereNotNull('composicion'))));
 
         $query = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
@@ -154,7 +155,7 @@ class InstallationController extends Controller
             'equipos.*.marca' => ['nullable', 'string', 'max:100'],
             'equipos.*.ubicacion_actual' => ['nullable', 'string', 'max:150'],
             'equipos.*.serie_fabricante' => ['nullable', 'string', 'max:50'],
-            'equipos.*.anio_fabricacion' => ['nullable', 'integer', 'min:1970', 'max:'.(date('Y') + 1)],
+            'equipos.*.anio_fabricacion' => ['nullable', 'integer', 'min:1970', 'max:'.today()->year],
         ], [
             'firma.required' => 'El cliente debe firmar en la pantalla.',
             'conformidad_nombre.regex' => 'Escribe el nombre de quien recibe (nombre y apellido).',

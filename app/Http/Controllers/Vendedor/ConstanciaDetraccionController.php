@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Models\Team;
 use App\Services\AuditLogger;
+use App\Services\Cobranzas\CarteraDeCobranzas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,8 +38,7 @@ class ConstanciaDetraccionController extends Controller
                 $monto = round((float) $request->validated('monto'), 2);
                 $operacion = trim((string) $request->validated('numero_operacion'));
                 SalePayment::validarDetraccion($sale, $monto, 'deposito', $operacion);
-                $saldo = round((float) $sale->total - (float) $sale->payments()->sum('monto'), 2);
-                if ($monto > $saldo) {
+                if ($monto > CarteraDeCobranzas::saldoDeVenta($sale)) {
                     throw ValidationException::withMessages(['monto' => 'El depósito no puede superar el saldo pendiente de la venta.']);
                 }
 

@@ -1,4 +1,5 @@
-﻿import { Head, useForm, usePage } from '@inertiajs/react';
+import { pageTitleClass } from '@/components/page-header';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowDownRight,
@@ -31,6 +32,7 @@ import AlmacenLayout from '@/layouts/almacen-layout';
 import type { Team } from '@/types';
 import AjustesRoutes from '@/routes/almacen/ajustes';
 import { NativeSelect } from '@/components/ui/native-select';
+import { fechaHora } from '@/lib/utils';
 
 export type SedeOption = {
     id: number;
@@ -120,17 +122,6 @@ export type Props = {
     };
 };
 
-function formatDate(isoString: string): string {
-    const d = new Date(isoString);
-    return d.toLocaleString('es-PE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
-
 export default function AjustesIndex({
     ajustes,
     sedes,
@@ -199,13 +190,11 @@ export default function AjustesIndex({
         <AlmacenLayout title="Ajustes de Stock Autorizados">
             <Head title="Ajustes de Stock - Almacén" />
 
-            <div className="mx-auto flex max-w-6xl flex-col gap-6">
+            <div className="flex flex-col gap-6">
                 {/* Header Title */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-foreground text-xl font-bold tracking-tight">
-                            Ajustes de Stock
-                        </h1>
+                        <h1 className={pageTitleClass}>Ajustes de Stock</h1>
                         <p className="text-muted-foreground text-xs">
                             Aplicación directa con motivo obligatorio. Siempre
                             genera un movimiento de Kardex compensatorio.
@@ -714,7 +703,7 @@ export default function AjustesIndex({
                                                 className="hover:bg-muted/40"
                                             >
                                                 <TableCell className="text-muted-foreground px-4 py-3 font-mono text-xs">
-                                                    {formatDate(m.created_at)}
+                                                    {fechaHora(m.created_at)}
                                                 </TableCell>
                                                 <TableCell className="text-foreground px-4 py-3 font-semibold">
                                                     <div>

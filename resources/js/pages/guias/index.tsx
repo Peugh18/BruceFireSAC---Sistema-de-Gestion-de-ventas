@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/page-header';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import PestanasSunat from '@/components/pestanas-sunat';
 import { toast } from 'sonner';
@@ -70,14 +71,12 @@ export default function GuiasIndex({
             breadcrumbs={[{ title: 'Guías de remisión', href: '#' }]}
         >
             <Head title="Guías de remisión" />
-            <div className="mx-auto max-w-5xl space-y-4 p-4">
+            <div className="flex flex-col gap-4">
+                <PageHeader
+                    title="Guías de remisión"
+                    description="Crea la guía desde una venta, una orden de recojo o entrega, o un traslado entre sedes. La mercadería solo puede salir con la guía lista para trasladar (CDR aceptado por SUNAT)."
+                />
                 <PestanasSunat actual="guias" />
-                <h1 className="text-xl font-bold">Guías de remisión</h1>
-                <p className="text-muted-foreground text-sm">
-                    Crea la guía desde una venta, una orden de recojo o entrega,
-                    o un traslado entre sedes. La mercadería solo puede salir
-                    con la guía lista para trasladar (CDR aceptado por SUNAT).
-                </p>
                 {flash?.success ? (
                     <p role="status" className="text-success-strong text-sm">
                         {flash.success}

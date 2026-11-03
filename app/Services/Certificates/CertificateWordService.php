@@ -69,7 +69,13 @@ class CertificateWordService
 
             if ($paginas->isNotEmpty()) {
                 $word = $this->nuevoDocumento($paginas->first());
-                $paginas->each(fn (array $datos) => $this->diploma($word, $datos));
+                $paginas->each(function (array $datos) use ($word): void {
+                    if (isset($datos['tipo']['composicion'])) {
+                        $this->dinamico($word, $datos);
+                    } else {
+                        $this->diploma($word, $datos);
+                    }
+                });
 
                 return $this->guardarWord($word);
             }
@@ -117,6 +123,12 @@ class CertificateWordService
     {
         $word = $this->nuevoDocumento($datos);
 
+        if (isset($datos['tipo']['composicion'])) {
+            $this->dinamico($word, $datos);
+
+            return $word;
+        }
+
         if (CertificatePdfService::esDiploma($datos['tipo'])) {
             $this->diploma($word, $datos);
 
@@ -145,6 +157,90 @@ class CertificateWordService
         $this->firmas($seccion, $datos['firmantes']);
 
         return $word;
+    }
+
+    /** @param array<string, mixed> $datos */
+    protected function dinamico(PhpWord $word, array $datos): void
+    {
+        $horizontal = ($datos['tipo']['orientacion'] ?? 'vertical') === 'horizontal';
+        $seccion = $word->addSection([
+            'paperSize' => 'A4',
+            'orientation' => $horizontal ? 'landscape' : 'portrait',
+            'marginTop' => $this->twip(10),
+            'marginBottom' => $this->twip(15),
+            'marginLeft' => $this->twip(13),
+            'marginRight' => $this->twip(13),
+        ]);
+        $this->decoracion($seccion, $horizontal);
+        $this->pie($seccion, $datos['empresa']);
+        $this->cabecera($seccion, $datos['empresa']);
+        $asneex = $seccion->addTable($this->tablaSinBordes())->addRow();
+        $asneex->addCell($this->twip(18))->addImage($this->recurso('certificados/logo-asneex.png'), ['width' => $this->mm(12)]);
+        $asneex->addCell()->addText('EMPRESA ASOCIADA · ASNEEX · Asociación Nacional de Empresas de Extintores', ['name' => self::COND_NEGRITA, 'size' => 8, 'color' => self::ROJO]);
+        $this->titulo($seccion, $datos);
+
+        foreach ($datos['tipo']['composicion'] as $bloque) {
+            if (! empty($bloque['titulo'])) {
+                $seccion->addText($bloque['titulo'], ['name' => self::COND_NEGRITA, 'size' => 11, 'color' => self::ROJO], ['spaceBefore' => 120, 'keepNext' => true]);
+            }
+
+            switch ($bloque['tipo']) {
+                case 'datos':
+                    $sinDeclaracion = $datos;
+                    $sinDeclaracion['tipo']['declaracion'] = null;
+                    $this->datos($seccion, $sinDeclaracion);
+                    break;
+                case 'declaracion':
+                case 'responsabilidad':
+                case 'texto':
+                    $texto = $bloque['texto'] ?? ($datos['tipo'][$bloque['tipo']] ?? '');
+                    foreach (preg_split('/\R/u', (string) $texto) ?: [] as $linea) {
+                        $seccion->addText($linea, ['size' => 8.5], ['spaceBefore' => 40]);
+                    }
+                    break;
+                case 'tabla':
+                    $this->tablaDeEquipos($seccion, $datos, false);
+                    break;
+                case 'pruebas':
+                    $this->pruebas($seccion, $datos['pruebas'], false);
+                    break;
+                case 'resultado':
+                    $sinResponsabilidad = $datos;
+                    $sinResponsabilidad['tipo']['responsabilidad'] = null;
+                    $this->resultado($seccion, $sinResponsabilidad, false);
+                    break;
+                case 'diploma':
+                    $centro = ['alignment' => Jc::CENTER, 'spaceBefore' => 100];
+                    $seccion->addText('OTORGADO A', ['name' => self::COND, 'size' => 11], $centro);
+                    $seccion->addText((string) $datos['cliente']['razon_social'], ['name' => self::TITULO, 'size' => 23], $centro);
+                    $capacitacion = $datos['capacitacion'];
+                    if ($capacitacion['personal_de']) {
+                        $seccion->addText('Personal de '.$capacitacion['personal_de'].($capacitacion['dni'] ? ' · DNI '.$capacitacion['dni'] : ''), [], $centro);
+                    }
+                    if (! empty($bloque['texto'])) {
+                        $seccion->addText($bloque['texto'], [], $centro);
+                    } elseif (! in_array('declaracion', array_column($datos['tipo']['composicion'], 'tipo'), true)) {
+                        $seccion->addText((string) $datos['tipo']['declaracion'], [], $centro);
+                    }
+                    $seccion->addText($capacitacion['curso'], ['name' => self::TITULO, 'size' => 19, 'color' => self::ROJO], $centro);
+                    $seccion->addText('Con una duración de '.$capacitacion['horas'].' horas, realizada en '.$datos['empresa']['ciudad'].' el '.$capacitacion['fecha_larga'].'.', [], $centro);
+                    if ($capacitacion['cargo']) {
+                        $seccion->addText('Cargo: '.$capacitacion['cargo'], [], $centro);
+                    }
+                    foreach ($capacitacion['fotos'] as $foto) {
+                        $seccion->addImage($this->imagen($foto), ['width' => $this->mm(45), 'alignment' => Jc::CENTER]);
+                    }
+                    break;
+            }
+        }
+
+        $firmantes = $datos['firmantes'];
+        if (in_array('diploma', array_column($datos['tipo']['composicion'], 'tipo'), true)
+            && ! empty($datos['capacitacion']['instructor'])
+            && ($firmantes[0]['nombre'] ?? '') !== $datos['capacitacion']['instructor']) {
+            $firmantes = [['nombre' => $datos['capacitacion']['instructor'], 'cargo' => 'Instructor', 'cip' => null, 'firma' => null]];
+        }
+        $this->firmas($seccion, $firmantes);
     }
 
     /** @param array<string, mixed> $datos */
@@ -198,6 +294,10 @@ class CertificateWordService
         $marca = $this->fija($this->mm(95), $this->mm(42), $this->mm(107));
         $marca['height'] = $this->mm(107) * 1000 / 1047;
         $encabezado->addImage($this->recurso('certificados/marca-agua.png'), $marca);
+        // ASNEEX va en todos los certificados: aquí, arriba a la derecha como en el PDF.
+        $asneex = $this->fija($this->mm(262), $this->mm(9), $this->mm(15));
+        $asneex['height'] = $this->mm(15) * 500 / 397;
+        $encabezado->addImage($this->recurso('certificados/logo-asneex.png'), $asneex);
 
         $this->pie($seccion, $datos['empresa']);
 
@@ -319,7 +419,7 @@ class CertificateWordService
         ];
     }
 
-    protected function decoracion(Section $seccion): void
+    protected function decoracion(Section $seccion, bool $horizontal = false): void
     {
         $encabezado = $seccion->addHeader();
         $fija = fn (float $izquierda, float $arriba, float $ancho) => [
@@ -336,9 +436,9 @@ class CertificateWordService
         ];
 
         $encabezado->addImage($this->recurso('certificados/franja-superior-izquierda.png'), $fija(0, 0, $this->mm(56)));
-        $encabezado->addImage($this->recurso('certificados/franja-inferior-derecha.png'), $fija($this->mm(154), $this->mm(241), $this->mm(56)));
+        $encabezado->addImage($this->recurso('certificados/franja-inferior-derecha.png'), $fija($this->mm($horizontal ? 241 : 154), $this->mm($horizontal ? 154 : 241), $this->mm(56)));
 
-        $marca = $fija($this->mm(55), $this->mm(108), $this->mm(100));
+        $marca = $fija($this->mm($horizontal ? 98 : 55), $this->mm($horizontal ? 55 : 108), $this->mm(100));
         $marca['height'] = $this->mm(100) * 1000 / 1047;
         $encabezado->addImage($this->recurso('certificados/marca-agua.png'), $marca);
     }
@@ -454,6 +554,7 @@ class CertificateWordService
             'Vigencia' => $certificado['vigencia'],
             'Tipo de atención' => $certificado['tipo_atencion'],
             'Orden de servicio' => $certificado['orden'],
+            'Comprobante' => $certificado['comprobante'] ?? null,
         ]);
 
         $this->espacio($seccion);
@@ -462,7 +563,7 @@ class CertificateWordService
         $anchoIzquierdo = (int) (self::ANCHO * 0.55) - 70;
         $anchoDerecho = self::ANCHO - $anchoIzquierdo - 140;
 
-        foreach ([[$anchoIzquierdo, 'Datos del cliente', $izquierdo], [140, null, null], [$anchoDerecho, 'Datos del servicio', $derecho]] as [$ancho, $titulo, $filas]) {
+        foreach ([[$anchoIzquierdo, 'Datos del cliente', $izquierdo], [140, null, null], [$anchoDerecho, $certificado['titulo_datos'] ?? 'Datos del servicio', $derecho]] as [$ancho, $titulo, $filas]) {
             $celda = $fila->addCell($ancho);
 
             if ($titulo === null) {
@@ -494,7 +595,7 @@ class CertificateWordService
     /**
      * @param  array<string, mixed>  $datos
      */
-    protected function tablaDeEquipos(Section $seccion, array $datos): void
+    protected function tablaDeEquipos(Section $seccion, array $datos, bool $conTitulo = true): void
     {
         $columnas = $datos['tipo']['columnas'] ?? [];
 
@@ -508,14 +609,16 @@ class CertificateWordService
             : (in_array('serie', $claves, true) ? 'Información técnica de los extintores' : 'Equipos inspeccionados'));
 
         $this->espacio($seccion);
-        $this->barra($seccion, $titulo, self::ANCHO);
+        if ($conTitulo) {
+            $this->barra($seccion, $titulo, self::ANCHO);
+        }
         $tabla = $seccion->addTable($this->tablaConBordes(self::ANCHO));
         $anchos = $this->anchosDeColumnas($columnas);
 
         $encabezado = $tabla->addRow(null, ['tblHeader' => true, 'cantSplit' => true]);
         foreach ($columnas as $indice => $columna) {
             $encabezado->addCell($anchos[$indice], ['bgColor' => 'F1F0EF', 'valign' => 'center'])
-                ->addText($columna['titulo'], ['name' => self::COND_NEGRITA, 'size' => 8.5], ['alignment' => $this->alineacion($columna)]);
+                ->addText($columna['titulo'].(empty($columna['unidad']) ? '' : " ({$columna['unidad']})"), ['name' => self::COND_NEGRITA, 'size' => 8.5], ['alignment' => $this->alineacion($columna)]);
         }
 
         foreach ($datos['filas'] as $numeroFila => $fila) {
@@ -543,7 +646,7 @@ class CertificateWordService
      *
      * @param  list<array{texto: string, valor: string|null, estado: string}>  $pruebas
      */
-    protected function pruebas(Section $seccion, array $pruebas): void
+    protected function pruebas(Section $seccion, array $pruebas, bool $conTitulo = true): void
     {
         if (! $pruebas) {
             return;
@@ -561,7 +664,9 @@ class CertificateWordService
             }
 
             $celda = $fila->addCell($ancho);
-            $this->barra($celda, $lado === 0 ? 'Pruebas realizadas' : '', $ancho);
+            if ($conTitulo) {
+                $this->barra($celda, $lado === 0 ? 'Pruebas realizadas' : '', $ancho);
+            }
             $lista = $celda->addTable($this->tablaConBordes($ancho));
             $cabecera = $lista->addRow();
             $anchoMarca = $this->twip(7);
@@ -598,14 +703,10 @@ class CertificateWordService
     protected function bloques(Section $seccion, array $tipo): void
     {
         $bloques = $tipo['bloques'] ?? [];
-        $conAsneex = in_array('asneex', $tipo['logos'] ?? [], true);
-
-        if (! $bloques && ! $conAsneex) {
-            return;
-        }
 
         $this->espacio($seccion);
-        $anchoLogo = $conAsneex ? $this->twip(22) : 0;
+        // ASNEEX va en todos los certificados: Bruce Fire es empresa asociada.
+        $anchoLogo = $this->twip(22);
         $anchoBloque = $bloques ? (int) ((self::ANCHO - $anchoLogo) / count($bloques)) : 0;
         $tabla = $seccion->addTable(['borderSize' => 4, 'borderColor' => self::BORDE, 'cellMargin' => 80, 'width' => self::ANCHO, 'unit' => TblWidth::TWIP]);
         $fila = $tabla->addRow(null, ['cantSplit' => true]);
@@ -616,20 +717,20 @@ class CertificateWordService
             $celda->addText($bloque['texto'], ['size' => 7.5, 'color' => '3F3D3B'], ['lineHeight' => 1.1]);
         }
 
-        if ($conAsneex) {
-            $celda = $fila->addCell($anchoLogo, ['valign' => 'center', 'borderTopColor' => 'FFFFFF', 'borderRightColor' => 'FFFFFF', 'borderBottomColor' => 'FFFFFF']);
-            $celda->addImage($this->recurso('certificados/logo-asneex.png'), ['width' => $this->mm(16), 'height' => $this->mm(16) * 500 / 397, 'alignment' => Jc::CENTER]);
-            $celda->addText('ASOCIADO', ['name' => self::COND_NEGRITA, 'size' => 7, 'color' => '6B6965'], ['alignment' => Jc::CENTER]);
-        }
+        $celda = $fila->addCell($anchoLogo, ['valign' => 'center', 'borderTopColor' => 'FFFFFF', 'borderRightColor' => 'FFFFFF', 'borderBottomColor' => 'FFFFFF']);
+        $celda->addImage($this->recurso('certificados/logo-asneex.png'), ['width' => $this->mm(16), 'height' => $this->mm(16) * 500 / 397, 'alignment' => Jc::CENTER]);
+        $celda->addText('EMPRESA ASOCIADA', ['name' => self::COND_NEGRITA, 'size' => 7, 'color' => self::ROJO], ['alignment' => Jc::CENTER]);
     }
 
     /**
      * @param  array<string, mixed>  $datos
      */
-    protected function resultado(Section $seccion, array $datos): void
+    protected function resultado(Section $seccion, array $datos, bool $conTitulo = true): void
     {
         $this->espacio($seccion);
-        $this->barra($seccion, 'Resultado de la evaluación', self::ANCHO);
+        if ($conTitulo) {
+            $this->barra($seccion, 'Resultado de la evaluación', self::ANCHO);
+        }
         $tabla = $seccion->addTable($this->tablaConBordes(self::ANCHO));
         $fila = $tabla->addRow($this->twip(9), ['cantSplit' => true]);
         $ancho = (int) (self::ANCHO / 3);

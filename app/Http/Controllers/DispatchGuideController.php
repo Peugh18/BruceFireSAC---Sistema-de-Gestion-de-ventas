@@ -11,6 +11,7 @@ use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\TransportVehicle;
 use App\Models\User;
+use App\Services\Billing\GuiaRemisionPdfService;
 use App\Services\Billing\GuiaRemisionPrefill;
 use App\Services\Billing\GuiaRemisionService;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -93,7 +95,8 @@ class DispatchGuideController extends Controller
         if (isset($tipo, $id) && $tipo === 'venta' && $user->can('guias_remision.create')) {
             $origen['crear_url'] = route('guias.create', ['current_team' => $current_team, 'origen' => $tipo, 'id' => $id]);
         }
-        $documentos = [];
+        // La representación impresa siempre se puede ver; el XML y el CDR, cuando existen.
+        $documentos = ['pdf' => route('guias.documento', ['current_team' => $current_team, 'guide' => $guide, 'tipo' => 'pdf'])];
         foreach (['xml' => $guide->xml_path, 'cdr' => $guide->cdr_path] as $tipoDocumento => $path) {
             if ($path !== null && Storage::disk('local')->exists($path)) {
                 $documentos[$tipoDocumento] = route('guias.documento', ['current_team' => $current_team, 'guide' => $guide, 'tipo' => $tipoDocumento]);
@@ -118,9 +121,15 @@ class DispatchGuideController extends Controller
         ]);
     }
 
-    public function documento(Team $current_team, Request $request, DispatchGuide $guide, string $tipo): StreamedResponse
+    public function documento(Team $current_team, Request $request, DispatchGuide $guide, string $tipo): StreamedResponse|HttpResponse
     {
         $this->asegurarVisible($request->user(), $guide);
+        if ($tipo === 'pdf') {
+            return response(app(GuiaRemisionPdfService::class)->generate($guide), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$guide->numero().'.pdf"',
+            ]);
+        }
         $path = match ($tipo) {
             'xml' => $guide->xml_path, 'cdr' => $guide->cdr_path, default => null
         };

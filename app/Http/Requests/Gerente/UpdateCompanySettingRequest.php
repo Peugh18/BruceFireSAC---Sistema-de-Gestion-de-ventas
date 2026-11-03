@@ -38,6 +38,7 @@ class UpdateCompanySettingRequest extends FormRequest
         return [
             'razon_social' => ['required', 'string', 'max:255'],
             'nombre_comercial' => ['nullable', 'string', 'max:255'],
+            'intervalo_ph_anios' => ['sometimes', 'required', 'integer', 'min:1', 'max:12'],
             'ruc' => ['required', 'digits:11', fn (string $atributo, mixed $valor, Closure $fail) => Ruc::esValido((string) $valor) ? null : $fail('El RUC no es válido: revisa los dígitos.')],
             'direccion' => ['nullable', 'string', 'max:255'],
             'ubigeo' => ['nullable', 'string', 'size:6', 'exists:ubigeos,codigo'],

@@ -420,7 +420,7 @@ export default function ChispaWidget({
                     type="button"
                     aria-label="Abrir la ayuda de Chispa"
                     data-globo={globo && !abierto ? '' : undefined}
-                    className={`bf-chispa-launcher chispa-boton border-border bg-card fixed right-5 ${enOrden ? 'bottom-28' : 'bottom-5'} z-40 flex size-16 items-center justify-center rounded-2xl border shadow-lg ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))] max-md:size-11' : ''}`}
+                    className={`bf-chispa-launcher chispa-boton border-border bg-card fixed right-5 ${enOrden ? 'bottom-28' : 'bottom-5'} z-40 flex size-16 items-center justify-center rounded-2xl border shadow-lg max-md:right-3 max-md:size-11 ${conBarraInferior ? 'max-md:bottom-[calc(9rem+env(safe-area-inset-bottom))]' : ''}`}
                 >
                     <span
                         aria-hidden

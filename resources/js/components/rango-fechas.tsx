@@ -2,21 +2,9 @@ import { useEffect, useState } from 'react';
 
 import FiltroSelect from '@/components/filtro-select';
 import { Input } from '@/components/ui/input';
-import { fechaCorta } from '@/lib/utils';
+import { fechaCorta, sumarDias } from '@/lib/utils';
 
 export type Rango = { desde: string; hasta: string };
-
-/** Fecha local "YYYY-MM-DD" desplazada unos días desde otra. */
-function moverDias(fecha: string, dias: number) {
-    const d = new Date(`${fecha}T00:00:00`);
-    d.setDate(d.getDate() + dias);
-
-    return [
-        d.getFullYear(),
-        String(d.getMonth() + 1).padStart(2, '0'),
-        String(d.getDate()).padStart(2, '0'),
-    ].join('-');
-}
 
 /** Atajos del filtro, calculados desde "hoy" del servidor (hora de Lima). */
 function atajos(hoy: string) {
@@ -25,8 +13,8 @@ function atajos(hoy: string) {
 
     return [
         { label: 'Hoy', desde: hoy, hasta: hoy },
-        { label: 'Ayer', desde: moverDias(hoy, -1), hasta: moverDias(hoy, -1) },
-        { label: 'Esta semana', desde: moverDias(hoy, -diaSemana), hasta: hoy },
+        { label: 'Ayer', desde: sumarDias(hoy, -1), hasta: sumarDias(hoy, -1) },
+        { label: 'Esta semana', desde: sumarDias(hoy, -diaSemana), hasta: hoy },
         { label: 'Este mes', desde: `${hoy.slice(0, 8)}01`, hasta: hoy },
     ];
 }

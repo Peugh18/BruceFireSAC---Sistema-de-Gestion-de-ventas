@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
 import ChatFlotante, { marcarLeido } from '@/components/chat-flotante';
@@ -5,6 +6,9 @@ import ConversacionOrden, {
     type ConversacionProps,
 } from '@/components/conversacion-orden';
 import DeficienciaSuelta from '@/components/deficiencia-suelta';
+import SelectorFormatoStickers, {
+    type FormatoStickers,
+} from '@/components/formato-stickers';
 import {
     DeficienciaCard,
     type DeficiencyItem,
@@ -39,7 +43,13 @@ import EquiposRoutes from '@/routes/vendedor/ordenes-servicio/equipos';
 import VentasRoutes from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Check, Download, MoreHorizontal } from 'lucide-react';
+import {
+    ArrowLeft,
+    Check,
+    Download,
+    MoreHorizontal,
+    Printer,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -261,6 +271,8 @@ export default function ServiceOrderShow({
     const [tecnicoElegido, setTecnicoElegido] = useState('');
     const entrega = useForm({ tecnico_id: '' });
     const ruta = { current_team: teamSlug, service_order: serviceOrder.id };
+    const [formatoStickers, setFormatoStickers] =
+        useState<FormatoStickers>('rollo');
 
     function asignar(tecnicoId: string) {
         if (!tecnicoId) {
@@ -328,7 +340,7 @@ export default function ServiceOrderShow({
         <VendedorLayout title={`Orden ${serviceOrder.codigo}`}>
             <Head title={`Orden ${serviceOrder.codigo}`} />
 
-            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
                 <aside
                     aria-label="Chat con el taller"
                     className="sticky top-0 hidden h-[calc(100dvh-7rem)] min-h-0 min-w-0 flex-col gap-2 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:flex"
@@ -366,7 +378,7 @@ export default function ServiceOrderShow({
                     </Button>
                     <div className="min-w-0 flex-[1_1_260px]">
                         <div className="flex flex-wrap items-center gap-2">
-                            <h1 className="text-foreground font-['Oswald',sans-serif] text-[26px] leading-tight font-semibold">
+                            <h1 className={pageTitleClass}>
                                 {serviceOrder.codigo}
                             </h1>
                             <Badge className="border-border bg-muted text-foreground border">
@@ -822,7 +834,7 @@ export default function ServiceOrderShow({
                                 aria-label="Hallazgos de la orden"
                                 className="bg-card border-border space-y-2 rounded-2xl border p-3 sm:p-4 lg:col-start-1"
                             >
-                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex flex-col gap-2">
                                     <h2 className="text-foreground text-base font-bold">
                                         Hallazgos
                                         {otrosHallazgos.length > 0
@@ -836,6 +848,9 @@ export default function ServiceOrderShow({
                                                 (item) => ({
                                                     id: item.id,
                                                     serie: item.numero_serie,
+                                                    tipo_agente:
+                                                        item.tipo_agente,
+                                                    capacidad: item.capacidad,
                                                 }),
                                             )}
                                             destino={DeficiencyController.store.url(
@@ -870,9 +885,32 @@ export default function ServiceOrderShow({
                             aria-label="Extintores de la orden"
                             className="bg-card border-border space-y-2 rounded-2xl border p-3 sm:p-4 lg:col-start-1"
                         >
-                            <h2 className="text-foreground text-base font-bold">
-                                Extintores
-                            </h2>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <h2 className="text-foreground text-base font-bold">
+                                    Extintores
+                                </h2>
+                                {serviceOrder.equipments.length > 0 ? (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <SelectorFormatoStickers
+                                            value={formatoStickers}
+                                            onChange={setFormatoStickers}
+                                        />
+                                        <a
+                                            href={ordenes.stickers.url(ruta, {
+                                                query: {
+                                                    formato: formatoStickers,
+                                                },
+                                            })}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="border-border text-foreground hover:bg-muted inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 text-sm font-semibold"
+                                        >
+                                            <Printer className="size-4" />
+                                            Stickers
+                                        </a>
+                                    </div>
+                                ) : null}
+                            </div>
                             <EquiposDeLaOrden
                                 casilleros={casilleros}
                                 rutas={{

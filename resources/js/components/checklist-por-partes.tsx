@@ -125,6 +125,13 @@ export default function ChecklistPorPartes({
             {cuantas > 0
                 ? `Guardar con ${cuantas} ${cuantas === 1 ? 'falla' : 'fallas'} y seguir`
                 : textoBoton}
+            {cuantas > 0 && !noApto ? (
+                <span className="block text-xs font-medium">
+                    {Object.values(fallas).some((f) => f.requiere_autorizacion)
+                        ? 'Lo que pide permiso espera al vendedor; lo demás sigue.'
+                        : 'Ninguna falla pide permiso: pasa directo a reparar.'}
+                </span>
+            ) : null}
         </button>
     );
 

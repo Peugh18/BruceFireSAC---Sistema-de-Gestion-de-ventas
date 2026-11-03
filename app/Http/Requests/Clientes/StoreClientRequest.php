@@ -41,6 +41,10 @@ class StoreClientRequest extends FormRequest
             ],
             'razon_social' => ['required', 'string', 'max:255'],
             'nombre_comercial' => ['nullable', 'string', 'max:255'],
+            'certificado_con' => ['nullable', 'in:razon_social,nombre_comercial'],
+            'locales' => ['nullable', 'array', 'max:20'],
+            'locales.*.nombre' => ['required', 'string', 'max:255'],
+            'locales.*.direccion' => ['required', 'string', 'max:255'],
             'telefono' => ['nullable', new TelefonoPeru],
             'whatsapp' => ['nullable', new CelularPeru],
             'email' => ['nullable', 'email', 'max:255'],
@@ -76,7 +80,7 @@ class StoreClientRequest extends FormRequest
         $expectedLength = $this->input('tipo_documento') === 'dni' ? 8 : 11;
 
         if (mb_strlen((string) $this->input('numero_documento')) !== $expectedLength) {
-            $validator->errors()->add('numero_documento', "El numero de documento debe tener {$expectedLength} caracteres.");
+            $validator->errors()->add('numero_documento', "El número de documento debe tener {$expectedLength} caracteres.");
         }
     }
 

@@ -32,7 +32,7 @@ import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
 import FiltroSelect from '@/components/filtro-select';
 import RangoFechas from '@/components/rango-fechas';
-import { fechaCorta } from '@/lib/utils';
+import { etiquetaPaginacion, fechaCorta, soles } from '@/lib/utils';
 
 type SaleRow = {
     id: number;
@@ -120,17 +120,6 @@ const FILTERS = [
     { label: 'Anuladas', value: 'anulada' },
 ];
 
-function money(value: number | string) {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-    }).format(Number(value) || 0);
-}
-
-function cleanLabel(label: string) {
-    return label.replace('&laquo;', '<').replace('&raquo;', '>');
-}
-
 function statusBadge(estado: string) {
     const normalized = estado?.toLowerCase();
 
@@ -201,7 +190,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
     const kpiItems = [
         {
             label: esHoy ? 'Vendido hoy' : 'Vendido en el periodo',
-            value: money(kpis.total_vendido),
+            value: soles(kpis.total_vendido),
             detalle: `${kpis.ventas} venta(s) emitida(s)`,
             icon: Banknote,
             bg: 'bg-emerald-500/10',
@@ -209,7 +198,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
         },
         {
             label: 'Al contado',
-            value: money(kpis.contado),
+            value: soles(kpis.contado),
             detalle: 'Cobrado en caja',
             icon: ShoppingCart,
             bg: 'bg-muted',
@@ -217,7 +206,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
         },
         {
             label: 'A crédito',
-            value: money(kpis.credito),
+            value: soles(kpis.credito),
             detalle: 'Se cobra por cuotas',
             icon: CreditCard,
             bg: 'bg-muted',
@@ -460,7 +449,7 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                                 ) : null}
                                             </TableCell>
                                             <TableCell className="border-border text-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
-                                                {money(sale.total)}
+                                                {soles(sale.total)}
                                             </TableCell>
                                             <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                 <Badge
@@ -564,14 +553,14 @@ export default function VentasIndex({ sales, filters, hoy, kpis }: Props) {
                                         preserveState
                                         className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                     >
-                                        {cleanLabel(link.label)}
+                                        {etiquetaPaginacion(link.label)}
                                     </Link>
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
                                         className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                                     >
-                                        {cleanLabel(link.label)}
+                                        {etiquetaPaginacion(link.label)}
                                     </span>
                                 ),
                             )}

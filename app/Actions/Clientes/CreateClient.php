@@ -16,13 +16,20 @@ class CreateClient
      */
     public function handle(array $data): Client
     {
-        $data = [...$data, ...self::estadoSunat($this->sunat, $data)];
+        $locales = $data['locales'] ?? [];
+        unset($data['locales']);
+        $data = [...$data, ...self::estadoSunat($this->sunat, $data), 'certificado_con' => $data['certificado_con'] ?? 'razon_social'];
 
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $locales) {
             $client = Client::create([
                 ...$data,
                 'codigo_interno' => 'CLI-TMP-'.Str::uuid()->toString(),
             ]);
+
+            // Los locales del cliente: la venta los elige y el certificado usa su dirección.
+            foreach ($locales as $local) {
+                $client->sites()->create(['tipo' => 'local', 'nombre' => trim($local['nombre']), 'direccion' => trim($local['direccion']), 'estado' => 'activo']);
+            }
 
             $client->update([
                 'codigo_interno' => 'CLI-'.str_pad((string) $client->id, 4, '0', STR_PAD_LEFT),

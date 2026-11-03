@@ -3,6 +3,7 @@ import {
     ArrowLeftRight,
     Barcode,
     Boxes,
+    ClipboardList,
     LayoutDashboard,
     Search,
     Truck,
@@ -18,6 +19,8 @@ import type { Auth } from '@/types';
 import AjustesRoutes from '@/routes/almacen/ajustes';
 import TrasladosRoutes from '@/routes/almacen/traslados';
 import ConsultaRoutes from '@/routes/almacen/consulta';
+import FichasRoutes from '@/routes/almacen/fichas';
+import { normalizePath } from '@/lib/utils';
 
 type SidebarCounts = {
     bajoMinimo?: number;
@@ -78,6 +81,11 @@ function buildNavGroups(
                     count: counts?.recepcionesHoy,
                 },
                 {
+                    title: 'Fichas técnicas',
+                    href: FichasRoutes.index.url({ current_team: teamSlug }),
+                    icon: ClipboardList,
+                },
+                {
                     title: 'Stickers de Barras',
                     href: stickers.index.url(teamSlug),
                     icon: Barcode,
@@ -111,13 +119,6 @@ function buildNavGroups(
             ],
         },
     ];
-}
-
-function normalizePath(path: string): string {
-    const withoutQuery = path.split('?')[0].split('#')[0];
-    const withoutTrailingSlash = withoutQuery.replace(/\/+$/u, '');
-
-    return withoutTrailingSlash === '' ? '/' : withoutTrailingSlash;
 }
 
 function isActivePath(currentPath: string, href: string): boolean {

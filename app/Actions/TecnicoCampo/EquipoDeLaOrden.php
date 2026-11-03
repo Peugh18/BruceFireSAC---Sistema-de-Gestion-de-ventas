@@ -4,6 +4,7 @@ namespace App\Actions\TecnicoCampo;
 
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
+use App\Services\Certificates\CertificateDateCalculator;
 use App\Services\Inventory\InventorySequenceGenerator;
 use Illuminate\Validation\ValidationException;
 
@@ -62,7 +63,7 @@ class EquipoDeLaOrden
             // que se registró, no una venta.
             'fecha_venta' => now(),
             'proxima_fecha_atencion' => $instalado ? now()->addYear() : null,
-            'proxima_prueba_hidrostatica' => $instalado ? now()->addYears(5) : null,
+            'proxima_prueba_hidrostatica' => $instalado ? CertificateDateCalculator::proximaPruebaHidrostatica(today()) : null,
         ]);
     }
 

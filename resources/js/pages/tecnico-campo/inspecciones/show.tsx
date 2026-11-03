@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import ChecklistExtintor from '@/components/checklist-extintor';
 import { etiquetaEstadoOrden } from '@/lib/estados-orden';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
@@ -245,7 +246,7 @@ export default function InspeccionShow({
                         <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
                             Cliente & Sede de Inspección
                         </span>
-                        <h1 className="text-foreground text-base leading-snug font-black">
+                        <h1 className={pageTitleClass}>
                             {order.client.razon_social}
                         </h1>
                         {order.client.numero_documento && (

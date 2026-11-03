@@ -64,7 +64,9 @@ class CreateQuote
                 $quote->items()->create([...$item, 'descuento' => $item['descuento'] ?? 0, 'tipo_afectacion_igv' => AfectacionIgv::codigo($catalogo), 'subtotal' => round($item['cantidad'] * $item['precio_unitario'] - ($item['descuento'] ?? 0), 2)]);
             }
             $totales = PrecioConIgv::totalesConAfectacion(array_values($quote->items()->get()->map(fn (QuoteItem $item): array => $item->toArray())->all()));
-            $quote->update([...collect($data)->except(['sede_id', 'vendedor_id', 'estado', 'numero'])->all(), ...$totales, 'estado' => 'borrador']);
+            $quote->update([...collect($data)->except(['sede_id', 'vendedor_id', 'estado', 'numero'])->all(), ...$totales, 'estado' => 'borrador',
+                // Cambió lo cotizado: la aceptación anterior ya no vale (D-10).
+                'aceptada_por' => null, 'aceptada_canal' => null, 'aceptada_at' => null]);
             AuditLogger::log(action: 'cotizacion.editada', entity: $quote, oldValues: $antes, newValues: ['cabecera' => $quote->only(['total', 'estado', 'observaciones']), 'items' => $quote->items()->get()->toArray()], userId: $userId);
 
             return $quote->refresh();
