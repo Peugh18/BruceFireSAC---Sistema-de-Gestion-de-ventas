@@ -14,11 +14,11 @@ class ServiceOrderReceiptPdfService
 
     public function generate(ServiceOrder $serviceOrder): PDF
     {
-        $serviceOrder->loadMissing('client', 'sede', 'equipments');
+        $serviceOrder->loadMissing('client', 'sede', 'equipments', 'quote');
 
         return PdfFacade::loadView('pdf.service-order-receipt', [
             'order' => $serviceOrder,
-            'company' => CompanySetting::current(),
+            ...CompanySetting::current()->identidadPdf(),
             'firmaRecojo' => $this->evidencias->firma($serviceOrder, ['recojo']),
         ])->setPaper('a4');
     }

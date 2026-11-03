@@ -1,4 +1,5 @@
-﻿import { Head, Link, router, usePage } from '@inertiajs/react';
+import { pageTitleClass } from '@/components/page-header';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Building2,
@@ -32,6 +33,7 @@ import recepciones from '@/routes/almacen/recepciones';
 import type { Team } from '@/types';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
+import { fechaCorta } from '@/lib/utils';
 
 export type ReceptionRow = {
     id: number;
@@ -83,11 +85,6 @@ export type Props = {
     };
 };
 
-function formatDate(dateStr: string): string {
-    const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
-}
-
 export default function RecepcionesIndex({
     receptions,
     sedes,
@@ -138,7 +135,7 @@ export default function RecepcionesIndex({
                 {/* Header Actions */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-foreground text-xl font-bold">
+                        <h1 className={pageTitleClass}>
                             Recepciones de Mercadería
                         </h1>
                         <p className="text-muted-foreground text-xs">
@@ -348,7 +345,7 @@ export default function RecepcionesIndex({
                                                 #{rec.id}
                                             </TableCell>
                                             <TableCell className="text-foreground/80 px-3 py-3 font-mono text-xs whitespace-nowrap">
-                                                {formatDate(rec.fecha)}
+                                                {fechaCorta(rec.fecha)}
                                             </TableCell>
                                             <TableCell className="text-foreground px-4 py-3 font-bold">
                                                 {rec.proveedor}

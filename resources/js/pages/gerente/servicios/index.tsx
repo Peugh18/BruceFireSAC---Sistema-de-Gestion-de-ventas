@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -43,6 +44,7 @@ import {
 import { Empty } from '@/components/ui/empty';
 import OpcionesAgente from '@/components/opciones-agente';
 import BotonAgentes from '@/components/agentes-modal';
+import { soles } from '@/lib/utils';
 
 const etiquetaUnidad = (codigo: string, nombre: string) => {
     if (codigo === 'ZZ') return 'Unidad de servicio';
@@ -106,13 +108,6 @@ type PageProps = {
     };
     [key: string]: unknown;
 };
-function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-        minimumFractionDigits: 2,
-    }).format(amount);
-}
 export default function ServiciosIndex() {
     const modalTrigger = useRef<HTMLElement | null>(null);
     const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
@@ -342,7 +337,7 @@ export default function ServiciosIndex() {
                 {/* Cabecera y Botón Nuevo */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
-                        <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
+                        <h1 className={pageTitleClass}>
                             Catálogo de Servicios Técnicos
                         </h1>
                         <p className="text-muted-foreground mt-1 text-sm">
@@ -543,7 +538,7 @@ export default function ServiciosIndex() {
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
-                                                {formatCurrency(s.precio_venta)}
+                                                {soles(s.precio_venta)}
                                             </TableCell>
                                             <TableCell className="px-4 py-3 text-center">
                                                 <span className="border-border bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 text-xs font-medium">

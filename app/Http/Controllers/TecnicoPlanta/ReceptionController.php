@@ -9,11 +9,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
-use App\Services\Inventory\StickerPdfService;
+use App\Services\Equipment\FechasDelEquipo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -29,12 +28,14 @@ class ReceptionController extends Controller
         $search = trim((string) $request->input('search', ''));
         $filter = $request->string('filter', 'pendientes')->toString(); // pendientes | recibidas | todas
 
-        $query = ServiceOrder::query()
+        // P-012: la lista y sus contadores salen de la misma base (lo que el técnico ve).
+        $base = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
             ->where(function ($q) {
                 $q->where('departamento_tecnico', 'planta')
                     ->orWhereNull('departamento_tecnico');
-            })
+            });
+        $query = (clone $base)
             ->with([
                 'client:id,nombre_comercial,razon_social,telefono,numero_documento',
                 'sede:id,nombre',
@@ -81,10 +82,8 @@ class ReceptionController extends Controller
         });
 
         $counts = [
-            'pendientes' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
-                ->where('estado', 'pendiente_recepcion')->count(),
-            'recibidas' => ServiceOrder::where(fn ($q) => $q->where('departamento_tecnico', 'planta')->orWhereNull('departamento_tecnico'))
-                ->whereIn('estado', ['recibido_planta', 'en_proceso'])->count(),
+            'pendientes' => (clone $base)->where('estado', 'pendiente_recepcion')->count(),
+            'recibidas' => (clone $base)->whereIn('estado', ['recibido_planta', 'en_proceso'])->count(),
         ];
 
         return Inertia::render('tecnico-planta/recepciones/index', [
@@ -203,7 +202,7 @@ class ReceptionController extends Controller
             'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
-            'anio_fabricacion' => ['nullable', 'string', 'max:100'],
+            ...FechasDelEquipo::reglas(),
             'ubicacion_actual' => ['nullable', 'string', 'max:255'],
             'notas' => ['nullable', 'string', 'max:500'],
             'observaciones_recepcion' => ['nullable', 'string', 'max:500'],
@@ -212,25 +211,5 @@ class ReceptionController extends Controller
         $equipment = $action->execute($service_order, [...$validated, 'recibido' => true], $request->user());
 
         return back()->with('success', sprintf('Equipo %s registrado/vinculado exitosamente.', $equipment->numero_serie));
-    }
-
-    /**
-     * Imprime etiquetas en rollo o en hojas A4 para los equipos de la orden (§18, §84.9).
-     */
-    public function printStickers(
-        Team $current_team,
-        ServiceOrder $service_order,
-        StickerPdfService $stickerPdfService,
-        Request $request,
-    ): HttpResponse {
-        $equipments = $service_order->equipments()->get();
-
-        $datos = $request->validate(['formato' => ['sometimes', 'required', 'in:rollo,a4']]);
-        $pdf = $stickerPdfService->generateForEquipments($equipments, $service_order, $datos['formato'] ?? 'rollo');
-
-        return response($pdf->output(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => sprintf('inline; filename="stickers-%s.pdf"', $service_order->codigo),
-        ]);
     }
 }

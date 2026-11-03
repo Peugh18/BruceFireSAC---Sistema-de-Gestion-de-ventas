@@ -14,6 +14,7 @@ use App\Models\SaleItem;
 use App\Models\Sede;
 use App\Models\Service;
 use App\Services\Billing\AfectacionIgv;
+use App\Services\Certificates\CertificateDateCalculator;
 use App\Services\Inventory\StockPorLote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -182,6 +183,11 @@ class ProcessSaleItem
             $this->exigirPropiedadAnteriorCerrada($equipment);
         }
 
+        // Al corregir el comprobante el extintor no se vendió de nuevo: su ficha
+        // conserva la fecha de venta y sus vencimientos.
+        $seCorrige = $equipment && (int) $equipment->client_id === (int) $sale->client_id && $sale->corrige_sale_id
+            && Sale::query()->whereKey($sale->corrige_sale_id)->whereNotNull('correccion_desde')->exists();
+
         $equipment = Equipment::updateOrCreate(['numero_serie' => $unit->numero_serie], [
             'client_id' => $sale->client_id,
             'product_id' => $unit->product_id,
@@ -190,10 +196,12 @@ class ProcessSaleItem
             'marca' => $unit->marca,
             'serie_fabricante' => $unit->serie_fabricante,
             'anio_fabricacion' => $unit->anio_fabricacion,
-            'fecha_venta' => $sale->fecha,
             'estado' => 'activo',
-            'proxima_fecha_atencion' => $sale->fecha->copy()->addYear(),
-            'proxima_prueba_hidrostatica' => $sale->fecha->copy()->addYears(5),
+            ...($seCorrige ? [] : [
+                'fecha_venta' => $sale->fecha,
+                'proxima_fecha_atencion' => $sale->fecha->copy()->addYear(),
+                'proxima_prueba_hidrostatica' => CertificateDateCalculator::proximaPruebaHidrostatica($sale->fecha),
+            ]),
         ]);
 
         return $sale->items()->create([

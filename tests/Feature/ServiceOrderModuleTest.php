@@ -18,8 +18,7 @@ test('crear service order standalone genera codigo y evento inicial', function (
 
     $this->actingAs($user)
         ->post(route('vendedor.ordenes-servicio.store', ['current_team' => $user->currentTeam]), [
-            'client_id' => $client->id,
-            'service_id' => Service::factory()->create(['nombre' => 'Recarga y mantenimiento'])->id,
+            'quote_id' => cotizacionAceptada(Service::factory()->create(['nombre' => 'Recarga y mantenimiento']), ['client_id' => $client->id])->id,
             'fecha' => now()->toDateString(),
             'departamento_tecnico' => 'planta',
         ])
@@ -77,12 +76,11 @@ test('la orden se asigna a un tecnico del area elegida y guarda la referencia', 
     $tecnicoPlanta->assignRole('TecnicoPlanta');
     $tecnicoCampo = User::factory()->create();
     $tecnicoCampo->assignRole('TecnicoCampo');
+    // D-10: la referencia (destino) viene de la cotización aceptada.
     $datos = [
-        'client_id' => Client::factory()->create()->id,
-        'service_id' => Service::factory()->create(['nombre' => 'Recarga PQS 6 kg'])->id,
+        'quote_id' => cotizacionAceptada(Service::factory()->create(['nombre' => 'Recarga PQS 6 kg']), ['client_id' => Client::factory()->create()->id, 'referencia' => 'PLACA: AVR-833'])->id,
         'fecha' => now()->toDateString(),
         'departamento_tecnico' => 'planta',
-        'referencia' => 'PLACA: AVR-833',
     ];
     $ruta = route('vendedor.ordenes-servicio.store', ['current_team' => $user->currentTeam]);
 

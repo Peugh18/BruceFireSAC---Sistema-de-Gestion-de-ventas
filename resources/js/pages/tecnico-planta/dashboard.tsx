@@ -1,6 +1,5 @@
-import GraficosDashboard, {
-    type DatosGraficos,
-} from '@/components/graficos-dashboard';
+import { pageTitleClass } from '@/components/page-header';
+import { TuSemana, type Punto } from '@/components/bi';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -53,7 +52,11 @@ export type PaginationLink = {
 };
 
 export type Props = {
-    graficos: DatosGraficos;
+    graficos: {
+        prioridades: Punto[];
+        atrasadas: Punto[];
+        terminadas: Punto[];
+    };
     orders: {
         data: OrderItem[];
         links: PaginationLink[];
@@ -206,15 +209,12 @@ export default function TecnicoPlantaDashboard({
             <Head title="Taller Principal - Planta" />
 
             <div className="space-y-4 sm:space-y-5">
-                <GraficosDashboard rol="planta" datos={graficos} />
                 <div className="flex items-center justify-between gap-4 pb-1">
                     <div className="min-w-0">
                         <p className="text-primary-strong mb-1 text-xs font-bold tracking-wider uppercase">
                             Planta
                         </p>
-                        <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">
-                            Cola de taller
-                        </h1>
+                        <h1 className={pageTitleClass}>Cola de taller</h1>
                         <p className="text-muted-foreground mt-1 text-sm">
                             Pendientes de hoy y días anteriores. Urgentes
                             primero.
@@ -500,6 +500,8 @@ export default function TecnicoPlantaDashboard({
                         </div>
                     </div>
                 )}
+
+                <TuSemana graficos={graficos} />
             </div>
         </TecnicoPlantaLayout>
     );

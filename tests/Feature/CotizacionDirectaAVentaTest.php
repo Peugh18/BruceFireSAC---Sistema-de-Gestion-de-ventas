@@ -1,9 +1,9 @@
 <?php
 
 use App\Actions\Cotizaciones\CreateQuote;
+use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Actions\Sales\CreateSale;
 use App\Models\Client;
-use App\Models\Quote;
 use App\Models\Sede;
 use App\Models\Service;
 use App\Models\User;
@@ -38,6 +38,9 @@ test('una cotizacion con lineas exoneradas no inventa IGV y sus totales cuadran 
         ->and((float) $quote->total)->toBe(218.00)
         ->and($quote->items()->firstWhere('service_id', $exonerado->id)->tipo_afectacion_igv)->toBe('20');
 
+    // D-10: la venta sale de la cotización ya aceptada por el cliente.
+    app(TransitionQuoteState::class)->aceptar($quote, ['aceptada_por' => 'Cliente', 'aceptada_canal' => 'presencial']);
+
     $sale = app(CreateSale::class)->handle([
         'quote_id' => $quote->id,
         'client_id' => $client->id,
@@ -57,36 +60,5 @@ test('una cotizacion con lineas exoneradas no inventa IGV y sus totales cuadran 
         ->and((float) $sale->total)->toBe((float) $quote->total);
 });
 
-test('una cotizacion vigente pasa a venta sin aceptarla antes', function (string $estado) {
-    $this->seed(RolesAndPermissionsSeeder::class);
-    $vendedor = User::factory()->create();
-    $vendedor->assignRole('Vendedor');
-    $client = Client::factory()->create();
-    $sede = Sede::factory()->almacen()->create();
-    $service = Service::factory()->create();
-    $quote = Quote::factory()->create([
-        'vendedor_id' => $vendedor->id,
-        'client_id' => $client->id,
-        'sede_id' => $sede->id,
-        'estado' => $estado,
-    ]);
-
-    $sale = app(CreateSale::class)->handle([
-        'quote_id' => $quote->id,
-        'client_id' => $client->id,
-        'sede_id' => $sede->id,
-        'fecha' => today()->toDateString(),
-        'destino' => 'local_cliente',
-        'condicion_pago' => 'contado',
-        'comprobante_tipo' => 'nota_venta',
-    ], [[
-        'tipo_linea' => 'servicio',
-        'service_id' => $service->id,
-        'cantidad' => 1,
-        'precio_unitario' => 100,
-        'descuento' => 0,
-    ]], $vendedor->id);
-
-    expect($sale->quote_id)->toBe($quote->id)
-        ->and($quote->refresh()->estado)->toBe('convertida');
-})->with(['borrador', 'emitida', 'enviada']);
+// La regla contraria («pasa a venta sin aceptarla») se reemplazó el 29/10/2026
+// por D-10: ver tests/Feature/Auditoria/Lote2CadenaCotizacionTest.php.

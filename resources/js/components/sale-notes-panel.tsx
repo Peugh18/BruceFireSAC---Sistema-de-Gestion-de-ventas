@@ -26,6 +26,7 @@ import facturacion from '@/routes/vendedor/facturacion';
 import ventas from '@/routes/vendedor/ventas';
 import ArchivosNota from '@/components/archivos-nota';
 import { Empty } from '@/components/ui/empty';
+import { nombreDocumento, soles } from '@/lib/utils';
 
 type SaleDocument = {
     id: number;
@@ -67,21 +68,9 @@ const MOTIVOS: Record<NoteKind, { value: string; label: string }[]> = {
     ],
 };
 
-const KIND_LABEL: Record<string, string> = {
-    nota_credito: 'Nota de crédito',
-    nota_debito: 'Nota de débito',
-};
-
 const ESTADO_LABEL: Record<string, string> = {
     baja_pendiente: 'baja en proceso',
 };
-
-function money(value?: number | string | null) {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-    }).format(Number(value ?? 0) || 0);
-}
 
 function estadoClass(estado?: string) {
     if (estado === 'aceptado') {
@@ -166,7 +155,7 @@ export function SaleNotesPanel({
     return (
         <Card
             id="notas-de-la-venta"
-            className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none"
+            className="border-border bg-card scroll-mt-4 gap-0 rounded-2xl p-5 shadow-none"
         >
             <div className="mb-3 flex flex-wrap items-center gap-3">
                 <h2 className="font-['Oswald',sans-serif] text-[18px] font-semibold uppercase">
@@ -285,8 +274,7 @@ export function SaleNotesPanel({
                                 {notas.map((nota) => (
                                     <TableRow key={nota.id}>
                                         <TableCell className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold">
-                                            {KIND_LABEL[nota.tipo ?? ''] ??
-                                                nota.tipo}{' '}
+                                            {nombreDocumento(nota.tipo)}{' '}
                                             {nota.serie}-{nota.correlativo}
                                         </TableCell>
                                         <TableCell className="border-border border-b px-2.5 py-[13px]">
@@ -299,7 +287,7 @@ export function SaleNotesPanel({
                                             )?.label ?? nota.motivo_catalogo}
                                         </TableCell>
                                         <TableCell className="border-border border-b px-2.5 py-[13px] font-bold">
-                                            {money(nota.importe)}
+                                            {soles(nota.importe)}
                                         </TableCell>
                                         <TableCell className="border-border border-b px-2.5 py-[13px]">
                                             <Badge

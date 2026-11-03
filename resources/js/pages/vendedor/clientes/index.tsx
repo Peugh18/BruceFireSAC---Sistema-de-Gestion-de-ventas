@@ -11,7 +11,7 @@ import {
 import { useState } from 'react';
 
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
-import { cn } from '@/lib/utils';
+import { cn, etiquetaPaginacion, iniciales } from '@/lib/utils';
 import { FilasCargando } from '@/components/cargando';
 import { PageHeader } from '@/components/page-header';
 import ClientCreateDialog from '@/components/client-create-dialog';
@@ -90,19 +90,6 @@ type Props = {
 
 function formatNumber(value: number) {
     return new Intl.NumberFormat('es-PE').format(value);
-}
-
-function initials(value: string) {
-    return value
-        .split(/\s+/u)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? '')
-        .join('');
-}
-
-function cleanPaginationLabel(label: string) {
-    return label.replace('&laquo;', '<').replace('&raquo;', '>');
 }
 
 function renderSunatBadge(client: ClientRow) {
@@ -428,7 +415,7 @@ export default function ClientesIndex({
                                                             <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                                 <div className="flex items-center gap-2.5">
                                                                     <div className="bg-muted text-foreground/80 flex size-[34px] shrink-0 items-center justify-center rounded-full text-xs font-bold">
-                                                                        {initials(
+                                                                        {iniciales(
                                                                             client
                                                                                 .cliente
                                                                                 .razon_social,
@@ -544,7 +531,7 @@ export default function ClientesIndex({
                                                             : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                                                     ].join(' ')}
                                                 >
-                                                    {cleanPaginationLabel(
+                                                    {etiquetaPaginacion(
                                                         link.label,
                                                     )}
                                                 </Link>
@@ -553,7 +540,7 @@ export default function ClientesIndex({
                                                     key={`${link.label}-${index}`}
                                                     className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                                                 >
-                                                    {cleanPaginationLabel(
+                                                    {etiquetaPaginacion(
                                                         link.label,
                                                     )}
                                                 </span>

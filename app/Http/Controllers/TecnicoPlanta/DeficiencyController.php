@@ -240,8 +240,8 @@ class DeficiencyController extends Controller
         }
 
         $validated = $request->validate([
-            'resolucion' => ['required', 'string', 'max:500'],
-        ]);
+            'resolucion' => ['required', 'string', 'min:5', 'max:500'],
+        ], ['resolucion.min' => 'Cuenta en pocas palabras qué se hizo: sin repuesto no se descuenta stock.']);
 
         ExecuteAndCloseServiceOrder::asegurarQueSePuedeReparar($deficiency);
 

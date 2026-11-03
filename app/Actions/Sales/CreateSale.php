@@ -48,6 +48,7 @@ class CreateSale
 
             $this->validarVehiculo($data);
             $this->validarCatalogoActivo($lineas);
+            $this->exigirCotizacion($data, $lineas);
 
             $this->validarComprobanteCliente->handle(
                 Client::query()->findOrFail($data['client_id']),
@@ -65,6 +66,8 @@ class CreateSale
                 'total' => $total,
                 'estado' => 'borrador',
             ]);
+
+            app(CorregirVenta::class)->prepararCliente($sale);
 
             foreach ($lineas as $linea) {
                 $this->processSaleItem->handle($sale, $linea);
@@ -130,6 +133,8 @@ class CreateSale
                 'igv' => $igv,
                 'total' => $total,
             ]);
+
+            app(CorregirVenta::class)->prepararCliente($sale);
 
             foreach ($lineas as $linea) {
                 $this->processSaleItem->handle($sale, $linea);
@@ -280,6 +285,29 @@ class CreateSale
         }
 
         return $inicio && $inicio->lte($ahora) && $inicio->gte($ahora->copy()->subHours(12)) ? $inicio : $ahora;
+    }
+
+    /**
+     * D-10: los servicios y las ventas a empresas con RUC salen de una
+     * cotización aceptada; así cada recarga tiene su orden y su extintor.
+     * Lo que compra una persona en mostrador se vende directo.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  list<array<string, mixed>>  $lineas
+     */
+    protected function exigirCotizacion(array $data, array $lineas): void
+    {
+        if (! empty($data['quote_id']) || ! config('billing.exigir_cotizacion')) {
+            return;
+        }
+
+        if (collect($lineas)->contains(fn (array $linea) => ! empty($linea['service_id']))) {
+            throw ValidationException::withMessages(['quote_id' => 'Los servicios se venden desde una cotización aceptada: así la recarga queda con su orden y su extintor. Usa «Nueva cotización».']);
+        }
+
+        if (Client::query()->whereKey($data['client_id'])->value('tipo_documento') === 'ruc') {
+            throw ValidationException::withMessages(['quote_id' => 'A una empresa con RUC se le vende desde una cotización aceptada. Usa «Nueva cotización».']);
+        }
     }
 
     /**

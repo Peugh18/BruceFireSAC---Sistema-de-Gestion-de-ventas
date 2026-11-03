@@ -19,7 +19,7 @@ import VendedorLayout from '@/layouts/vendedor-layout';
 import certificados from '@/routes/vendedor/certificados';
 import clientes from '@/routes/vendedor/clientes';
 import type { Team } from '@/types';
-import { fechaCorta } from '@/lib/utils';
+import { etiquetaPaginacion, fechaCorta } from '@/lib/utils';
 import { NativeSelect } from '@/components/ui/native-select';
 
 type CertificateRow = {
@@ -58,10 +58,6 @@ type Props = {
     tipos: { codigo: string; nombre: string }[];
     filters: { search?: string; tipo?: string; estado?: string };
 };
-
-function cleanLabel(label: string) {
-    return label.replace('&laquo;', '<').replace('&raquo;', '>');
-}
 
 function badgeClass(estado: string) {
     const e = estado?.toLowerCase();
@@ -539,14 +535,14 @@ export default function CertificadosIndex({
                                         preserveState
                                         className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                     >
-                                        {cleanLabel(link.label)}
+                                        {etiquetaPaginacion(link.label)}
                                     </Link>
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
                                         className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                                     >
-                                        {cleanLabel(link.label)}
+                                        {etiquetaPaginacion(link.label)}
                                     </span>
                                 ),
                             )}

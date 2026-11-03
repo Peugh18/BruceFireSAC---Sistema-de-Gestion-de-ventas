@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Gerente\DashboardController;
 use App\Models\Certificate;
 use App\Models\CertificateUnit;
 use App\Models\Client;
@@ -13,6 +14,7 @@ use App\Models\ServiceOrder;
 use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Http\Request;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -89,6 +91,29 @@ test('el filtro agrupa la tienda con su almacen y limita los indicadores a esa s
             ->where('sedeSeleccionada', $tienda->id)
             ->has('sedes', 2)
         );
+});
+
+test('el BI trae la tendencia de 6 meses de cada indicador y las órdenes abiertas por paso, en plazo o atrasadas', function () {
+    Carbon::setTestNow('2026-10-15 10:00:00');
+    $gerente = createGerenteUserForDashboardTest();
+    $venta = Sale::factory()->create(['fecha' => '2026-09-10', 'total' => 500, 'estado' => 'confirmada']);
+    SalePayment::factory()->create(['sale_id' => $venta->id, 'fecha' => '2026-09-12', 'monto' => 200]);
+    ServiceOrder::factory()->create(['estado' => 'pendiente_recepcion', 'fecha' => '2026-10-15']);
+    ServiceOrder::factory()->create(['estado' => 'pendiente_recepcion', 'fecha' => '2026-10-10']);
+    ServiceOrder::factory()->create(['estado' => 'entregado', 'fecha' => '2026-10-01']);
+
+    $this->actingAs($gerente)->get(route('gerente.dashboard', ['current_team' => $gerente->currentTeam]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('graficos.tendencias.cobrado', 6)
+            ->where('graficos.tendencias.cobrado.4', 200)
+            ->has('graficos.tendencias.margenBruto', 6)
+            ->has('graficos.tendencias.conversionCotizaciones', 6)
+            ->has('graficos.pasos', 5)
+            ->where('graficos.pasos.0.nombre', 'Por recibir')
+            ->where('graficos.pasos.0.valor', 1)
+            ->where('graficos.pasos.0.secundario', 1));
+
+    Carbon::setTestNow();
 });
 
 test('dashboard generico redirige a usuarios con rol Gerente a gerente.dashboard', function () {
@@ -217,7 +242,7 @@ test('el almacén mixto que surte a una tienda no cuenta como otra sede de venta
             ->where('sedes', []));
 });
 
-test('el dashboard muestra a quién llamar según la IA de recompra', function () {
+test('la IA de recompra va al reporte comercial y no al dashboard, que es solo BI', function () {
     $gerente = createGerenteUserForDashboardTest();
     $cliente = Client::factory()->create(['nombre_comercial' => 'Grifo El Sol']);
     ClientRetentionScore::query()->create([
@@ -228,10 +253,12 @@ test('el dashboard muestra a quién llamar según la IA de recompra', function (
     ]);
 
     $this->actingAs($gerente)->get(route('gerente.dashboard', ['current_team' => $gerente->currentTeam]))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('iaRecompra.alta', 1)
-            ->where('iaRecompra.clientes.0.cliente', 'Grifo El Sol')
-            ->where('iaRecompra.clientes.0.porcentaje', 91));
+        ->assertInertia(fn (Assert $page) => $page->missing('iaRecompra'));
+
+    $ia = app(DashboardController::class)->datosMensuales(Request::create('/'))['iaRecompra'];
+    expect($ia['alta'])->toBe(1)
+        ->and($ia['clientes'][0]['cliente'])->toBe('Grifo El Sol')
+        ->and($ia['clientes'][0]['porcentaje'])->toBe(91);
 });
 
 test('cada enlace del resumen abre solo lo que cuenta: paso, tramo o comprobantes vencidos', function () {

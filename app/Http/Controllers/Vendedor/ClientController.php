@@ -15,7 +15,9 @@ use App\Models\Equipment;
 use App\Models\Installment;
 use App\Models\Quote;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Team;
+use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Ml\RetentionModel;
 use App\Services\Sunat\DocumentoNoEncontrado;
@@ -26,6 +28,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -107,6 +110,46 @@ class ClientController extends Controller
      * la búsqueda actual del listado, o todos si no hay búsqueda.
      */
     /** Lista de clientes en Excel (.xlsx), con la búsqueda que tenga puesta el usuario. */
+    /**
+     * Qué compró el cliente, línea por línea: en ventas emitidas, con su fecha
+     * y comprobante.
+     *
+     * @return Collection<int, mixed>
+     */
+    protected function compras(Client $client, User $user): Collection
+    {
+        return SaleItem::query()
+            ->with(['product:id,nombre', 'service:id,nombre', 'inventoryUnit:id,numero_serie', 'sale.electronicDocuments'])
+            ->whereHas('sale', fn ($query) => $query->where('client_id', $client->id)->where('estado', 'confirmada')->visiblePara($user))
+            ->get()
+            ->sortByDesc(fn (SaleItem $item) => [$item->sale->fecha?->toDateString(), $item->sale_id])
+            ->map(fn (SaleItem $item) => [
+                'sale_id' => $item->sale_id,
+                'fecha' => $item->sale->fecha?->toDateString(),
+                'comprobante' => $item->sale->numeroComprobante() ?? $item->sale->numero_interno,
+                'nombre' => $item->product->nombre ?? $item->service->nombre ?? 'Línea de venta',
+                'tipo' => $item->service_id ? 'Servicio' : 'Producto',
+                'serie' => $item->inventoryUnit?->numero_serie,
+                'cantidad' => (int) $item->cantidad,
+                'total' => (float) $item->subtotal,
+            ]);
+    }
+
+    public function comprasExcel(Team $current_team, Client $client, Request $request): StreamedResponse
+    {
+        $filas = $this->compras($client, $request->user())->map(fn (array $compra) => [
+            Carbon::parse($compra['fecha'])->format('d/m/Y'), $compra['comprobante'], $compra['tipo'], $compra['nombre'], $compra['serie'], $compra['cantidad'], $compra['total'],
+        ]);
+
+        return ExcelSimple::descargar(
+            'compras-'.$client->numero_documento.'.xlsx',
+            'Compras',
+            ['Fecha', 'Comprobante', 'Tipo', 'Producto o servicio', 'Serie', 'Cantidad', 'Total (S/)'],
+            $filas,
+            [12, 18, 10, 46, 16, 10, 12],
+        );
+    }
+
     public function export(Request $request): StreamedResponse
     {
         $search = $request->string('search')->toString();
@@ -166,10 +209,10 @@ class ClientController extends Controller
         $user = $request->user();
         $client->load(['sites.ubicacion', 'vehicles', 'ubicacion']);
 
-        // Cada vendedor ve solo lo suyo dentro de su sede (§90.1); el Gerente, todo.
+        // P-005: las cotizaciones del cliente se ven igual que en la lista de
+        // Cotizaciones (toda la sede), para que la ficha no diga «sin cotizaciones».
         $quotes = $client->quotes()->with('sale')
             ->when($user->sedeRestringidaId(), fn ($query, int $sedeId) => $query->where('sede_id', $sedeId))
-            ->when($user->vendedorRestringidoId(), fn ($query, int $vendedorId) => $query->where('vendedor_id', $vendedorId))
             ->latest('fecha')->get();
         $sales = $client->sales()->with(['electronicDocuments', 'installments.payments', 'payments'])->visiblePara($user)->latest('fecha')->latest('id')->get();
         $equipos = $client->equipment()->with('product:id,nombre')->visiblePara($user)->latest('fecha_venta')->get();
@@ -197,6 +240,7 @@ class ClientController extends Controller
                 'ultima_compra' => $confirmadas->max(fn ($sale) => $sale->fecha?->toDateString()),
                 'cotizaciones_abiertas' => $quotes->whereIn('estado', ['borrador', 'emitida', 'enviada', 'pendiente', 'aceptada'])->count(),
             ],
+            'compras' => $this->compras($client, $user)->values(),
             'cotizaciones' => $quotes->map(fn ($quote) => ['id' => $quote->id, 'numero' => $quote->numero, 'fecha' => $quote->fecha?->toDateString(), 'total' => (float) $quote->total, 'estado' => $quote->estado, 'vigencia_hasta' => $quote->vigencia_hasta?->toDateString(), 'venta' => $quote->sale ? ['id' => $quote->sale->id, 'numero' => $quote->sale->numero_interno] : null]),
             // Al contado ya está pagada; a crédito debe lo que falta de sus cuotas.
             'ventas' => $sales->map(fn ($sale) => [
@@ -242,14 +286,14 @@ class ClientController extends Controller
                 ];
             }),
             'certificados' => $certificates->map(fn ($certificate) => ['id' => $certificate->id, 'numero' => $certificate->numero, 'tipo' => $certificate->certificateType->nombre, 'fecha_emision' => $certificate->fecha_emision?->toDateString(), 'fecha_vigencia_hasta' => $certificate->fecha_vigencia_hasta?->toDateString(), 'estado' => $certificate->estado, 'venta' => $certificate->sale ? ['id' => $certificate->sale->id, 'numero' => $certificate->sale->numero_interno] : null]),
-            'servicios' => $serviceOrders->map(fn ($order) => ['id' => $order->id, 'numero' => $order->codigo, 'servicio' => $order->service->nombre, 'area' => $order->departamento_tecnico, 'estado' => $order->estado, 'estado_texto' => $order->coarseLabel(), 'tecnico' => $order->tecnico?->name, 'fecha' => $order->fecha?->toDateString()]),
+            'servicios' => $serviceOrders->map(fn ($order) => ['id' => $order->id, 'numero' => $order->codigo, 'servicio' => $order->resumenServicios(), 'area' => $order->departamento_tecnico, 'estado' => $order->estado, 'estado_texto' => $order->coarseLabel(), 'tecnico' => $order->tecnico?->name, 'fecha' => $order->fecha?->toDateString()]),
             'cobranzas' => [
                 'cuotas' => $installments->map(fn ($installment) => ['id' => $installment->id, 'venta' => ['id' => $installment->sale_id, 'numero' => $sales->firstWhere('id', $installment->sale_id)?->numero_interno], 'numero_cuota' => $installment->numero_cuota, 'monto' => (float) $installment->monto, 'saldo' => $installment->saldo(), 'fecha_vencimiento' => $installment->fecha_vencimiento?->toDateString(), 'estado' => $installment->estado, 'dias_vencido' => $installment->fecha_vencimiento?->isPast() ? (int) $installment->fecha_vencimiento->diffInDays(today()) : 0]),
                 'pagos' => $payments->map(fn ($payment) => ['id' => $payment->id, 'fecha' => $payment->fecha?->toDateString(), 'monto' => (float) $payment->monto, 'forma_pago' => $payment->forma_pago, 'numero_operacion' => $payment->numero_operacion, 'venta' => ['id' => $payment->sale_id, 'numero' => $sales->firstWhere('id', $payment->sale_id)?->numero_interno]]),
             ],
             'historial' => AuditLog::query()->with('user:id,name')->where(function ($query) use ($client, $sales, $quotes) {
                 $query->where(fn ($query) => $query->where('auditable_type', Client::class)->where('auditable_id', $client->id))->orWhere(fn ($query) => $query->where('auditable_type', Sale::class)->whereIn('auditable_id', $sales->pluck('id')))->orWhere(fn ($query) => $query->where('auditable_type', Quote::class)->whereIn('auditable_id', $quotes->pluck('id')));
-            })->latest('created_at')->limit(50)->get()->map(fn ($log) => ['fecha' => $log->created_at?->toIso8601String(), 'texto' => $this->textoDeHistorial($log), 'usuario' => $log->user?->name]),
+            })->latest('created_at')->limit(50)->get()->map(fn ($log) => ['fecha' => $log->created_at?->toIso8601String(), 'texto' => $log->texto(), 'usuario' => $log->user?->name]),
             'recompra' => $this->recompra($client),
             'sunat' => ['verificado' => $client->consultado_at !== null, 'estado' => $client->estado_contribuyente, 'condicion' => $client->condicion_domicilio, 'consultado_at' => $client->consultado_at?->toIso8601String()],
         ]);
@@ -405,23 +449,6 @@ class ClientController extends Controller
     /**
      * Lo que pasó, en palabras que entiende la vendedora.
      */
-    protected function textoDeHistorial(AuditLog $log): string
-    {
-        $numero = $log->new_values['numero_interno'] ?? $log->new_values['numero'] ?? null;
-        $texto = [
-            'venta.creada' => 'Se registró una venta',
-            'venta.borrador_editado' => 'Se editó el borrador de una venta',
-            'venta.anulada' => 'Se anuló una venta',
-            'venta.nota_venta_confirmada' => 'Se emitió una nota de venta',
-            'venta.extintor_cambiado' => 'Se cambió un extintor de la venta',
-            'cotizacion.creada' => 'Se creó una cotización',
-            'cliente.creado' => 'Se registró el cliente',
-            'cliente.actualizado' => 'Se actualizaron los datos del cliente',
-        ][$log->action] ?? ucfirst(str_replace(['.', '_'], ' ', $log->action));
-
-        return $numero ? "{$texto} ({$numero})" : $texto;
-    }
-
     protected function activeAndLocatedPercentage(): float
     {
         $total = Client::where('tipo_documento', 'ruc')->count();

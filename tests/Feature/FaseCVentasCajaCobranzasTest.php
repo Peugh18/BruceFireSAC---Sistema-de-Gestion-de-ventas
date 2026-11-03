@@ -195,6 +195,7 @@ test('X7: mide el registro de venta, el tiempo de cotizacion y los clientes recu
     $quote = app(CreateQuote::class)->handle(['client_id' => $client->id, 'fecha' => today(), 'vigencia_hasta' => today()->addDays(15), 'origen_alerta_equipment_id' => $equipment->id], [['service_id' => $service->id, 'cantidad' => 1, 'precio_unitario' => 50]], $this->vendedor->id);
     $this->travel(30)->minutes();
     app(TransitionQuoteState::class)->handle($quote, 'emitida');
+    aceptarCotizacion($quote);
 
     $sale = app(CreateSale::class)->handle(
         ['client_id' => $client->id, 'quote_id' => $quote->id, 'fecha' => today()->toDateString(), 'destino' => 'local_cliente', 'condicion_pago' => 'credito', 'comprobante_tipo' => 'nota_venta', 'iniciado_at' => now()->subMinutes(5)->toIso8601String()],

@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $product_id
  * @property string $numero_serie
  * @property Carbon|null $fecha_venta
+ * @property Carbon|null $fecha_ultima_ph
  * @property string|null $ubicacion_actual
  * @property string $estado
  * @property Carbon|null $proxima_fecha_atencion
@@ -29,7 +30,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'client_id', 'product_id', 'numero_serie', 'numero_cliente', 'fecha_venta', 'ubicacion_actual',
-    'estado', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica',
+    'estado', 'proxima_fecha_atencion', 'proxima_prueba_hidrostatica', 'fecha_ultima_ph',
     'tipo_agente', 'capacidad', 'marca', 'serie_fabricante', 'anio_fabricacion',
     'foto_general_path', 'foto_placa_path', 'notas',
 ])]
@@ -44,6 +45,7 @@ class Equipment extends Model
     {
         return [
             'fecha_venta' => 'date',
+            'fecha_ultima_ph' => 'date',
             'proxima_fecha_atencion' => 'date',
             'proxima_prueba_hidrostatica' => 'date',
         ];

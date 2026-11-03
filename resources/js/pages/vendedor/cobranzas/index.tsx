@@ -42,6 +42,24 @@ import type { Team } from '@/types';
 import { fechaCorta, soles } from '@/lib/utils';
 import { NativeSelect } from '@/components/ui/native-select';
 
+/**
+ * Billetes y monedas que se cuentan al cerrar, en céntimos (mismas claves que
+ * el servidor: un punto en la clave rompe la validación de Laravel).
+ */
+const DENOMINACIONES = [
+    '20000',
+    '10000',
+    '5000',
+    '2000',
+    '1000',
+    '500',
+    '200',
+    '100',
+    '50',
+    '20',
+    '10',
+];
+
 export type Sede = {
     id: number;
     nombre: string;
@@ -56,6 +74,8 @@ export type TurnoActual = {
     monto_apertura: number | string;
     estado: string;
     abierto_mas_de_24_horas?: boolean;
+    /** Ya contó el cajón y no cuadró: solo falta su explicación (arqueo ciego). */
+    conteo_registrado?: boolean;
     ventas_por_forma_pago?: Record<string, number>;
     salidas?: {
         id: number;
@@ -72,8 +92,6 @@ export type CierreItem = {
     fecha_cierre?: string;
     monto_apertura: number | string;
     monto_contado_cierre: number | string;
-    monto_esperado_calculado: number | string;
-    diferencia: number | string;
     observacion?: string;
     estado: string;
 };
@@ -217,11 +235,18 @@ export default function CobranzasIndex({
         0,
     );
 
-    // Form: Cerrar turno de caja (arqueo ciego)
+    // Form: Cerrar turno de caja (arqueo ciego por billetes y monedas)
     const closeForm = useForm({
-        monto_contado_cierre: '',
+        denominaciones: {} as Record<string, string>,
         observacion: '',
     });
+    const totalContado = DENOMINACIONES.reduce(
+        (total, d) =>
+            total +
+            (Number(d) / 100) * Number(closeForm.data.denominaciones[d] || 0),
+        0,
+    );
+    const conteoRegistrado = !!turno_actual?.conteo_registrado;
 
     const submitCloseTurno = (e: FormEvent) => {
         e.preventDefault();
@@ -232,15 +257,12 @@ export default function CobranzasIndex({
                 cash_register: turno_actual.id,
             }),
             {
-                onError: (errors) =>
-                    toast.error(
-                        Object.values(errors)[0] ??
-                            'No se pudo completar la acción.',
-                    ),
+                // Los errores quedan junto a cada campo del diálogo.
                 preserveScroll: true,
                 onSuccess: () => {
                     setCloseTurnoDialogOpen(false);
                     closeForm.reset();
+                    toast.success('Turno de caja cerrado.');
                 },
             },
         );
@@ -334,6 +356,7 @@ export default function CobranzasIndex({
         (turno_actual?.ventas_por_forma_pago?.yape ?? 0) +
         (turno_actual?.ventas_por_forma_pago?.plin ?? 0) +
         (turno_actual?.ventas_por_forma_pago?.pos ?? 0);
+    const ventasOtros = turno_actual?.ventas_por_forma_pago?.otro ?? 0;
 
     const installmentRows = installments?.data ?? [];
 
@@ -428,6 +451,16 @@ export default function CobranzasIndex({
                                                 {soles(ventasTarjetaYape)}
                                             </span>
                                         </div>
+                                        {ventasOtros !== 0 && (
+                                            <div className="flex items-center justify-between py-2">
+                                                <span className="text-muted-foreground">
+                                                    Otros medios
+                                                </span>
+                                                <span className="text-foreground font-semibold">
+                                                    {soles(ventasOtros)}
+                                                </span>
+                                            </div>
+                                        )}
                                         <div className="flex items-center justify-between py-2">
                                             <span className="text-muted-foreground">
                                                 Salidas de dinero
@@ -459,13 +492,13 @@ export default function CobranzasIndex({
                                                 ))}
                                             </ul>
                                         )}
-                                        {/* Arqueo ciego: el efectivo esperado
-                                        se ve recién al cerrar, después de
-                                        contar lo que hay en el cajón. */}
+                                        {/* Arqueo ciego (E-011): el vendedor
+                                        no ve el efectivo esperado; la
+                                        diferencia la revisa el Gerente. */}
                                         <p className="text-muted-foreground pt-2.5 text-xs">
-                                            El efectivo esperado se muestra al
-                                            cerrar el turno, después de que
-                                            cuentes el cajón.
+                                            Al cerrar cuentas el cajón por
+                                            billetes y monedas. La diferencia,
+                                            si la hay, la revisa el Gerente.
                                         </p>
                                     </div>
 
@@ -528,12 +561,14 @@ export default function CobranzasIndex({
                                     </span>
                                     <span className="text-muted-foreground text-xs">
                                         {cierres.total ?? cierres.data.length}{' '}
-                                        cierres
+                                        {(cierres.total ??
+                                            cierres.data.length) === 1
+                                            ? 'cierre'
+                                            : 'cierres'}
                                     </span>
                                 </div>
                                 <div className="divide-border mt-3 divide-y text-[12px]">
                                     {cierres.data.slice(0, 4).map((cierre) => {
-                                        const dif = Number(cierre.diferencia);
                                         return (
                                             <div
                                                 key={cierre.id}
@@ -559,21 +594,6 @@ export default function CobranzasIndex({
                                                                   'es-PE',
                                                               )
                                                             : '-'}
-                                                    </span>
-                                                    <span
-                                                        className={
-                                                            dif === 0
-                                                                ? 'text-success-strong'
-                                                                : dif > 0
-                                                                  ? 'text-foreground font-bold'
-                                                                  : 'text-destructive-strong font-bold'
-                                                        }
-                                                    >
-                                                        {dif === 0
-                                                            ? 'Exacto'
-                                                            : dif > 0
-                                                              ? `+${soles(dif)}`
-                                                              : soles(dif)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -1016,8 +1036,9 @@ export default function CobranzasIndex({
                                     Cerrar turno de caja
                                 </DialogTitle>
                                 <DialogDescription className="text-muted-foreground text-xs">
-                                    Arqueo ciego: ingresa el monto total en
-                                    efectivo físico que has contado.
+                                    {conteoRegistrado
+                                        ? 'Tu conteo ya quedó registrado.'
+                                        : 'Arqueo ciego: cuenta el efectivo del cajón por billetes y monedas.'}
                                 </DialogDescription>
                             </div>
                         </div>
@@ -1033,45 +1054,116 @@ export default function CobranzasIndex({
                             errors={Object.entries(closeForm.errors)
                                 .filter(
                                     ([clave]) =>
-                                        clave !== 'monto_contado_cierre',
+                                        clave !== 'observacion' &&
+                                        !clave.startsWith('denominaciones.'),
                                 )
                                 .map(([, mensaje]) => mensaje)}
                         />
-                        <div>
-                            <Label className="text-foreground text-sm font-medium">
-                                Monto contado en efectivo (S/) *
-                            </Label>
-                            <Input
-                                aria-label="Monto contado al cierre (S/)"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                required
-                                value={closeForm.data.monto_contado_cierre}
-                                onChange={(e) =>
-                                    closeForm.setData(
-                                        'monto_contado_cierre',
-                                        e.target.value,
-                                    )
-                                }
-                                placeholder="0.00"
-                                className="border-border bg-card mt-1 h-9 rounded-lg font-mono text-[13px]"
-                            />
-                            {closeForm.errors.monto_contado_cierre && (
-                                <p className="text-destructive-strong mt-1 text-xs">
-                                    {closeForm.errors.monto_contado_cierre}
+                        {conteoRegistrado ? (
+                            <p className="border-border bg-muted/40 text-foreground rounded-lg border p-3 text-[13px]">
+                                Ya no se puede cambiar el conteo. Si necesitas
+                                volver a contar, pídeselo al Gerente.
+                            </p>
+                        ) : (
+                            <fieldset>
+                                <legend className="text-foreground text-sm font-medium">
+                                    ¿Cuántos hay de cada uno?
+                                </legend>
+                                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
+                                    {DENOMINACIONES.map((d) => {
+                                        const id = `denominacion-${d}`;
+                                        const error = (
+                                            closeForm.errors as Record<
+                                                string,
+                                                string | undefined
+                                            >
+                                        )[`denominaciones.${d}`];
+                                        return (
+                                            <div key={d}>
+                                                <Label
+                                                    htmlFor={id}
+                                                    className="text-muted-foreground text-xs"
+                                                >
+                                                    {Number(d) >= 1000
+                                                        ? 'Billete'
+                                                        : 'Moneda'}{' '}
+                                                    S/{' '}
+                                                    {Number(d) >= 100
+                                                        ? Number(d) / 100
+                                                        : (
+                                                              Number(d) / 100
+                                                          ).toFixed(2)}
+                                                </Label>
+                                                <Input
+                                                    id={id}
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    step="1"
+                                                    min="0"
+                                                    value={
+                                                        closeForm.data
+                                                            .denominaciones[
+                                                            d
+                                                        ] ?? ''
+                                                    }
+                                                    onChange={(e) =>
+                                                        closeForm.setData(
+                                                            'denominaciones',
+                                                            {
+                                                                ...closeForm
+                                                                    .data
+                                                                    .denominaciones,
+                                                                [d]: e.target
+                                                                    .value,
+                                                            },
+                                                        )
+                                                    }
+                                                    placeholder="0"
+                                                    aria-invalid={!!error}
+                                                    aria-describedby={
+                                                        error
+                                                            ? `${id}-error`
+                                                            : undefined
+                                                    }
+                                                    className="border-border bg-card mt-0.5 h-9 rounded-lg font-mono text-[13px]"
+                                                />
+                                                {error && (
+                                                    <p
+                                                        id={`${id}-error`}
+                                                        className="text-destructive-strong mt-1 text-xs"
+                                                    >
+                                                        {error}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <p
+                                    className="text-foreground mt-3 flex justify-between text-[13px] font-semibold"
+                                    aria-live="polite"
+                                >
+                                    <span>Total contado</span>
+                                    <span className="font-mono">
+                                        {soles(totalContado)}
+                                    </span>
                                 </p>
-                            )}
-                        </div>
+                            </fieldset>
+                        )}
 
                         <div>
-                            <Label className="text-foreground text-sm font-medium">
-                                Observación (obligatoria si falta o sobra
-                                dinero)
+                            <Label
+                                htmlFor="cierre-observacion"
+                                className="text-foreground text-sm font-medium"
+                            >
+                                {conteoRegistrado
+                                    ? 'Explica qué pasó *'
+                                    : 'Observación (opcional)'}
                             </Label>
                             <Input
-                                aria-label="Observación"
+                                id="cierre-observacion"
                                 type="text"
+                                required={conteoRegistrado}
                                 value={closeForm.data.observacion}
                                 onChange={(e) =>
                                     closeForm.setData(
@@ -1082,9 +1174,17 @@ export default function CobranzasIndex({
                                 placeholder="Ej. Di vuelto de más a un cliente"
                                 className="border-border bg-card mt-1 h-9 rounded-lg text-[13px]"
                                 aria-invalid={!!closeForm.errors.observacion}
+                                aria-describedby={
+                                    closeForm.errors.observacion
+                                        ? 'cierre-observacion-error'
+                                        : undefined
+                                }
                             />
                             {closeForm.errors.observacion && (
-                                <p className="text-destructive-strong mt-1 text-xs font-medium">
+                                <p
+                                    id="cierre-observacion-error"
+                                    className="text-destructive-strong mt-1 text-xs font-medium"
+                                >
                                     {closeForm.errors.observacion}
                                 </p>
                             )}
@@ -1104,7 +1204,9 @@ export default function CobranzasIndex({
                                 loading={closeForm.processing}
                                 className="bg-primary hover:bg-primary/90 rounded-lg text-xs font-bold text-white"
                             >
-                                Confirmar y cerrar turno
+                                {conteoRegistrado
+                                    ? 'Guardar explicación y cerrar'
+                                    : 'Confirmar conteo y cerrar'}
                             </Button>
                         </DialogFooter>
                     </form>

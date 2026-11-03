@@ -32,6 +32,17 @@ class ServiceOrderEvent extends Model
 
     public $timestamps = false;
 
+    /**
+     * La hora la pone Laravel (zona de Lima), no el reloj de MySQL: de este
+     * evento sale la fecha de recarga del certificado.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (ServiceOrderEvent $evento): void {
+            $evento->created_at ??= Carbon::now();
+        });
+    }
+
     protected function casts(): array
     {
         return [

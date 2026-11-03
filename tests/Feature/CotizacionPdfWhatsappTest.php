@@ -64,7 +64,7 @@ test('la lista trae el whatsapp del cliente con el 51 y el enlace del pdf', func
 
 test('una cotizacion convertida enlaza a su venta', function () {
     $quote = cotizacionConItems(datos: ['estado' => 'convertida']);
-    $sale = Sale::factory()->create(['quote_id' => $quote->id, 'client_id' => $quote->client_id, 'numero_interno' => 'VTA-0077']);
+    $sale = Sale::factory()->create(['quote_id' => $quote->id, 'client_id' => $quote->client_id, 'vendedor_id' => $this->vendedor->id, 'numero_interno' => 'VTA-0077']);
 
     $this->actingAs($this->vendedor)
         ->get(route('vendedor.cotizaciones.index', ['current_team' => $this->vendedor->currentTeam]))

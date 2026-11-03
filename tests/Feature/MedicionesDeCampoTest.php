@@ -48,6 +48,16 @@ test('campo recibe las columnas del certificado asociado al servicio de la orden
         ->where('formulariosCertificado.0.columnas.1.unidad', 'Ω'));
 });
 
+test('campo encuentra una orden por la plantilla dinamica aunque no tenga tabla', function () {
+    [$user, $orden, $tipo] = visitaConMedicion('Protección técnica');
+    $tipo->update(['columnas' => null, 'checklist' => [], 'composicion' => [['tipo' => 'datos'], ['tipo' => 'texto', 'texto' => 'Servicio realizado.']]]);
+
+    $this->actingAs($user)->get(route('tecnico-campo.instalaciones.index', $user->currentTeam))
+        ->assertInertia(fn (Assert $page) => $page->has('instalaciones.data', 1));
+    $this->get(route('tecnico-campo.instalaciones.show', ['current_team' => $user->currentTeam, 'service_order' => $orden]))
+        ->assertInertia(fn (Assert $page) => $page->where('formulariosCertificado.0.requiere_tabla', false)->where('formulariosCertificado.0.columnas', []));
+});
+
 test('pozo a tierra aparece en instalaciones aunque el servicio este en una linea de la orden', function (bool $conPrincipal) {
     [$user, $orden] = visitaConMedicion('Pozo a tierra');
     $servicioId = $orden->service_id;

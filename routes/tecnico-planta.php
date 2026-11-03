@@ -33,7 +33,6 @@ Route::prefix('tecnico-planta')
         Route::patch('recepciones/{service_order}/equipos/reordenar', [ServiceOrderEquipmentController::class, 'reorder'])->name('recepciones.equipos.reordenar');
         Route::delete('recepciones/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'destroy'])->name('recepciones.equipos.destroy');
         Route::patch('recepciones/{service_order}/equipos/{equipment}', [ServiceOrderEquipmentController::class, 'update'])->name('recepciones.equipos.update');
-        Route::get('recepciones/{service_order}/stickers', [ReceptionController::class, 'printStickers'])->name('recepciones.stickers');
 
         // Checklist Técnico Digital (§19)
         Route::post('ordenes/{service_order}/equipos/{equipment}/checklist', [ChecklistController::class, 'store'])->name('checklist.store');

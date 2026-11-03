@@ -6,6 +6,7 @@ import {
     Clock,
     FileMinus2,
     FilePlus2,
+    RotateCcw,
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -26,7 +27,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import VendedorLayout from '@/layouts/vendedor-layout';
-import { soles } from '@/lib/utils';
+import { fechaCorta, soles } from '@/lib/utils';
 import notasCredito from '@/routes/vendedor/notas-credito';
 import notasDebito from '@/routes/vendedor/notas-debito';
 import ventas from '@/routes/vendedor/ventas';
@@ -37,6 +38,8 @@ type Linea = {
     nombre: string;
     cantidad: number;
     total: number;
+    devuelta: number;
+    series: string[];
 };
 
 type NotaEmitida = {
@@ -61,8 +64,31 @@ type Props = {
     };
     porAcreditar: number;
     lineas: Linea[];
+    hay_productos?: boolean;
     notas: NotaEmitida[];
+    resumen: { pendiente: number; devolvible: number };
 };
+
+type Modo = 'corregir' | 'devolver_todo' | 'devolver_parte';
+
+const MODOS: { valor: Modo; titulo: string; detalle: string }[] = [
+    {
+        valor: 'corregir',
+        titulo: 'Corregir un error del comprobante',
+        detalle:
+            'Boleta en vez de factura, o cliente o datos equivocados. Se anula este comprobante y emites uno nuevo; los certificados se conservan.',
+    },
+    {
+        valor: 'devolver_todo',
+        titulo: 'El cliente devuelve todo',
+        detalle: 'Se anula la venta y sus certificados. No se vuelve a emitir.',
+    },
+    {
+        valor: 'devolver_parte',
+        titulo: 'El cliente devuelve una parte',
+        detalle: 'Eliges qué devuelve. El comprobante sigue vigente.',
+    },
+];
 
 const redondear = (valor: number) =>
     Math.round((valor + Number.EPSILON) * 100) / 100;
@@ -79,6 +105,8 @@ export default function NotaDeVenta({
     porAcreditar,
     lineas,
     notas,
+    hay_productos = true,
+    resumen,
 }: Props) {
     const { currentTeam, flash } = usePage<{
         currentTeam?: Team | null;
@@ -88,10 +116,21 @@ export default function NotaDeVenta({
     const esCredito = tipo === 'credito';
     const titulo = esCredito ? 'Nota de crédito' : 'Nota de débito';
 
-    // Crédito: anular todo (por defecto) o devolver solo una parte.
-    const [parcial, setParcial] = useState(false);
+    // Crédito: lo normal es corregir un error; las devoluciones son la excepción.
+    const [modo, setModo] = useState<Modo>('corregir');
+    const parcial = modo === 'devolver_parte';
     const [devueltas, setDevueltas] = useState<Record<number, number>>({});
-    const [devolverStock, setDevolverStock] = useState(false);
+    const [seriesElegidas, setSeriesElegidas] = useState<
+        Record<number, string[]>
+    >({});
+    const alternarSerie = (indice: number, serie: string) => {
+        const actuales = seriesElegidas[indice] ?? [];
+        const series = actuales.includes(serie)
+            ? actuales.filter((s) => s !== serie)
+            : [...actuales, serie];
+        setSeriesElegidas({ ...seriesElegidas, [indice]: series });
+        setDevueltas({ ...devueltas, [indice]: series.length });
+    };
     // Débito: cobro por pago tardío o ajuste de precio de un ítem.
     const [cobro, setCobro] = useState<'mora' | 'precio'>('mora');
     const [montoMora, setMontoMora] = useState('');
@@ -140,14 +179,17 @@ export default function NotaDeVenta({
                               .map((l) => ({
                                   indice: l.indice,
                                   cantidad: devueltas[l.indice],
+                                  ...(l.series.length > 0
+                                      ? { series: seriesElegidas[l.indice] }
+                                      : {}),
                               })),
                       },
                   }
                 : {
                       motivo_catalogo: '01',
                       detalle: 'Anulación de la operación',
-                      ...(devolverStock
-                          ? { nota_datos: { devolucion_fisica: true } }
+                      ...(modo === 'corregir'
+                          ? { nota_datos: { correccion: true } }
                           : {}),
                   }
             : cobro === 'mora'
@@ -179,8 +221,8 @@ export default function NotaDeVenta({
                     setMontoMora('');
                     setPrecioNuevo('');
                     setDevueltas({});
-                    setParcial(false);
-                    setDevolverStock(false);
+                    setSeriesElegidas({});
+                    setModo('corregir');
                 },
                 onError: (errores) =>
                     toast.error(
@@ -190,6 +232,44 @@ export default function NotaDeVenta({
             },
         );
     };
+
+    // Lo mismo que hará el sistema cuando SUNAT acepte la nota: anular todo
+    // cierra las cuotas y devuelve lo cobrado; una nota parcial rebaja el saldo
+    // y solo el excedente sale de caja; un débito agrega una cuota.
+    const anulaTodo = esCredito && !parcial;
+    const rebaja = Math.min(importe, resumen.pendiente);
+    const excedente = redondear(importe - rebaja);
+    const devuelveCaja = anulaTodo
+        ? resumen.devolvible
+        : esCredito
+          ? Math.min(excedente, resumen.devolvible)
+          : 0;
+    const saldoFinal = anulaTodo
+        ? 0
+        : esCredito
+          ? redondear(resumen.pendiente - rebaja)
+          : redondear(resumen.pendiente + importe);
+    const efecto: [string, string][] = [
+        [
+            'Comprobante',
+            anulaTodo ? 'Queda anulado con su venta' : 'Sigue vigente',
+        ],
+        ['Saldo pendiente', soles(saldoFinal)],
+        [
+            'Caja',
+            devuelveCaja > 0
+                ? `Devuelve ${soles(devuelveCaja)}`
+                : 'Sin movimiento',
+        ],
+        [
+            'Stock',
+            hay_productos && (anulaTodo || (parcial && importe > 0))
+                ? parcial
+                    ? 'Vuelven los productos elegidos'
+                    : 'Vuelven los productos'
+                : 'Sin cambios',
+        ],
+    ];
 
     const ultima = notas.find((n) =>
         esCredito ? n.tipo === 'nota_credito' : n.tipo === 'nota_debito',
@@ -215,9 +295,11 @@ export default function NotaDeVenta({
                 <PageHeader
                     title={titulo}
                     description={
-                        esCredito
-                            ? 'Sobre la misma boleta o factura. Por defecto anula todo: revisa y acepta.'
-                            : 'Cobra lo que se agregó después de la boleta o factura: intereses por pagar tarde o un precio que subió.'
+                        anulada
+                            ? 'Esta venta ya está anulada.'
+                            : esCredito
+                              ? 'Sobre esta misma boleta o factura. Elige qué pasó y revisa el efecto antes de aceptar.'
+                              : 'Cobra lo que se agregó después de la boleta o factura: intereses por pagar tarde o un precio que subió.'
                     }
                 />
 
@@ -236,6 +318,25 @@ export default function NotaDeVenta({
                     >
                         {flash.success}
                     </div>
+                ) : null}
+
+                {anulada && esCredito ? (
+                    <Card className="border-border bg-card flex flex-col gap-3 rounded-2xl p-4 shadow-none sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-foreground text-sm font-semibold">
+                            ¿Era un error? Rehaz la venta: ya trae el cliente y
+                            los productos, y puedes cambiar a boleta o factura.
+                        </p>
+                        <Button asChild className="h-11 shrink-0 rounded-lg">
+                            <Link
+                                href={ventas.create.url(teamSlug, {
+                                    query: { rehacer: venta.id },
+                                })}
+                            >
+                                <RotateCcw className="size-4" />
+                                Rehacer venta
+                            </Link>
+                        </Button>
+                    </Card>
                 ) : null}
 
                 {ultima ? (
@@ -298,7 +399,9 @@ export default function NotaDeVenta({
                             </p>
                             <p className="text-muted-foreground text-xs">
                                 {venta.documento}
-                                {original.fecha ? ` · ${original.fecha}` : ''}
+                                {original.fecha
+                                    ? ` · ${fechaCorta(original.fecha)}`
+                                    : ''}
                             </p>
                         </div>
                     </div>
@@ -335,34 +438,80 @@ export default function NotaDeVenta({
                                         </TableCell>
                                         {esCredito && parcial ? (
                                             <TableCell className="text-right">
-                                                <Input
-                                                    type="number"
-                                                    min={0}
-                                                    max={l.cantidad}
-                                                    step={1}
-                                                    aria-label={`Cantidad que devuelve de ${l.nombre}`}
-                                                    value={
-                                                        devueltas[l.indice] ?? 0
-                                                    }
-                                                    onChange={(e) =>
-                                                        setDevueltas({
-                                                            ...devueltas,
-                                                            [l.indice]:
-                                                                Math.min(
-                                                                    Math.max(
-                                                                        Number(
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        ) || 0,
-                                                                        0,
+                                                {l.series.length > 0 ? (
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        {l.series.map(
+                                                            (serie) => (
+                                                                <label
+                                                                    key={serie}
+                                                                    className="flex items-center gap-2 font-['IBM_Plex_Mono',monospace] text-xs"
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={(
+                                                                            seriesElegidas[
+                                                                                l
+                                                                                    .indice
+                                                                            ] ??
+                                                                            []
+                                                                        ).includes(
+                                                                            serie,
+                                                                        )}
+                                                                        onChange={() =>
+                                                                            alternarSerie(
+                                                                                l.indice,
+                                                                                serie,
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                    {serie}
+                                                                </label>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <Input
+                                                        type="number"
+                                                        min={0}
+                                                        max={
+                                                            l.cantidad -
+                                                            l.devuelta
+                                                        }
+                                                        step={1}
+                                                        aria-label={`Cantidad que devuelve de ${l.nombre}`}
+                                                        value={
+                                                            devueltas[
+                                                                l.indice
+                                                            ] ?? 0
+                                                        }
+                                                        onChange={(e) =>
+                                                            setDevueltas({
+                                                                ...devueltas,
+                                                                [l.indice]:
+                                                                    Math.min(
+                                                                        Math.max(
+                                                                            Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            ) ||
+                                                                                0,
+                                                                            0,
+                                                                        ),
+                                                                        l.cantidad -
+                                                                            l.devuelta,
                                                                     ),
-                                                                    l.cantidad,
-                                                                ),
-                                                        })
-                                                    }
-                                                    className="ml-auto h-9 w-20 text-right"
-                                                />
+                                                            })
+                                                        }
+                                                        className="ml-auto h-9 w-20 text-right"
+                                                    />
+                                                )}
+                                                {l.devuelta > 0 ? (
+                                                    <span className="text-muted-foreground mt-1 block text-xs">
+                                                        Ya devuelto:{' '}
+                                                        {l.devuelta}
+                                                    </span>
+                                                ) : null}
                                             </TableCell>
                                         ) : null}
                                     </TableRow>
@@ -372,37 +521,43 @@ export default function NotaDeVenta({
                     </div>
 
                     {anulada ? null : esCredito ? (
-                        <div className="flex flex-col gap-3">
-                            {!parcial ? (
-                                <label className="text-foreground flex items-start gap-2 text-sm">
+                        <fieldset className="flex flex-col gap-2">
+                            <legend className="text-foreground mb-2 text-sm font-bold">
+                                ¿Qué pasó?
+                            </legend>
+                            {MODOS.map((opcion) => (
+                                <label
+                                    key={opcion.valor}
+                                    className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm ${modo === opcion.valor ? 'border-primary bg-destructive/10' : 'border-border'}`}
+                                >
                                     <input
-                                        type="checkbox"
-                                        checked={devolverStock}
-                                        onChange={(e) =>
-                                            setDevolverStock(e.target.checked)
-                                        }
+                                        type="radio"
+                                        name="que-paso"
+                                        checked={modo === opcion.valor}
+                                        onChange={() => {
+                                            setModo(opcion.valor);
+                                            setDevueltas({});
+                                            setSeriesElegidas({});
+                                        }}
                                         className="mt-1"
                                     />
                                     <span>
-                                        Ya recibí los productos: vuelven al
-                                        stock. Si no lo marcas, solo se anula el
-                                        comprobante.
+                                        <span className="text-foreground block font-semibold">
+                                            {opcion.titulo}
+                                        </span>
+                                        <span className="text-muted-foreground block text-xs">
+                                            {opcion.detalle}
+                                        </span>
                                     </span>
                                 </label>
+                            ))}
+                            {modo === 'corregir' ? (
+                                <p className="text-muted-foreground text-xs">
+                                    Lo cobrado figura como devuelto y al rehacer
+                                    la venta registras el cobro otra vez.
+                                </p>
                             ) : null}
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setParcial(!parcial);
-                                    setDevueltas({});
-                                }}
-                                className="text-primary-strong min-h-9 self-start text-sm font-semibold underline-offset-2 hover:underline"
-                            >
-                                {parcial
-                                    ? 'Mejor anular todo'
-                                    : '¿Solo devuelve una parte? Elegir qué devuelve'}
-                            </button>
-                        </div>
+                        </fieldset>
                     ) : (
                         <div className="grid gap-3 sm:grid-cols-2">
                             {(
@@ -477,10 +632,39 @@ export default function NotaDeVenta({
                         </div>
                     )}
 
+                    {sinSaldo ? null : (
+                        <section
+                            aria-labelledby="efecto-nota"
+                            className="bg-muted/50 rounded-xl p-4"
+                        >
+                            <h2
+                                id="efecto-nota"
+                                className="text-foreground text-sm font-bold"
+                            >
+                                Qué pasará cuando SUNAT la acepte
+                            </h2>
+                            <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                                {efecto.map(([etiqueta, valor]) => (
+                                    <div
+                                        key={etiqueta}
+                                        className="flex justify-between gap-3"
+                                    >
+                                        <dt className="text-muted-foreground">
+                                            {etiqueta}
+                                        </dt>
+                                        <dd className="text-foreground text-right font-semibold tabular-nums">
+                                            {valor}
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        </section>
+                    )}
+
                     <div className="border-border flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p className="text-muted-foreground text-xs font-semibold uppercase">
-                                {esCredito ? 'Se devuelve' : 'Se cobra'}
+                                Importe de la nota
                             </p>
                             <p className="text-foreground font-['Oswald',sans-serif] text-3xl font-bold">
                                 {soles(importe)}

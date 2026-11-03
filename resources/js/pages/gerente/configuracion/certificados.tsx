@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Link, usePage } from '@inertiajs/react';
 import { Award, Eye, Pencil, Plus } from 'lucide-react';
 
@@ -40,12 +41,10 @@ export default function Certificados({
                             <Award className="size-5" aria-hidden="true" />
                         </div>
                         <div>
-                            <h1 className="text-foreground text-xl font-semibold">
-                                Certificados
-                            </h1>
+                            <h1 className={pageTitleClass}>Certificados</h1>
                             <p className="text-muted-foreground text-xs">
-                                Todos usan la misma plantilla. Crea uno nuevo y
-                                lígalo a su tipo de servicio.
+                                Crea plantillas por bloques y relaciónalas con
+                                tipos de servicio o productos.
                             </p>
                         </div>
                     </div>

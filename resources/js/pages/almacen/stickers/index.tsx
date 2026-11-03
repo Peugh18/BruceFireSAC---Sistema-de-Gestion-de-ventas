@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Barcode, Building2, FileText, Printer } from 'lucide-react';
 import { useState } from 'react';
@@ -19,6 +20,7 @@ import AlmacenLayout from '@/layouts/almacen-layout';
 import recepciones from '@/routes/almacen/recepciones';
 import stickersRutas from '@/routes/almacen/stickers';
 import type { Team } from '@/types';
+import { fechaCorta } from '@/lib/utils';
 
 export type StickerReceptionRow = {
     id: number;
@@ -45,11 +47,6 @@ export type Props = {
     recepciones: PaginatedReceptions;
 };
 
-function formatDate(dateStr: string): string {
-    const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
-}
-
 export default function StickersIndex({ recepciones: receptions }: Props) {
     const [formato, setFormato] = useState<FormatoStickers>('rollo');
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
@@ -65,7 +62,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
 
             <div className="flex flex-col gap-6">
                 <div>
-                    <h1 className="text-foreground text-xl font-bold">
+                    <h1 className={pageTitleClass}>
                         Stickers de Código de Barras
                     </h1>
                     <p className="text-muted-foreground text-xs">
@@ -185,7 +182,7 @@ export default function StickersIndex({ recepciones: receptions }: Props) {
                                                 #{rec.id}
                                             </TableCell>
                                             <TableCell className="text-foreground/80 px-3 py-3 font-mono text-xs whitespace-nowrap">
-                                                {formatDate(rec.fecha)}
+                                                {fechaCorta(rec.fecha)}
                                             </TableCell>
                                             <TableCell className="text-foreground px-4 py-3 font-bold">
                                                 {rec.proveedor}

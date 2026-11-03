@@ -125,7 +125,7 @@ class InspectionController extends Controller
             'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'ubicacion_actual' => ['nullable', 'string', 'max:150'],
-            'anio_fabricacion' => ['nullable', 'integer', 'min:1970', 'max:'.(date('Y') + 1)],
+            'anio_fabricacion' => ['nullable', 'integer', 'min:1970', 'max:'.today()->year],
             'serie_fabricante' => ['nullable', 'string', 'max:50'],
         ]);
 

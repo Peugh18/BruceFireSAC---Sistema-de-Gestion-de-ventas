@@ -2,28 +2,32 @@
 
 namespace App\Http\Controllers\Vendedor;
 
+use App\Actions\Certificates\EmitirCertificadoDeServicio;
 use App\Actions\Certificates\EmitirCertificadosDeVenta;
 use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vendedor\Concerns\ValidaVentaVisible;
 use App\Http\Requests\Sales\EmitirCertificadosRequest;
 use App\Models\Certificate;
 use App\Models\CertificateUnit;
 use App\Models\CompanySetting;
 use App\Models\Equipment;
 use App\Models\Sale;
-use App\Models\SaleItem;
 use App\Models\Team;
 use App\Services\Certificates\CertificadosDeVenta;
 use App\Services\Certificates\PruebasHidrostaticas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SaleCertificateController extends Controller
 {
+    use ValidaVentaVisible;
+
     /**
      * Pantalla "Armar certificados": reparte los extintores de la venta en
      * grupos (un local o vehículo por grupo), con la numeración del cliente.
@@ -44,25 +48,24 @@ class SaleCertificateController extends Controller
                 'referencia' => $sale->referencia,
                 'client' => $sale->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento', 'direccion_fiscal']),
             ],
-            'unidades' => $sale->items
-                ->filter(fn (SaleItem $item) => $item->equipment !== null)
-                ->map(fn (SaleItem $item) => [
-                    'equipment_id' => $item->equipment->id,
-                    'codigo_interno' => $item->equipment->numero_serie,
-                    'serie_fabricante' => $item->equipment->serie_fabricante,
-                    'producto' => $item->product?->nombre,
-                    'capacidad' => $item->equipment->capacidad,
-                    'marca' => $item->equipment->marca,
-                    'numero_cliente' => $item->equipment->numero_cliente,
-                    'agente' => $item->equipment->tipo_agente,
-                    'agente_conocido' => EquipmentType::esConocido($item->equipment->tipo_agente),
-                    'presion_ph_sugerida' => EquipmentType::esConocido($item->equipment->tipo_agente)
-                        ? EquipmentType::fromDescription($item->equipment->tipo_agente)->presionPruebaHidrostatica()
+            'unidades' => CertificadosDeVenta::equipos($sale)
+                ->map(fn (Equipment $equipo) => [
+                    'equipment_id' => $equipo->id,
+                    'codigo_interno' => $equipo->numero_serie,
+                    'serie_fabricante' => $equipo->serie_fabricante,
+                    'producto' => $equipo->product?->nombre,
+                    'capacidad' => $equipo->capacidad,
+                    'marca' => $equipo->marca,
+                    'numero_cliente' => $equipo->numero_cliente,
+                    'agente' => $equipo->tipo_agente,
+                    'agente_conocido' => EquipmentType::esConocido($equipo->tipo_agente),
+                    'presion_ph_sugerida' => EquipmentType::esConocido($equipo->tipo_agente)
+                        ? EquipmentType::fromDescription($equipo->tipo_agente)->presionPruebaHidrostatica()
                         : null,
-                    'fecha_ultima_ph' => $pruebas->get($item->equipment->id)?->fecha_ultima_ph?->toDateString(),
-                    'presion_ph' => $pruebas->get($item->equipment->id)?->presion_ph,
-                    'tiempo_ph' => $pruebas->get($item->equipment->id)?->tiempo_ph,
-                    'ph_reutilizable' => ($ph = $pruebas->get($item->equipment->id)?->certificate) ? [
+                    'fecha_ultima_ph' => $pruebas->get($equipo->id)?->fecha_ultima_ph?->toDateString(),
+                    'presion_ph' => $pruebas->get($equipo->id)?->presion_ph,
+                    'tiempo_ph' => $pruebas->get($equipo->id)?->tiempo_ph,
+                    'ph_reutilizable' => ($ph = $pruebas->get($equipo->id)?->certificate) ? [
                         'id' => $ph->id,
                         'numero' => $ph->numero,
                         'fecha_vigencia_hasta' => $ph->fecha_vigencia_hasta?->toDateString(),
@@ -71,7 +74,7 @@ class SaleCertificateController extends Controller
                 ->values(),
             'tiposSugeridos' => EmitirCertificadosDeVenta::tiposPorDestino($sale->destino),
             'instructor' => CompanySetting::current()->instructor_capacitacion,
-            'emitidos' => CertificadosDeVenta::deLaVenta($sale),
+            'emitidos' => CertificadosDeVenta::deLaVenta($sale, true),
             'gruposActuales' => $this->gruposActuales($sale),
         ]);
     }
@@ -83,7 +86,7 @@ class SaleCertificateController extends Controller
      */
     protected function pruebasRegistradas(Sale $sale): Collection
     {
-        return PruebasHidrostaticas::vigentes($sale->client_id, array_values($sale->items->map(fn (SaleItem $item) => $item->equipment_id)->filter()->all()));
+        return PruebasHidrostaticas::vigentes($sale->client_id, array_values(CertificadosDeVenta::equipos($sale)->map(fn (Equipment $equipo): int => $equipo->id)->all()));
     }
 
     /**
@@ -94,10 +97,11 @@ class SaleCertificateController extends Controller
      */
     protected function gruposActuales(Sale $sale): array
     {
-        return array_values(Certificate::query()
+        return array_values(CertificadosDeVenta::propios($sale)
             ->with(['certificateType', 'certificateUnits', 'participants'])
-            ->whereDoesntHave('certificateType', fn ($query) => $query->where('codigo', 'prueba_hidrostatica'))
-            ->where('sale_id', $sale->id)
+            // Solo los de extintores y capacitación se arman aquí; los de servicio
+            // (luces, detección, plantillas por bloques) tienen su propio formulario.
+            ->whereHas('certificateType', fn ($query) => $query->whereIn('codigo', array_diff(EmitirCertificadoDeServicio::TIPOS_DE_EXTINTORES, ['prueba_hidrostatica'])))
             ->where('client_id', $sale->client_id)
             ->whereIn('estado', ['vigente', 'vencido'])
             ->orderBy('id')
@@ -113,7 +117,9 @@ class SaleCertificateController extends Controller
                     'destino' => $destino,
                     'referencia' => $certificados->first()->referencia,
                     'direccion' => $certificados->first()->direccion,
-                    'tipos' => $conUnidades?->datos['tipos'] ?? $certificados->map(fn (Certificate $certificate) => $certificate->certificateType->codigo)->unique()->values()->all(),
+                    'tipos' => $conUnidades?->datos['tipos'] ?? ($conUnidades?->service_order_id
+                        ? EmitirCertificadosDeVenta::tiposPorDestino($destino)
+                        : $certificados->map(fn (Certificate $certificate) => $certificate->certificateType->codigo)->unique()->values()->all()),
                     'unidades' => $conUnidades
                         ? $conUnidades->certificateUnits->sortBy('orden')->filter(fn ($unit) => $unit->equipment_id !== null)
                             ->map(fn ($unit) => ['equipment_id' => $unit->equipment_id, 'numero_cliente' => $unit->numero_cliente])
@@ -137,14 +143,17 @@ class SaleCertificateController extends Controller
     public function store(Team $current_team, Sale $sale, EmitirCertificadosRequest $request, EmitirCertificadosDeVenta $emitir): RedirectResponse
     {
         $this->assertSedeAccess($request, $sale);
-        $this->completarDatos($sale, $request->validated('grupos'));
+        $certificados = DB::transaction(function () use ($sale, $request, $emitir) {
+            $sale = Sale::query()->lockForUpdate()->findOrFail($sale->id);
+            $this->completarDatos($sale, $request->validated('grupos'));
 
-        $certificados = $emitir->handle(
-            $sale,
-            $request->validated('grupos'),
-            $request->validated('motivo') ?: EmitirCertificadosDeVenta::MOTIVO_AJUSTE,
-            $request->user()->id,
-        );
+            return $emitir->handle(
+                $sale,
+                $request->validated('grupos'),
+                $request->validated('motivo') ?: EmitirCertificadosDeVenta::MOTIVO_AJUSTE,
+                $request->user()->id,
+            );
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => "{$certificados->count()} certificado(s) listos."]);
 
@@ -164,6 +173,7 @@ class SaleCertificateController extends Controller
     protected function completarDatos(Sale $sale, array $grupos): void
     {
         $faltan = [];
+        $permitidos = CertificadosDeVenta::equipos($sale)->keyBy('id');
 
         foreach ($grupos as $index => $grupo) {
             if (array_diff($grupo['tipos'], ['capacitacion']) === []) {
@@ -171,9 +181,13 @@ class SaleCertificateController extends Controller
             }
 
             foreach ($grupo['unidades'] as $unidad) {
-                $equipo = Equipment::query()->whereKey((int) $unidad['equipment_id'])->first();
+                $equipo = $permitidos->get((int) $unidad['equipment_id']);
+                if (! $equipo) {
+                    throw ValidationException::withMessages(["grupos.{$index}.unidades" => 'Hay extintores que no pertenecen a esta venta o aún no están aptos.']);
+                }
+                $equipo = Equipment::query()->lockForUpdate()->findOrFail($equipo->id);
                 if (filled($unidad['serie_fabricante'] ?? null)) {
-                    $equipo?->update(['serie_fabricante' => trim($unidad['serie_fabricante'])]);
+                    $equipo->update(['serie_fabricante' => trim($unidad['serie_fabricante'])]);
                 } elseif ($equipo && (blank($equipo->serie_fabricante) || str_starts_with((string) $equipo->serie_fabricante, 'No legible'))) {
                     $faltan["grupos.{$index}.unidades"][] = "Falta la serie de fábrica de {$equipo->numero_serie}.";
                 }
@@ -187,11 +201,5 @@ class SaleCertificateController extends Controller
         if ($faltan !== []) {
             throw ValidationException::withMessages(array_map(fn (array $mensajes) => implode(' ', $mensajes), $faltan));
         }
-    }
-
-    protected function assertSedeAccess(Request $request, Sale $sale): void
-    {
-        // Cada vendedor corrige solo sus ventas; el Gerente, las de todos.
-        abort_unless(Sale::query()->visiblePara($request->user())->whereKey($sale->id)->exists(), 404);
     }
 }

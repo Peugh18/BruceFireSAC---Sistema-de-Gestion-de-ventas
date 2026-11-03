@@ -33,19 +33,48 @@ const AGENTE: ParteExtintor = {
     nombre: 'Agente extintor',
     opciones: ['Compactado', 'Bajo peso', 'Húmedo', 'Contaminado', 'Otro'],
 };
+const PASADOR: ParteExtintor = {
+    clave: 'pasador',
+    nombre: 'Pasador y precinto',
+    opciones: ['Sin pasador', 'Precinto roto', 'Sin precinto', 'Otro'],
+};
+const ETIQUETA: ParteExtintor = {
+    clave: 'identificacion',
+    nombre: 'Tarjeta o etiqueta',
+    opciones: ['Sin tarjeta', 'Ilegible', 'Vencida', 'Otro'],
+};
 const RUEDAS: ParteExtintor = {
     clave: 'ruedas',
     nombre: 'Ruedas y carro',
     opciones: ['Rueda rota', 'Eje trabado', 'Carro doblado', 'Otro'],
 };
 
-/** Las partes que se revisan en planta, según el tipo de extintor. */
+/**
+ * Las partes que se revisan en planta, según el tipo de extintor (E-054). El
+ * CO2 no lleva manómetro: su carga se controla por peso.
+ */
 export const PARTES: Record<TipoExtintor, ParteExtintor[]> = {
-    pqs: [MANOMETRO, VALVULA, MANGUERA, CILINDRO, AGENTE],
-    acetato: [MANOMETRO, VALVULA, MANGUERA, CILINDRO, AGENTE],
-    co2: [VALVULA, MANGUERA, CILINDRO],
-    rodante: [CILINDRO, MANGUERA, VALVULA, MANOMETRO, RUEDAS],
-    otro: [CILINDRO, MANGUERA, VALVULA, MANOMETRO],
+    pqs: [MANOMETRO, VALVULA, PASADOR, MANGUERA, CILINDRO, AGENTE, ETIQUETA],
+    acetato: [
+        MANOMETRO,
+        VALVULA,
+        PASADOR,
+        MANGUERA,
+        CILINDRO,
+        AGENTE,
+        ETIQUETA,
+    ],
+    co2: [VALVULA, PASADOR, MANGUERA, CILINDRO, AGENTE, ETIQUETA],
+    rodante: [
+        CILINDRO,
+        MANGUERA,
+        VALVULA,
+        PASADOR,
+        MANOMETRO,
+        RUEDAS,
+        ETIQUETA,
+    ],
+    otro: [CILINDRO, MANGUERA, VALVULA, PASADOR, MANOMETRO, ETIQUETA],
 };
 
 /** Qué dibujo usar: por el agente y, desde 25 kg, rodante. */

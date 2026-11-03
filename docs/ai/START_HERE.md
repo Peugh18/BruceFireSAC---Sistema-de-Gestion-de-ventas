@@ -1,0 +1,34 @@
+# START HERE — punto de entrada para cualquier IA (Claude, GPT/Codex, Gemini)
+
+> Léelo completo antes de cualquier tarea importante. Si el código contradice un documento, registra la diferencia en la bitácora y resuélvela con evidencia.
+
+## 1. Qué es y en qué etapa está
+
+Sistema web interno de BRUCE FIRE & SAFETY S.A.C. (Trujillo, Perú): venta, recarga, mantenimiento e inspección de extintores, facturación electrónica SUNAT, inventario por serie, taller, campo y certificados. **Etapa: beta funcional en demo** (sin producción SUNAT).
+
+## 2. Lee en este orden
+
+| #   | Documento                                                                                  | Para qué                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | [PROYECTO.md](PROYECTO.md)                                                                 | Stack, arquitectura en corto, comandos, convenciones y qué no tocar                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 2   | [PROJECT_STATE.md](PROJECT_STATE.md)                                                       | Estado real hoy: qué funciona, riesgos y bloqueos                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 3   | [PLAN.md](PLAN.md)                                                                         | **Tablero oficial de tareas** (fases y decisiones vigentes)                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 4   | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)                                                     | Lo que espera una decisión del usuario o de la contadora                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 5   | [DECISIONS_INDEX.md](DECISIONS_INDEX.md)                                                   | Decisiones aprobadas y ADR                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 6   | La última entrada de [BITACORA.md](BITACORA.md) y [SESSION_HANDOFF.md](SESSION_HANDOFF.md) | Qué hizo la sesión anterior y qué sigue                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 7   | Según la tarea                                                                             | [CONTEXTO_SISTEMA.md](CONTEXTO_SISTEMA.md) (reglas del negocio), [ERRORES.md](ERRORES.md) (errores y decisiones), [SUNAT_FACTURACION.md](../SUNAT_FACTURACION.md), [APIS.md](../APIS.md), [DESIGN.md](../../DESIGN.md), [auditoría](../audit/AUDITORIA_2026-10-28.md), [arquitectura](../architecture/ARQUITECTURA_OBJETIVO.md), [componentes](../design-system/COMPONENTES_Y_FAMILIA_DOCUMENTAL.md), [métricas](../finance-bi/METRICAS_FINANCIERAS.md), [vistas](../views/INVENTARIO_VISTAS_ACTUAL.md) |
+
+## 3. Cómo saber si una tarea está autorizada
+
+Una tarea está autorizada si está en [PLAN.md](PLAN.md) como fase en curso **o** si el usuario la pidió en la conversación. Una recomendación de otra IA **no** es una decisión aprobada. Cambiar la arquitectura, agregar dependencias, hacer commit o push, o tocar datos reales requiere permiso explícito del usuario.
+
+## 4. Reglas del equipo de IA
+
+Están en [AI_RULES.md](AI_RULES.md). Las más importantes: investigar cómo lo resuelven los sistemas grandes antes de decidir, escribir primero la prueba que falla, no duplicar reglas y no declarar nada hecho sin evidencia.
+
+## 5. Cómo entregar el trabajo
+
+1. Pruebas afectadas en verde. `composer ci:check` al cerrar una fase. Revisión en el navegador si hay pantalla.
+2. Actualizar ERRORES.md (estado del error), PLAN.md (avance) y una entrada nueva en BITACORA.md.
+3. Llenar [SESSION_HANDOFF.md](SESSION_HANDOFF.md) con lo que la siguiente IA necesita.
+4. Decir qué **no** se verificó.

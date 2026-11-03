@@ -20,7 +20,9 @@ class PruebasHidrostaticas
         return Certificate::query()
             ->with(['certificateUnits' => fn ($query) => $query
                 ->whereIn('equipment_id', $equipmentIds)
-                ->whereDate('fecha_ultima_ph', '>', today()->subYears(5))
+                ->where(fn ($query) => $query
+                    ->where(fn ($query) => $query->where('fechas_snapshot', true)->whereDate('proxima_prueba_hidrostatica', '>', today()))
+                    ->orWhere(fn ($query) => $query->where('fechas_snapshot', false)->whereDate('fecha_ultima_ph', '>', today()->subYears(5))))
                 ->whereDate('fecha_ultima_ph', '<=', today())
                 ->whereHas('equipment', fn ($equipment) => $equipment
                     ->where('client_id', $clientId)

@@ -103,7 +103,7 @@ class CommunicationController extends Controller
             'id' => $orden->id,
             'codigo' => $orden->codigo,
             'cliente' => $orden->client->razon_social,
-            'servicio' => $orden->service->nombre,
+            'servicio' => $orden->resumenServicios(),
             'tecnico' => $orden->tecnico?->name,
             'area' => $orden->departamento_tecnico ?? 'planta',
             'prioridad' => $orden->prioridad,

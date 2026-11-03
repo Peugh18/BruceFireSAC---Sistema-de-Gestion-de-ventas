@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import {
     Dialog,
     DialogContent,
@@ -34,6 +35,7 @@ import pagosRutas from '@/routes/gerente/cobranzas/pagos';
 import CobranzasRoutes from '@/routes/gerente/cobranzas';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Empty } from '@/components/ui/empty';
+import { soles } from '@/lib/utils';
 
 type PaymentItem = {
     id: number;
@@ -105,14 +107,6 @@ type PageProps = {
     [key: string]: unknown;
 };
 
-function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-        minimumFractionDigits: 2,
-    }).format(amount);
-}
-
 export default function CobranzasConsolidadasIndex() {
     const modalTrigger = useRef<HTMLElement | null>(null);
     const { currentTeam, cuotas, filters, kpis, vendedores } =
@@ -182,7 +176,7 @@ export default function CobranzasConsolidadasIndex() {
             <div className="space-y-6">
                 {/* Cabecera */}
                 <div>
-                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
+                    <h1 className={pageTitleClass}>
                         Cartera Consolidada de Cobranzas
                     </h1>
                     <p className="text-muted-foreground mt-1 text-sm">
@@ -201,7 +195,7 @@ export default function CobranzasConsolidadasIndex() {
                             <Clock className="text-foreground size-4" />
                         </div>
                         <div className="text-foreground mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(kpis.totalPorCobrar)}
+                            {soles(kpis.totalPorCobrar)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
                             Saldo pendiente en cartera
@@ -218,7 +212,7 @@ export default function CobranzasConsolidadasIndex() {
                         <div
                             className={`${kpis.vencidoTotal > 0 ? 'text-primary-strong' : 'text-success-strong'} mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold`}
                         >
-                            {formatCurrency(kpis.vencidoTotal)}
+                            {soles(kpis.vencidoTotal)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
                             Cuotas con fecha pasada
@@ -233,7 +227,7 @@ export default function CobranzasConsolidadasIndex() {
                             <Calendar className="text-warning-strong size-4" />
                         </div>
                         <div className="text-warning-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(kpis.venceEstaSemana)}
+                            {soles(kpis.venceEstaSemana)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
                             Vencimientos hasta domingo
@@ -248,7 +242,7 @@ export default function CobranzasConsolidadasIndex() {
                             <TrendingUp className="text-success-strong size-4" />
                         </div>
                         <div className="text-success-strong mt-2 font-['IBM_Plex_Mono',monospace] text-2xl font-bold">
-                            {formatCurrency(kpis.cobradoEsteMes)}
+                            {soles(kpis.cobradoEsteMes)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
                             Abonos del mes menos devoluciones
@@ -479,17 +473,13 @@ export default function CobranzasConsolidadasIndex() {
                                                         )}
                                                 </TableCell>
                                                 <TableCell className="text-foreground px-4 py-3 text-right font-mono font-semibold">
-                                                    {formatCurrency(c.monto)}
+                                                    {soles(c.monto)}
                                                 </TableCell>
                                                 <TableCell className="text-success-strong px-4 py-3 text-right font-mono">
-                                                    {formatCurrency(
-                                                        c.monto_pagado,
-                                                    )}
+                                                    {soles(c.monto_pagado)}
                                                 </TableCell>
                                                 <TableCell className="text-foreground px-4 py-3 text-right font-mono font-bold">
-                                                    {formatCurrency(
-                                                        c.saldo_pendiente,
-                                                    )}
+                                                    {soles(c.saldo_pendiente)}
                                                 </TableCell>
                                                 <TableCell className="px-4 py-3 text-center">
                                                     <span
@@ -618,9 +608,7 @@ export default function CobranzasConsolidadasIndex() {
                                             Total Cuota:
                                         </span>
                                         <p className="text-foreground font-mono font-bold">
-                                            {formatCurrency(
-                                                viewingPayments.monto,
-                                            )}
+                                            {soles(viewingPayments.monto)}
                                         </p>
                                     </div>
                                     <div>
@@ -628,7 +616,7 @@ export default function CobranzasConsolidadasIndex() {
                                             Abonado:
                                         </span>
                                         <p className="text-success-strong font-mono font-bold">
-                                            {formatCurrency(
+                                            {soles(
                                                 viewingPayments.monto_pagado,
                                             )}
                                         </p>
@@ -638,7 +626,7 @@ export default function CobranzasConsolidadasIndex() {
                                             Saldo Restante:
                                         </span>
                                         <p className="text-primary-strong font-mono font-bold">
-                                            {formatCurrency(
+                                            {soles(
                                                 viewingPayments.saldo_pendiente,
                                             )}
                                         </p>
@@ -680,10 +668,7 @@ export default function CobranzasConsolidadasIndex() {
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="text-success-strong font-mono font-bold">
-                                                        +
-                                                        {formatCurrency(
-                                                            p.monto,
-                                                        )}
+                                                        +{soles(p.monto)}
                                                     </div>
                                                     <div className="text-muted-foreground text-xs">
                                                         {p.fecha}

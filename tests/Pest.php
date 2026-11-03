@@ -1,13 +1,17 @@
 <?php
 
 use App\Actions\Billing\IssueCreditNote;
+use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Actions\Sales\CreateSale;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryUnit;
 use App\Models\Product;
+use App\Models\Quote;
+use App\Models\QuoteItem;
 use App\Models\Sale;
 use App\Models\Sede;
+use App\Models\Service;
 use App\Models\User;
 use App\Services\Billing\GreenterService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,6 +31,9 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    // D-10 se escribió después de casi todas las pruebas de ventas: estas siguen
+    // vendiendo directo a empresas. Las pruebas de D-10 la encienden (Auditoria/).
+    ->beforeEach(fn () => config(['billing.exigir_cotizacion' => false]))
     ->in('Feature');
 
 /*
@@ -136,3 +143,30 @@ function guardarXmlOriginalDePrueba(ElectronicDocument $documento): void
 const FIRMA_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAeCAYAAABwmH1PAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA0ElEQVRYhe2YwQ2AIAxF0Q24sYH7j+MG3hwBTyZGBQv0t2D6zsa+ZzUanTMMgwMflqgxd9IYeo/dt1XMQzQ4t1Wp6FliiHPfW5W6xUWuamksctvQ4JIQqWhYcE2ARDQkuFUcGc4efJVtEUVFswUjBBHnZAlGP3uc5+9yC8g53T1j6JlVkprfwq3zi0W1Y1s9qt+PWqFXaqJJ0r1sNUWJXxefexxQPbPyo8SeUHxfA0YLvZPzf4SMHnuS6pgpB40Iyd2HJWr9TUSSbPpjrGH8nAM0qaKjXVkUpgAAAABJRU5ErkJggg==';
 
 const FIRMA_EN_BLANCO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+if (! function_exists('aceptarCotizacion')) {
+    function aceptarCotizacion(Quote $quote): Quote
+    {
+        return app(TransitionQuoteState::class)
+            ->aceptar($quote, ['aceptada_por' => 'Cliente de prueba', 'aceptada_canal' => 'presencial']);
+    }
+}
+
+if (! function_exists('cotizacionAceptada')) {
+    /**
+     * D-10: una cotización ya aceptada por el cliente, con un servicio, lista
+     * para abrir la orden o pasar a venta.
+     *
+     * @param  array<string, mixed>  $atributos
+     */
+    function cotizacionAceptada(?Service $servicio = null, array $atributos = [], int $cantidad = 1): Quote
+    {
+        $quote = Quote::factory()->aceptada()->create(['aceptada_por' => 'Cliente de prueba', 'aceptada_canal' => 'presencial', 'aceptada_at' => now(), ...$atributos]);
+        QuoteItem::factory()->create([
+            'quote_id' => $quote->id, 'product_id' => null,
+            'service_id' => ($servicio ?? Service::factory()->create())->id, 'cantidad' => $cantidad,
+        ]);
+
+        return $quote;
+    }
+}

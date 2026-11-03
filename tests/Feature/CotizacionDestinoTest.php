@@ -3,7 +3,9 @@
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Models\QuoteItem;
 use App\Models\Sale;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Vehicle;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -170,4 +172,25 @@ test('corregir la placa cotizada evita heredar el vehiculo anterior de la orden'
 
     $this->get(route('vendedor.ventas.create', [$user->currentTeam, 'orden_servicio' => $order->id]))
         ->assertInertia(fn ($page) => $page->where('venta.destino', 'vehiculo')->where('venta.vehicle_id', null)->where('venta.referencia', 'PLACA: BBB-222'));
+});
+
+test('cobrar una orden trae tambien los productos que se cotizaron con el servicio', function () {
+    $user = vendedorUser();
+    $client = Client::factory()->create();
+    $quote = Quote::factory()->create(['client_id' => $client->id, 'estado' => 'aceptada']);
+    $recarga = Service::factory()->create();
+    $extintor = Product::factory()->create(['serializado' => true]);
+    $senal = Product::factory()->create(['serializado' => false]);
+    QuoteItem::factory()->create(['quote_id' => $quote->id, 'service_id' => $recarga->id, 'product_id' => null, 'cantidad' => 1, 'precio_unitario' => 78]);
+    QuoteItem::factory()->create(['quote_id' => $quote->id, 'service_id' => null, 'product_id' => $extintor->id, 'cantidad' => 1, 'precio_unitario' => 320]);
+    QuoteItem::factory()->create(['quote_id' => $quote->id, 'service_id' => null, 'product_id' => $senal->id, 'cantidad' => 2, 'precio_unitario' => 6.2]);
+    $order = ServiceOrder::factory()->create(['client_id' => $client->id, 'quote_id' => $quote->id]);
+    $order->lines()->create(['service_id' => $recarga->id, 'cantidad' => 1]);
+
+    $this->actingAs($user)->get(route('vendedor.ventas.create', [$user->currentTeam, 'orden_servicio' => $order->id]))
+        ->assertInertia(fn ($page) => $page
+            ->where('venta.items', fn ($items) => collect($items)->contains('service_id', $recarga->id)
+                && collect($items)->contains(fn ($item) => $item['product_id'] === $senal->id && (int) $item['cantidad'] === 2 && (float) $item['precio_unitario'] === 6.2)
+                && ! collect($items)->contains('product_id', $extintor->id))
+            ->where('quote.items', fn ($items) => collect($items)->pluck('product_id')->all() === [$extintor->id]));
 });

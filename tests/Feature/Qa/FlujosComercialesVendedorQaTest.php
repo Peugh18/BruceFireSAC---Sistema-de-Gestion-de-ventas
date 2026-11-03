@@ -58,6 +58,7 @@ it('convierte una cotización de servicio en venta y marca la cotización como v
         'sede_id' => $sede->id,
         'estado' => 'enviada',
     ]);
+    aceptarCotizacion($quote);
 
     $sale = app(CreateSale::class)->handle([
         'quote_id' => $quote->id,

@@ -34,7 +34,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ClientSite> $sites
  * @property-read Collection<int, Vehicle> $vehicles
  */
-#[Fillable(['codigo_interno', 'tipo_documento', 'numero_documento', 'razon_social', 'nombre_comercial', 'telefono', 'whatsapp', 'email', 'direccion_fiscal', 'ubigeo', 'estado_contribuyente', 'condicion_domicilio', 'consultado_at', 'activo', 'observaciones'])]
+#[Fillable(['codigo_interno', 'tipo_documento', 'numero_documento', 'razon_social', 'nombre_comercial', 'certificado_con', 'telefono', 'whatsapp', 'email', 'direccion_fiscal', 'ubigeo', 'estado_contribuyente', 'condicion_domicilio', 'consultado_at', 'activo', 'observaciones'])]
 class Client extends Model
 {
     /** @use HasFactory<ClientFactory> */

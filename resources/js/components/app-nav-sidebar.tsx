@@ -5,6 +5,7 @@ import { useInitials } from '@/hooks/use-initials';
 import { logout } from '@/routes';
 import { edit as editarPerfil } from '@/routes/profile';
 import type { Auth } from '@/types';
+import { normalizePath } from '@/lib/utils';
 
 type AppNavItem = {
     title: string;
@@ -38,13 +39,6 @@ type AuthPageProps = {
     };
     [key: string]: unknown;
 };
-
-function normalizePath(path: string): string {
-    const withoutQuery = path.split('?')[0].split('#')[0];
-    const withoutTrailingSlash = withoutQuery.replace(/\/+$/u, '');
-
-    return withoutTrailingSlash === '' ? '/' : withoutTrailingSlash;
-}
 
 function defaultIsItemActive(
     currentPath: string,

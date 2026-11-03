@@ -29,6 +29,18 @@ use Illuminate\Support\Carbon;
 #[Fillable(['client_id', 'tipo', 'nombre', 'direccion', 'ubigeo', 'referencia', 'contacto', 'telefono', 'email', 'estado'])]
 class ClientSite extends Model
 {
+    /**
+     * El local que nombra una referencia como "SEDE: Tienda Centro".
+     */
+    public static function deReferencia(?Client $client, ?string $referencia): ?self
+    {
+        if (! $client || ! preg_match('/^\s*(SEDE|LOCAL)\s*:\s*(.+)$/iu', (string) $referencia, $partes)) {
+            return null;
+        }
+
+        return $client->sites()->where('nombre', trim($partes[2]))->first();
+    }
+
     /** @use HasFactory<ClientSiteFactory> */
     use HasFactory;
 

@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Wrench, Inbox } from 'lucide-react';
 import { useState } from 'react';
@@ -50,9 +51,7 @@ export default function MantenimientosIndex({
                 <p className="text-primary-strong mb-1 text-xs font-bold tracking-wider uppercase">
                     Campo
                 </p>
-                <h1 className="text-2xl font-bold tracking-tight">
-                    Mantenimiento en sitio
-                </h1>
+                <h1 className={pageTitleClass}>Mantenimiento en sitio</h1>
                 <p className="text-muted-foreground mt-1 text-sm">
                     Equipos, revisión y conformidad del cliente.
                 </p>

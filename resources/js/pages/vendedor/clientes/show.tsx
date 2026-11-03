@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -7,7 +8,6 @@ import {
     CheckCircle2,
     CreditCard,
     Edit3,
-    History,
     Lightbulb,
     Mail,
     MapPin,
@@ -47,10 +47,14 @@ import {
 } from '@/components/ui/table';
 import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
+import {
+    HistorialActividad,
+    type HistorialItem,
+} from '@/components/historial-actividad';
 import VendedorLayout from '@/layouts/vendedor-layout';
 import clientes from '@/routes/vendedor/clientes';
 import type { Team } from '@/types';
-import { fechaCorta, soles } from '@/lib/utils';
+import { fechaCorta, iniciales, soles } from '@/lib/utils';
 import OrdenesServicioRoutes from '@/routes/vendedor/ordenes-servicio';
 import ExtintoresRoutes from '@/routes/vendedor/clientes/extintores';
 import AlertasRoutes from '@/routes/vendedor/alertas';
@@ -75,6 +79,7 @@ export type Client = {
     numero_documento: string | null;
     razon_social: string;
     nombre_comercial: string | null;
+    certificado_con?: string | null;
     telefono: string | null;
     whatsapp: string | null;
     email: string | null;
@@ -205,12 +210,6 @@ export type CobranzasData = {
     pagos: PagoItem[];
 };
 
-export type HistorialItem = {
-    fecha: string;
-    texto: string;
-    usuario: string | null;
-};
-
 export type SunatData = {
     verificado: boolean;
     estado: string | null;
@@ -225,6 +224,7 @@ export type Props = {
     resumen?: ResumenData;
     cotizaciones?: CotizacionItem[];
     ventas?: VentaItem[];
+    compras?: CompraItem[];
     extintores?: ExtintorItem[];
     certificados?: CertificadoItem[];
     servicios?: ServicioItem[];
@@ -271,11 +271,23 @@ type VehicleFormData = {
     estado: 'activo' | 'inactivo';
 };
 
+type CompraItem = {
+    sale_id: number;
+    fecha: string | null;
+    comprobante: string | null;
+    nombre: string;
+    tipo: string;
+    serie: string | null;
+    cantidad: number;
+    total: number;
+};
+
 type ClientFormData = {
     tipo_documento: 'ruc' | 'dni';
     numero_documento: string;
     razon_social: string;
     nombre_comercial: string;
+    certificado_con: 'razon_social' | 'nombre_comercial';
     telefono: string;
     whatsapp: string;
     email: string;
@@ -288,16 +300,6 @@ type ClientFormData = {
 };
 
 // ==================== HELPERS FORMATO ====================
-
-function initials(value: string | undefined): string {
-    if (!value) return 'CL';
-    return value
-        .split(/\s+/u)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? '')
-        .join('');
-}
 
 const siteTypes: SiteType[] = [
     'oficina',
@@ -336,6 +338,7 @@ export default function ClienteShow({
     resumen,
     cotizaciones = [],
     ventas = [],
+    compras = [],
     extintores = [],
     certificados = [],
     servicios = [],
@@ -375,6 +378,10 @@ export default function ClienteShow({
         numero_documento: client.numero_documento ?? '',
         razon_social: client.razon_social,
         nombre_comercial: client.nombre_comercial ?? '',
+        certificado_con:
+            client.certificado_con === 'nombre_comercial'
+                ? 'nombre_comercial'
+                : 'razon_social',
         telefono: client.telefono ?? '',
         whatsapp: client.whatsapp ?? '',
         email: client.email ?? '',
@@ -752,11 +759,11 @@ export default function ClienteShow({
                         {/* Identidad */}
                         <div className="flex items-start gap-4">
                             <div className="bg-primary/10 text-primary-strong flex size-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold">
-                                {initials(client.razon_social)}
+                                {iniciales(client.razon_social)}
                             </div>
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2.5">
-                                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
+                                    <h1 className={pageTitleClass}>
                                         {client.razon_social}
                                     </h1>
                                     {!client.activo && (
@@ -1079,7 +1086,7 @@ export default function ClienteShow({
                                                                 </span>
                                                             ) : (
                                                                 <span className="text-success-strong font-semibold">
-                                                                    Cancelado
+                                                                    Pagado
                                                                 </span>
                                                             )}
                                                         </div>
@@ -1487,6 +1494,107 @@ export default function ClienteShow({
                                         </Table>
                                     </div>
                                 )}
+                            </div>
+                        </Card>
+                    )}
+
+                    {activeTab === 'compras' && (
+                        <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
+                            <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+                                <h3 className="text-foreground text-base font-bold">
+                                    Qué compró · {compras.length}
+                                </h3>
+                                {compras.length > 0 ? (
+                                    <Button
+                                        asChild
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 rounded-xl text-xs font-bold"
+                                    >
+                                        <a
+                                            href={clientes.compras.url({
+                                                current_team: teamSlug,
+                                                client: client.id,
+                                            })}
+                                        >
+                                            Descargar Excel
+                                        </a>
+                                    </Button>
+                                ) : null}
+                            </div>
+                            <div className="mt-3 overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Fecha</TableHead>
+                                            <TableHead>
+                                                Producto o servicio
+                                            </TableHead>
+                                            <TableHead>Comprobante</TableHead>
+                                            <TableHead className="text-right">
+                                                Cantidad
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Total
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-border divide-y">
+                                        {compras.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5}>
+                                                    <Empty
+                                                        icon={<Inbox />}
+                                                        title="Aún no tiene compras emitidas."
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            compras.map((compra, indice) => (
+                                                <TableRow
+                                                    key={`${compra.sale_id}-${indice}`}
+                                                >
+                                                    <TableCell className="text-xs whitespace-nowrap">
+                                                        {fechaCorta(
+                                                            compra.fecha,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-xs">
+                                                        <span className="text-foreground font-semibold">
+                                                            {compra.nombre}
+                                                        </span>
+                                                        <span className="text-muted-foreground block">
+                                                            {compra.tipo}
+                                                            {compra.serie
+                                                                ? ` · ${compra.serie}`
+                                                                : ''}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-xs">
+                                                        <Link
+                                                            href={VentasRoutes.show.url(
+                                                                {
+                                                                    current_team:
+                                                                        teamSlug,
+                                                                    sale: compra.sale_id,
+                                                                },
+                                                            )}
+                                                            className="hover:underline"
+                                                        >
+                                                            {compra.comprobante}
+                                                        </Link>
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-xs tabular-nums">
+                                                        {compra.cantidad}
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-xs tabular-nums">
+                                                        {soles(compra.total)}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
                             </div>
                         </Card>
                     )}
@@ -2394,44 +2502,7 @@ export default function ClienteShow({
                                 </div>
                             </Card>
 
-                            {/* Historial en línea de tiempo */}
-                            <Card className="border-border bg-card rounded-2xl p-6 shadow-none">
-                                <div className="border-border flex items-center gap-2 border-b pb-3">
-                                    <History className="text-primary-strong size-4" />
-                                    <h3 className="text-foreground text-base font-bold">
-                                        Historial de actividad
-                                    </h3>
-                                </div>
-
-                                <div className="mt-4">
-                                    {historial.length === 0 ? (
-                                        <p className="text-muted-foreground py-6 text-center text-xs">
-                                            Sin eventos de historial
-                                            registrados.
-                                        </p>
-                                    ) : (
-                                        <div className="border-border relative space-y-4 border-l pl-4">
-                                            {historial.map((h, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className="relative"
-                                                >
-                                                    <span className="bg-primary absolute top-1.5 -left-[21px] size-2.5 rounded-full" />
-                                                    <div className="text-foreground text-xs font-semibold">
-                                                        {h.texto}
-                                                    </div>
-                                                    <div className="text-muted-foreground text-xs">
-                                                        {h.fecha}{' '}
-                                                        {h.usuario
-                                                            ? `· Por ${h.usuario}`
-                                                            : ''}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </Card>
+                            <HistorialActividad historial={historial} />
                         </div>
                     )}
                 </div>
@@ -2515,6 +2586,36 @@ export default function ClienteShow({
                                 }
                                 className="mt-1 h-9 text-xs"
                             />
+                        </div>
+                        <div>
+                            <Label htmlFor="cliente-certificado-con">
+                                En sus certificados sale con
+                            </Label>
+                            <NativeSelect
+                                id="cliente-certificado-con"
+                                value={editForm.data.certificado_con}
+                                onChange={(e) =>
+                                    editForm.setData(
+                                        'certificado_con',
+                                        e.target.value as
+                                            | 'razon_social'
+                                            | 'nombre_comercial',
+                                    )
+                                }
+                                className="mt-1 h-9 text-xs"
+                            >
+                                <option value="razon_social">
+                                    Razón social
+                                </option>
+                                <option
+                                    value="nombre_comercial"
+                                    disabled={
+                                        !editForm.data.nombre_comercial.trim()
+                                    }
+                                >
+                                    Nombre comercial
+                                </option>
+                            </NativeSelect>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">

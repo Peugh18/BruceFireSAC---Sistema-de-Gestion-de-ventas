@@ -1,10 +1,12 @@
 <?php
 
 use App\Actions\Certificates\EmitirCertificadosDeVenta;
+use App\Actions\Certificates\IssueCertificate;
 use App\Actions\Sales\ConfirmSale;
 use App\Actions\Sales\RevertSale;
 use App\Models\Certificate;
 use App\Models\CertificateParticipant;
+use App\Models\CertificateType;
 use App\Models\Client;
 use App\Models\Equipment;
 use App\Models\Product;
@@ -77,6 +79,28 @@ test('por regla de negocio un local lleva operatividad y capacitacion y un vehic
         ->and(EmitirCertificadosDeVenta::tiposPorDestino('vehiculo'))->toBe(['operatividad_garantia', 'prueba_hidrostatica']);
 });
 
+test('reorganizar extintores conserva certificados de otros servicios y productos', function () {
+    [$sale, $equipos] = ventaConExtintores(1);
+    $tipo = CertificateType::where('codigo', 'luces_emergencia')->sole();
+    $certificado = app(IssueCertificate::class)->handle($tipo, $sale->client, [], saleId: $sale->id);
+
+    app(EmitirCertificadosDeVenta::class)->handle($sale, [['tipos' => ['operatividad_garantia'], 'unidades' => [['equipment_id' => $equipos[0]->id]]]]);
+
+    expect($certificado->fresh()->estado)->toBe('vigente');
+});
+
+test('armar certificados agrupa solo extintores aunque la venta tenga certificados dinamicos', function () {
+    [$sale, $equipos] = ventaConExtintores(1);
+    $vendedor = vendedorUser();
+    $sale->update(['vendedor_id' => $vendedor->id]);
+    $tipo = CertificateType::where('codigo', 'luces_emergencia')->sole();
+    app(EmitirCertificadosDeVenta::class)->handle($sale, [['tipos' => ['operatividad_garantia'], 'unidades' => [['equipment_id' => $equipos[0]->id]]]]);
+    app(IssueCertificate::class)->handle($tipo, $sale->client, [], saleId: $sale->id, extra: ['referencia' => 'SEDE: Anexo']);
+
+    $this->actingAs($vendedor)->get(route('vendedor.ventas.certificados.create', ['current_team' => $vendedor->currentTeam, 'sale' => $sale]))
+        ->assertInertia(fn ($page) => $page->has('emitidos', 2)->has('gruposActuales', 1)->where('gruposActuales.0.tipos', ['operatividad_garantia']));
+});
+
 test('una venta se reparte en dos locales con la numeracion y el orden del cliente', function () {
     [$sale, $equipos] = ventaConExtintores(4);
 
@@ -121,7 +145,7 @@ test('una venta se reparte en dos locales con la numeracion y el orden del clien
         ->and($capacitacion->certificateUnits()->count())->toBe(0);
 });
 
-test('al confirmar la venta solo sale solo el de operatividad, en el orden escaneado', function (string $destino, array $tipos) {
+test('al confirmar la venta salen solos los del destino, menos la prueba hidrostatica', function (string $destino, array $tipos) {
     [$sale, $equipos] = ventaConExtintores(3, $destino);
     $sale->update(['estado' => 'borrador', 'comprobante_tipo' => 'nota_venta']);
 
@@ -133,7 +157,7 @@ test('al confirmar la venta solo sale solo el de operatividad, en el orden escan
         ->and($certificados->first()->certificateUnits->sortBy('orden')->pluck('equipment_id')->all())
         ->toBe(array_map(fn ($e) => $e->id, $equipos));
 })->with([
-    'local' => ['local_cliente', ['operatividad_garantia']],
+    'local' => ['local_cliente', ['operatividad_garantia', 'capacitacion']],
     'vehiculo' => ['vehiculo', ['operatividad_garantia']],
 ]);
 
@@ -408,7 +432,7 @@ test('el word del certificado es valido aunque la razon social tenga & o <', fun
     }
 });
 
-test('la prueba hidrostatica y la capacitacion quedan pendientes al cobrar y la P.H. pide sus datos reales', function () {
+test('la prueba hidrostatica queda pendiente al cobrar y pide sus datos reales', function () {
     [$sale, $equipos] = ventaConExtintores(1, 'vehiculo');
     $emitir = app(EmitirCertificadosDeVenta::class);
 

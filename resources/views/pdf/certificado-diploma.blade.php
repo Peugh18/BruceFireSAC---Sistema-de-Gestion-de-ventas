@@ -109,11 +109,6 @@
         .sello { top: 155mm; left: 128mm; width: 36mm; }
         /* Marca de agua de un certificado anulado o vencido */
         .sello-estado { position: fixed; top: 240px; left: 0; right: 0; text-align: center; font-size: 110px; font-weight: bold; color: #dc2626; opacity: 0.22; letter-spacing: 10px; transform: rotate(-35deg); z-index: 1000; }
-        @foreach (['encabezado' => '.logo, .titulo, .cinta', 'datos' => '.otorgado, .nombre, .linea-nombre', 'tabla' => '.declaracion, .curso, .duracion', 'pruebas' => '.verifica', 'firmas' => '.firma, .sello'] as $zona => $selector)
-            @if (isset($tipo['diseno'][$zona]))
-                {{ $selector }} { transform: translate({{ (float) $tipo['diseno'][$zona]['x'] }}pt, {{ (float) $tipo['diseno'][$zona]['y'] }}pt); }
-            @endif
-        @endforeach
     </style>
 </head>
 <body>
@@ -125,7 +120,6 @@
     'firmantes' => $firmantes, 'capacitacion' => $capacitacion, 'qr' => $qr, 'diploma' => $diploma,
 ]] as $pagina)
     @php extract($pagina); @endphp
-    @php($desplazar = fn (string $zona): string => isset($tipo['diseno'][$zona]) ? 'transform: translate('.(float) $tipo['diseno'][$zona]['x'].'pt, '.(float) $tipo['diseno'][$zona]['y'].'pt);' : '')
 <div class="pagina {{ $capacitacion['modo'] === 'con_fotos' && ! empty($capacitacion['fotos']) ? 'con-fotos' : '' }} {{ ! empty($capacitacion['personal_de']) ? 'por-trabajador' : '' }}">
     <img class="capa marca-agua" src="{{ $recursos['marca_agua'] }}" alt="">
     <img class="capa franja-sup" src="{{ $recursos['franja_superior'] }}" alt="">
@@ -134,9 +128,10 @@
         <div class="capa anulado">{{ $estado['texto'] }}</div>
     @endif
 
-    <div class="capa centro logo" style="{{ $desplazar('encabezado') }}"><img src="{{ $recursos['logo'] }}" alt="Extintores Bruce Fire"></div>
-    <div class="capa centro titulo" style="{{ $desplazar('encabezado') }}">{{ mb_strtoupper($tipo['titulo'] ?: 'CERTIFICADO') }}</div>
-    <div class="capa centro cinta" style="{{ $desplazar('encabezado') }}">
+    <div class="capa" style="top: 9mm; right: 10mm; width: 42mm;">@include('pdf.partes.asneex')</div>
+    <div class="capa centro logo"><img src="{{ $recursos['logo'] }}" alt="Extintores Bruce Fire"></div>
+    <div class="capa centro titulo" style="font-size: {{ min($diploma['tamano_titulo'] ?? 55, $capacitacion['modo'] === 'con_fotos' && ! empty($capacitacion['fotos']) ? 44 : 55) }}pt;">{{ mb_strtoupper($tipo['titulo'] ?: 'CERTIFICADO') }}</div>
+    <div class="capa centro cinta">
         <table>
             <tr>
                 <td class="linea"><div></div></td>
@@ -148,14 +143,14 @@
         </table>
     </div>
 
-    <div class="capa centro otorgado" style="{{ $desplazar('datos') }}">OTORGADO A</div>
-    <div class="capa centro nombre" style="font-size: {{ $diploma['tamano_nombre'] }}pt; {{ $desplazar('datos') }}">{{ mb_strtoupper((string) $cliente['razon_social']) }}</div>
-    <div class="capa linea-nombre" style="{{ $desplazar('datos') }}"></div>
-    <div class="capa declaracion" style="text-align: center; {{ $desplazar('tabla') }}">
+    <div class="capa centro otorgado">OTORGADO A</div>
+    <div class="capa centro nombre" style="font-size: {{ $diploma['tamano_nombre'] }}pt;">{{ mb_strtoupper((string) $cliente['razon_social']) }}</div>
+    <div class="capa linea-nombre"></div>
+    <div class="capa declaracion" style="text-align: center;">
         {!! str_replace(e($empresa['razon_social']), '<b>'.e($empresa['razon_social']).'</b>', e(trim((string) $tipo['declaracion']))) !!} en:
     </div>
-    <div class="capa centro curso" style="font-size: {{ $diploma['tamano_curso'] }}pt; {{ $desplazar('tabla') }}">{{ $capacitacion['curso'] }}</div>
-    <div class="capa centro duracion" style="{{ $desplazar('tabla') }}">
+    <div class="capa centro curso" style="font-size: {{ $diploma['tamano_curso'] }}pt;">{{ $capacitacion['curso'] }}</div>
+    <div class="capa centro duracion">
         Con una duración de <b>{{ str_pad((string) $capacitacion['horas'], 2, '0', STR_PAD_LEFT) }} horas</b>, realizada en {{ $empresa['ciudad'] ?? 'Trujillo' }} el {{ $capacitacion['fecha_larga'] }}.
     </div>
 
@@ -170,7 +165,7 @@
         </div>
     @endif
 
-    <div class="capa verifica" style="{{ $desplazar('pruebas') }}">
+    <div class="capa verifica">
         <div class="tarjeta">
             <table style="width: 100%;">
                 <tr>
@@ -191,7 +186,7 @@
         <div class="etiqueta" style="margin-top: 1.2mm; text-align: center;">ESCANEE PARA VERIFICAR SU AUTENTICIDAD</div>
     </div>
 
-    <div class="capa firma" style="{{ $desplazar('firmas') }}">
+    <div class="capa firma">
         @if (! empty($instructor['firma']))
             <img class="firma-img" src="{{ $instructor['firma'] }}" alt="">
         @else
@@ -202,9 +197,9 @@
             <div class="firma-cargo">{{ $instructor['cargo'] }}</div>
         </div>
     </div>
-    <img style="{{ $desplazar('firmas') }}" class="capa sello" src="{{ $recursos['sello'] }}" alt="Sello Bruce Fire">
+    <img class="capa sello" src="{{ $recursos['sello'] }}" alt="Sello Bruce Fire">
     @if (! empty($tipo['responsabilidad']))
-        <div class="capa centro" style="top: 153mm; font-size: 8pt; {{ $desplazar('cierre') }}">{{ $tipo['responsabilidad'] }}</div>
+        <div class="capa centro" style="top: 153mm; font-size: 8pt;">{{ $tipo['responsabilidad'] }}</div>
     @endif
 </div>
 @endforeach

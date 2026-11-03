@@ -8,9 +8,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Equipment;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Equipment\FechasDelEquipo;
+use App\Services\Inventory\StickerPdfService;
 use App\Services\ServiceOrders\CasillerosDeLaOrden;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -29,7 +32,7 @@ class ServiceOrderEquipmentController extends Controller
             'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
-            'anio_fabricacion' => ['nullable', 'string', 'max:100'],
+            ...FechasDelEquipo::reglas(),
             'observaciones_recepcion' => ['nullable', 'string', 'max:1000'],
         ]);
         $action->execute($service_order, [...$data, 'recibido' => false], $request->user());
@@ -79,7 +82,7 @@ class ServiceOrderEquipmentController extends Controller
             'capacidad' => ['nullable', 'string', 'max:30'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
-            'anio_fabricacion' => ['nullable', 'string', 'max:100'],
+            ...FechasDelEquipo::reglas(),
         ]);
 
         DB::transaction(function () use ($service_order, $equipment, $data, $request): void {
@@ -87,6 +90,10 @@ class ServiceOrderEquipmentController extends Controller
             $this->asegurarEditable($service_order);
             $pivot = $service_order->equipments()->whereKey($equipment->id)->first()?->pivot;
             abort_if($pivot === null, 404);
+
+            $fechas = FechasDelEquipo::paraGuardar($data, $equipment);
+            unset($data['fecha_ultima_ph'], $data['proxima_prueba_hidrostatica'], $data['proxima_fecha_atencion']);
+            $equipment->fill($fechas);
 
             // Agente y capacidad vacíos se quedan como estaban; marca, serie y
             // año vacíos quedan «No legible», como en el alta.
@@ -139,6 +146,22 @@ class ServiceOrderEquipmentController extends Controller
         });
 
         return back()->with('success', "Extintor {$equipment->numero_serie} quitado de la orden.");
+    }
+
+    /**
+     * Stickers BF-EQ de los extintores de la orden. Los imprime el vendedor,
+     * que entrega los equipos; planta solo llena los datos.
+     */
+    public function stickers(Team $current_team, ServiceOrder $service_order, Request $request, StickerPdfService $stickers): HttpResponse
+    {
+        $this->asegurarAcceso($service_order, $request);
+        $formato = $request->validate(['formato' => ['sometimes', 'required', 'in:rollo,a4']])['formato'] ?? 'rollo';
+        $pdf = $stickers->generateForEquipments($service_order->equipments()->get(), $service_order, $formato);
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => sprintf('inline; filename="stickers-%s.pdf"', $service_order->codigo),
+        ]);
     }
 
     private function asegurarAcceso(ServiceOrder $orden, Request $request): void

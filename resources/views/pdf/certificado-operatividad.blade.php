@@ -16,7 +16,11 @@
     $posicionSello = intdiv(count($firmantes), 2);
     $mitadPruebas = max(1, (int) ceil(count($pruebas) / 2));
     $bloques = $tipo['bloques'] ?? [];
-    $conAsneex = in_array('asneex', $tipo['logos'] ?? [], true);
+    // Con composición, los bloques que eligió el gerente y en su orden; sin
+    // composición (formatos de siempre), el orden de siempre.
+    $secciones = isset($tipo['composicion'])
+        ? $tipo['composicion']
+        : array_map(fn (string $clave): array => ['tipo' => $clave], ['datos', 'declaracion', 'tabla', 'pruebas', 'bloques', 'resultado', 'responsabilidad']);
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -149,6 +153,15 @@
         .firma-cargo { font-family: 'Cond'; font-size: 7.4pt; color: #3f3d3b; text-transform: uppercase; letter-spacing: 0.3pt; line-height: 1.2; }
         .sello-celda { width: 26mm; }
         .sello { width: 21mm; }
+        .asneex-celda { width: 38mm; vertical-align: bottom !important; padding-left: 0 !important; }
+
+        /* Diploma en hoja vertical */
+        .diploma-vertical { margin-top: 8mm; text-align: center; }
+        .diploma-vertical .otorgado { font-family: 'Cond'; font-size: 11pt; letter-spacing: 1.4pt; color: #2e2d2c; }
+        .diploma-vertical .persona { margin: 3mm 12mm 0; padding-bottom: 1.5mm; border-bottom: 1.1pt solid #d20404; font-family: 'Subtitulo'; font-size: 20pt; line-height: 1.1; }
+        .diploma-vertical .curso { margin: 3mm 0 1mm; font-family: 'Subtitulo'; font-size: 17pt; color: #d20404; line-height: 1.1; }
+        .diploma-vertical .detalle { margin-top: 2mm; font-size: 10.5pt; color: #3f3d3b; }
+        .diploma-vertical .foto-diploma { width: 55mm; height: 36.6mm; margin: 4mm 1.5mm 0; border: 0.8pt solid #d9d9d9; border-top: 1.6pt solid #d20404; }
         /* Marca de agua de un certificado anulado o vencido */
         .sello-estado { position: fixed; top: 360px; left: 0; right: 0; text-align: center; font-size: 110px; font-weight: bold; color: #dc2626; opacity: 0.22; letter-spacing: 10px; transform: rotate(-35deg); z-index: 1000; }
         @if ($horizontal ?? false)
@@ -158,11 +171,6 @@
             .bloques { width: 274.2mm; }
             .sello-estado { top: 240px; }
         @endif
-        @foreach (['encabezado' => '.cabecera, .titulo, .norma', 'datos' => '.seccion-datos', 'tabla' => '.zona-tabla', 'pruebas' => '.zona-pruebas', 'cierre' => '.zona-cierre', 'firmas' => '.firmas'] as $zona => $selector)
-            @if (isset($tipo['diseno'][$zona]))
-                {{ $selector }} { position: relative; left: {{ (float) $tipo['diseno'][$zona]['x'] }}pt; top: {{ (float) $tipo['diseno'][$zona]['y'] }}pt; }
-            @endif
-        @endforeach
     </style>
 </head>
 <body>
@@ -232,162 +240,213 @@
         <div class="norma">{{ $tipo['norma'] }}</div>
     @endif
 
-    {{-- Datos del cliente y del servicio --}}
-    <table class="seccion seccion-datos">
-        <tr>
-            <td style="width: 55%; padding-right: 2.4mm;">
-                <table class="barra"><tr><td class="texto">Datos del cliente</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
-                <table class="datos">
-                    <tr><td class="dato-etiqueta">Razón social</td><td class="dato-valor">{{ $cliente['razon_social'] }}</td></tr>
-                    <tr><td class="dato-etiqueta">{{ $cliente['documento_tipo'] }}</td><td class="dato-valor mono">{{ $cliente['documento'] }}</td></tr>
-                    @if (! empty($cliente['nombre_comercial']))
-                        <tr><td class="dato-etiqueta">Nombre comercial</td><td class="dato-valor">{{ $cliente['nombre_comercial'] }}</td></tr>
-                    @endif
-                    <tr><td class="dato-etiqueta">Dirección</td><td class="dato-valor">{{ $cliente['direccion'] }}</td></tr>
-                    @if (! empty($cliente['referencia']))
-                        <tr><td class="dato-etiqueta">{{ $cliente['referencia']['etiqueta'] }}</td><td class="dato-valor">{{ $cliente['referencia']['valor'] }}</td></tr>
-                    @endif
-                </table>
-            </td>
-            <td style="padding-left: 2.4mm;">
-                <table class="barra"><tr><td class="texto">Datos del servicio</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
-                <table class="datos">
-                    <tr><td class="dato-etiqueta">Fecha de emisión</td><td class="dato-valor mono">{{ $certificado['emision'] }}</td></tr>
-                    @if ($certificado['vencimiento'])
-                        <tr><td class="dato-etiqueta">Vencimiento</td><td class="dato-valor mono">{{ $certificado['vencimiento'] }}</td></tr>
-                    @endif
-                    @if ($certificado['vigencia'])
-                        <tr><td class="dato-etiqueta">Vigencia</td><td class="dato-valor">{{ $certificado['vigencia'] }}</td></tr>
-                    @endif
-                    @if ($certificado['tipo_atencion'])
-                        <tr><td class="dato-etiqueta">Tipo de atención</td><td class="dato-valor">{{ $certificado['tipo_atencion'] }}</td></tr>
-                    @endif
-                    @if ($certificado['orden'])
-                        <tr><td class="dato-etiqueta">Orden de servicio</td><td class="dato-valor mono">{{ $certificado['orden'] }}</td></tr>
-                    @endif
-                </table>
-            </td>
-        </tr>
-    </table>
-
-    @if (! empty($tipo['declaracion']))
-        <p class="declaracion">{!! str_replace(e($empresa['razon_social']), '<b>'.e($empresa['razon_social']).'</b>', e($tipo['declaracion'])) !!}</p>
-    @endif
-
-    {{-- Tabla de equipos o componentes --}}
-    @if ($columnas && $filas)
-        <div class="seccion zona-tabla">
-            <table class="barra"><tr><td class="texto">{{ $tituloTabla }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
-            <table @class(['tabla', 'compacta' => count($filas) > 12])>
-                <thead>
+    {{-- Contenido: los bloques que eligió el gerente, en su orden; sin composición, el orden de siempre --}}
+    @foreach ($secciones as $seccion)
+        @switch($seccion['tipo'])
+            @case('datos')
+                {{-- Datos del cliente y del servicio --}}
+                <table class="seccion seccion-datos">
                     <tr>
-                        @foreach ($columnas as $columna)
-                            <th @class(['centro' => in_array($columna['clave'], $centradas, true)])>{{ $columna['titulo'] }}</th>
-                        @endforeach
+                        <td style="width: 55%; padding-right: 2.4mm;">
+                            <table class="barra"><tr><td class="texto">{{ $seccion['titulo'] ?? null ?: 'Datos del cliente' }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
+                            <table class="datos">
+                                <tr><td class="dato-etiqueta">Razón social</td><td class="dato-valor">{{ $cliente['razon_social'] }}</td></tr>
+                                <tr><td class="dato-etiqueta">{{ $cliente['documento_tipo'] }}</td><td class="dato-valor mono">{{ $cliente['documento'] }}</td></tr>
+                                @if (! empty($cliente['nombre_comercial']))
+                                    <tr><td class="dato-etiqueta">Nombre comercial</td><td class="dato-valor">{{ $cliente['nombre_comercial'] }}</td></tr>
+                                @endif
+                                <tr><td class="dato-etiqueta">Dirección</td><td class="dato-valor">{{ $cliente['direccion'] }}</td></tr>
+                                @if (! empty($cliente['referencia']))
+                                    <tr><td class="dato-etiqueta">{{ $cliente['referencia']['etiqueta'] }}</td><td class="dato-valor">{{ $cliente['referencia']['valor'] }}</td></tr>
+                                @endif
+                            </table>
+                        </td>
+                        <td style="padding-left: 2.4mm;">
+                            <table class="barra"><tr><td class="texto">{{ $certificado['titulo_datos'] ?? 'Datos del servicio' }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
+                            <table class="datos">
+                                <tr><td class="dato-etiqueta">Fecha de emisión</td><td class="dato-valor mono">{{ $certificado['emision'] }}</td></tr>
+                                @if ($certificado['vencimiento'])
+                                    <tr><td class="dato-etiqueta">Vencimiento</td><td class="dato-valor mono">{{ $certificado['vencimiento'] }}</td></tr>
+                                @endif
+                                @if ($certificado['vigencia'])
+                                    <tr><td class="dato-etiqueta">Vigencia</td><td class="dato-valor">{{ $certificado['vigencia'] }}</td></tr>
+                                @endif
+                                @if ($certificado['tipo_atencion'])
+                                    <tr><td class="dato-etiqueta">Tipo de atención</td><td class="dato-valor">{{ $certificado['tipo_atencion'] }}</td></tr>
+                                @endif
+                                @if ($certificado['orden'])
+                                    <tr><td class="dato-etiqueta">Orden de servicio</td><td class="dato-valor mono">{{ $certificado['orden'] }}</td></tr>
+                                @endif
+                                @if ($certificado['comprobante'] ?? null)
+                                    <tr><td class="dato-etiqueta">Comprobante</td><td class="dato-valor mono">{{ $certificado['comprobante'] }}</td></tr>
+                                @endif
+                            </table>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach ($filas as $indice => $fila)
-                        <tr @class(['par' => $indice % 2 === 1])>
-                            @foreach ($columnas as $columna)
-                                <td @class(['centro' => in_array($columna['clave'], $centradas, true)])>
-                                    @if (($columna['tipo'] ?? '') === 'resultado')
-                                        @php($claveResultado = $fila['resultado'] ?? 'operativo')
-                                        <span class="pastilla p-{{ $claveResultado }}">{{ $resultados[$claveResultado] ?? $claveResultado }}</span>
-                                    @else
-                                        {{ ($fila[$columna['clave']] ?? '') !== '' ? $fila[$columna['clave']] : '—' }}
-                                    @endif
-                                </td>
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    @endif
+                </table>
+                @break
 
-    {{-- Pruebas realizadas (checklist C / NC / N/A) --}}
-    @if ($pruebas)
-        <table class="seccion zona-pruebas" style="page-break-inside: avoid;">
-            <tr>
-                @foreach (array_chunk($pruebas, $mitadPruebas, true) as $lado => $mitad)
-                    <td style="width: 50%; {{ $lado === 0 ? 'padding-right: 2.4mm;' : 'padding-left: 2.4mm;' }}">
-                        <table class="barra"><tr><td class="texto">{{ $lado === 0 ? 'Pruebas realizadas' : '' }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
-                        <table class="tabla pruebas">
-                            <thead><tr><th>N.°</th><th>Verificación</th><th class="centro">C</th><th class="centro">NC</th><th class="centro">N/A</th></tr></thead>
+            @case('declaracion')
+                @php($declaracion = $seccion['texto'] ?? null ?: $tipo['declaracion'])
+                @if (! empty($declaracion))
+                    @if (! empty($seccion['titulo']))
+                        <div class="seccion"><table class="barra"><tr><td class="texto">{{ $seccion['titulo'] }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table></div>
+                    @endif
+                    <p class="declaracion">{!! str_replace(e($empresa['razon_social']), '<b>'.e($empresa['razon_social']).'</b>', e($declaracion)) !!}</p>
+                @endif
+                @break
+
+            @case('texto')
+                @if (! empty($seccion['texto']))
+                    <div class="seccion zona-cierre" style="page-break-inside: avoid;">
+                        @if (! empty($seccion['titulo']))
+                            <table class="barra"><tr><td class="texto">{{ $seccion['titulo'] }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
+                        @endif
+                        <p class="declaracion" style="white-space: pre-line;">{{ $seccion['texto'] }}</p>
+                    </div>
+                @endif
+                @break
+
+            @case('tabla')
+                {{-- Tabla de equipos o componentes --}}
+                @if ($columnas && $filas)
+                    <div class="seccion zona-tabla">
+                        <table class="barra"><tr><td class="texto">{{ $seccion['titulo'] ?? null ?: $tituloTabla }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
+                        <table @class(['tabla', 'compacta' => count($filas) > 12])>
+                            <thead>
+                                <tr>
+                                    @foreach ($columnas as $columna)
+                                        <th @class(['centro' => in_array($columna['clave'], $centradas, true)])>{{ $columna['titulo'] }}@if (! empty($columna['unidad'])) ({{ $columna['unidad'] }})@endif</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
                             <tbody>
-                                @foreach ($mitad as $numero => $prueba)
-                                    <tr @class(['par' => $numero % 2 === 1])>
-                                        <td class="n">{{ str_pad((string) ($numero + 1), 2, '0', STR_PAD_LEFT) }}</td>
-                                        <td>{{ $prueba['texto'] }}@if ($prueba['valor'])<span class="valor"> · {{ $prueba['valor'] }}</span>@endif</td>
-                                        @foreach (['C' => 'caja-c', 'NC' => 'caja-nc', 'NA' => 'caja-na'] as $opcion => $claseMarcada)
-                                            <td class="col-marca"><span @class(['caja', 'check', $claseMarcada => $prueba['estado'] === $opcion])>@if ($prueba['estado'] === $opcion)&#10004;@endif</span></td>
+                                @foreach ($filas as $indice => $fila)
+                                    <tr @class(['par' => $indice % 2 === 1])>
+                                        @foreach ($columnas as $columna)
+                                            <td @class(['centro' => in_array($columna['clave'], $centradas, true)])>
+                                                @if (($columna['tipo'] ?? '') === 'resultado')
+                                                    @php($claveResultado = $fila['resultado'] ?? 'operativo')
+                                                    <span class="pastilla p-{{ $claveResultado }}">{{ $resultados[$claveResultado] ?? $claveResultado }}</span>
+                                                @else
+                                                    {{ ($fila[$columna['clave']] ?? '') !== '' ? $fila[$columna['clave']] : '—' }}
+                                                @endif
+                                            </td>
                                         @endforeach
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
-                    </td>
-                @endforeach
-            </tr>
-        </table>
-    @endif
+                    </div>
+                @endif
+                @break
 
-    {{-- Bloques técnicos del tipo (por ejemplo, extintores) --}}
-    @if ($bloques || $conAsneex)
-        <div class="seccion" style="page-break-inside: avoid;">
-            <table class="bloques">
-                <tr>
-                    @foreach ($bloques as $bloque)
-                        <td class="bloque">
-                            <div class="bloque-titulo">{{ $bloque['titulo'] }}</div>
-                            <div class="bloque-texto">{{ $bloque['texto'] }}</div>
-                        </td>
-                    @endforeach
-                    @if ($conAsneex)
-                        <td style="width: 21mm; text-align: center; vertical-align: middle;">
-                            <img src="{{ $recursos['logo_asneex'] }}" alt="ASNEEX" style="width: 17mm;">
-                            <div class="etiqueta" style="margin-top: 0.5mm;">ASOCIADO</div>
-                        </td>
-                    @endif
-                </tr>
-            </table>
-        </div>
-    @endif
+            @case('pruebas')
+                {{-- Pruebas realizadas (checklist C / NC / N/A) --}}
+                @if ($pruebas)
+                    <table class="seccion zona-pruebas" style="page-break-inside: avoid;">
+                        <tr>
+                            @foreach (array_chunk($pruebas, $mitadPruebas, true) as $lado => $mitad)
+                                <td style="width: 50%; {{ $lado === 0 ? 'padding-right: 2.4mm;' : 'padding-left: 2.4mm;' }}">
+                                    <table class="barra"><tr><td class="texto">{{ $lado === 0 ? ($seccion['titulo'] ?? null ?: 'Pruebas realizadas') : '' }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
+                                    <table class="tabla pruebas">
+                                        <thead><tr><th>N.°</th><th>Verificación</th><th class="centro">C</th><th class="centro">NC</th><th class="centro">N/A</th></tr></thead>
+                                        <tbody>
+                                            @foreach ($mitad as $numero => $prueba)
+                                                <tr @class(['par' => $numero % 2 === 1])>
+                                                    <td class="n">{{ str_pad((string) ($numero + 1), 2, '0', STR_PAD_LEFT) }}</td>
+                                                    <td>{{ $prueba['texto'] }}@if ($prueba['valor'])<span class="valor"> · {{ $prueba['valor'] }}</span>@endif</td>
+                                                    @foreach (['C' => 'caja-c', 'NC' => 'caja-nc', 'NA' => 'caja-na'] as $opcion => $claseMarcada)
+                                                        <td class="col-marca"><span @class(['caja', 'check', $claseMarcada => $prueba['estado'] === $opcion])>@if ($prueba['estado'] === $opcion)&#10004;@endif</span></td>
+                                                    @endforeach
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </td>
+                            @endforeach
+                        </tr>
+                    </table>
+                @endif
+                @break
 
-    {{-- Resultado, responsabilidad y firmas van siempre juntos --}}
-    <div style="page-break-inside: avoid;">
-    <div class="seccion zona-cierre">
-        <table class="barra"><tr><td class="texto">Resultado de la evaluación</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
-        <table class="resultado">
-            <tr>
-                @foreach ($resultados as $clave => $texto)
-                    <td @class(['celda', 'elegida' => $resultado === $clave])>
-                        <table class="opcion">
+            @case('bloques')
+                {{-- Bloques técnicos del tipo (por ejemplo, extintores) --}}
+                @if ($bloques)
+                    <div class="seccion" style="page-break-inside: avoid;">
+                        <table class="bloques">
                             <tr>
-                                <td class="marca"><span @class(['caja', 'check', 'caja-c' => $resultado === $clave])>@if ($resultado === $clave)&#10004;@endif</span></td>
-                                <td class="texto">{{ $texto }}</td>
+                                @foreach ($bloques as $bloque)
+                                    <td class="bloque">
+                                        <div class="bloque-titulo">{{ $bloque['titulo'] }}</div>
+                                        <div class="bloque-texto">{{ $bloque['texto'] }}</div>
+                                    </td>
+                                @endforeach
                             </tr>
                         </table>
-                    </td>
-                @endforeach
-            </tr>
-        </table>
-        @if (! empty($observaciones))
-            <div class="observaciones"><b>Observaciones:</b> {{ $observaciones }}</div>
-        @endif
-        @if ($estado['clave'] === 'anulado' && ! empty($certificado['anulado_motivo']))
-            <div class="observaciones" style="border-left-color: #b91c1c; background: #fdecec;"><b>Certificado anulado:</b> {{ $certificado['anulado_motivo'] }}</div>
-        @endif
-    </div>
+                    </div>
+                @endif
+                @break
 
-    @if (! empty($tipo['responsabilidad']))
-        <p class="responsabilidad zona-cierre">{{ $tipo['responsabilidad'] }}</p>
-    @endif
+            @case('resultado')
+                <div class="seccion zona-cierre" style="page-break-inside: avoid;">
+                    <table class="barra"><tr><td class="texto">{{ $seccion['titulo'] ?? null ?: 'Resultado de la evaluación' }}</td><td class="cola"><img src="{{ $recursos['cola'] }}" alt=""></td></tr></table>
+                    <table class="resultado">
+                        <tr>
+                            @foreach ($resultados as $clave => $texto)
+                                <td @class(['celda', 'elegida' => $resultado === $clave])>
+                                    <table class="opcion">
+                                        <tr>
+                                            <td class="marca"><span @class(['caja', 'check', 'caja-c' => $resultado === $clave])>@if ($resultado === $clave)&#10004;@endif</span></td>
+                                            <td class="texto">{{ $texto }}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            @endforeach
+                        </tr>
+                    </table>
+                    @if (! empty($observaciones))
+                        <div class="observaciones"><b>Observaciones:</b> {{ $observaciones }}</div>
+                    @endif
+                    @if ($estado['clave'] === 'anulado' && ! empty($certificado['anulado_motivo']))
+                        <div class="observaciones" style="border-left-color: #b91c1c; background: #fdecec;"><b>Certificado anulado:</b> {{ $certificado['anulado_motivo'] }}</div>
+                    @endif
+                </div>
+                @break
 
-    {{-- Firmas con el sello al centro --}}
+            @case('responsabilidad')
+                @php($responsabilidad = $seccion['texto'] ?? null ?: $tipo['responsabilidad'])
+                @if (! empty($responsabilidad))
+                    <p class="responsabilidad zona-cierre">{{ $responsabilidad }}</p>
+                @endif
+                @break
+
+            @case('diploma')
+                {{-- Diploma en hoja vertical: el horizontal usa la plantilla de capacitación --}}
+                <div class="diploma-vertical">
+                    <div class="otorgado">OTORGADO A</div>
+                    <div class="persona">{{ mb_strtoupper((string) $cliente['razon_social']) }}</div>
+                    @if (! empty($capacitacion['personal_de']))
+                        <div class="detalle">Personal de {{ $capacitacion['personal_de'] }}@if (! empty($capacitacion['dni'])) · DNI {{ $capacitacion['dni'] }}@endif</div>
+                    @endif
+                    @php($textoDiploma = $seccion['texto'] ?? null ?: $tipo['declaracion'])
+                    @if (! empty($textoDiploma))
+                        <div class="detalle">{{ $textoDiploma }} en:</div>
+                    @endif
+                    <div class="curso">{{ $capacitacion['curso'] }}</div>
+                    <div class="detalle">Con una duración de {{ str_pad((string) $capacitacion['horas'], 2, '0', STR_PAD_LEFT) }} horas, realizada en {{ $empresa['ciudad'] ?? 'Trujillo' }} el {{ $capacitacion['fecha_larga'] }}.</div>
+                    @foreach ($capacitacion['fotos'] ?? [] as $foto)
+                        <img class="foto-diploma" src="{{ $foto }}" alt="Registro fotográfico de la capacitación">
+                    @endforeach
+                </div>
+                @break
+        @endswitch
+    @endforeach
+
+    {{-- Firmas con el sello al centro; a la izquierda, la credencial de ASNEEX (va en todos los certificados) --}}
     <table class="firmas">
         <tr>
+            <td class="asneex-celda">@include('pdf.partes.asneex')</td>
             @foreach ($firmantes as $indice => $firmante)
                 @if ($indice === $posicionSello)
                     <td class="sello-celda"><img class="sello" src="{{ $recursos['sello'] }}" alt="Sello Bruce Fire"></td>
@@ -412,6 +471,5 @@
             @endif
         </tr>
     </table>
-    </div>
 </body>
 </html>

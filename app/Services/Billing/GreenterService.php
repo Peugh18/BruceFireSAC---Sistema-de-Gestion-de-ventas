@@ -98,6 +98,11 @@ class GreenterService
                     ->setValue($this->numeroEnLetras->convertir((float) $sale->total)),
             ]);
 
+        // Campo 54 del Anexo I (R.S. 114-2019): orden de compra del cliente, solo si la mandó.
+        if ($ordenCompra = $sale->quote?->orden_compra) {
+            $invoice->setCompra($ordenCompra);
+        }
+
         $observacion = collect([$sale->referencia, $sale->observaciones])->filter()->implode(' | ');
 
         if ($observacion !== '') {

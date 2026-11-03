@@ -55,6 +55,9 @@ export type EquipoCasillero = {
     marca: string | null;
     serie_fabricante: string | null;
     anio_fabricacion: string | null;
+    fecha_ultima_ph?: string | null;
+    proxima_prueba_hidrostatica?: string | null;
+    proxima_fecha_atencion?: string | null;
     linea_id: number | null;
     recibido: boolean;
 };
@@ -86,6 +89,9 @@ type Formulario = {
     marca: string;
     serie_fabricante: string;
     anio_fabricacion: string;
+    fecha_ultima_ph: string;
+    proxima_prueba_hidrostatica: string;
+    proxima_fecha_atencion: string;
     tipo_agente: string;
     capacidad: string;
 };
@@ -94,6 +100,9 @@ const vacio: Formulario = {
     marca: '',
     serie_fabricante: '',
     anio_fabricacion: '',
+    fecha_ultima_ph: '',
+    proxima_prueba_hidrostatica: '',
+    proxima_fecha_atencion: '',
     tipo_agente: '',
     capacidad: '',
 };
@@ -302,6 +311,10 @@ export default function EquiposDeLaOrden({
             marca: limpio(equipo.marca),
             serie_fabricante: limpio(equipo.serie_fabricante),
             anio_fabricacion: limpio(equipo.anio_fabricacion),
+            fecha_ultima_ph: equipo.fecha_ultima_ph ?? '',
+            proxima_prueba_hidrostatica:
+                equipo.proxima_prueba_hidrostatica ?? '',
+            proxima_fecha_atencion: equipo.proxima_fecha_atencion ?? '',
             tipo_agente: limpio(equipo.tipo_agente),
             capacidad: limpio(equipo.capacidad),
         });
@@ -478,6 +491,68 @@ export default function EquiposDeLaOrden({
                     className="h-11 text-sm sm:h-9"
                 />
             </label>
+            <label className="text-muted-foreground flex flex-col gap-1 text-xs">
+                Última prueba hidrostática
+                <Input
+                    type="date"
+                    value={formulario.fecha_ultima_ph}
+                    max={new Date().toLocaleDateString('en-CA')}
+                    onChange={(e) =>
+                        setFormulario({
+                            ...formulario,
+                            fecha_ultima_ph: e.target.value,
+                            proxima_prueba_hidrostatica: '',
+                        })
+                    }
+                    className="h-11 text-sm sm:h-9"
+                />
+                <span>
+                    Fecha grabada en el cilindro. Déjala vacía si no se conoce.
+                </span>
+            </label>
+            <details className="text-muted-foreground text-xs sm:col-span-full">
+                <summary className="min-h-9 cursor-pointer py-2 font-semibold">
+                    Próxima PH: 5 años después de la última · Próxima recarga: 1
+                    año desde el servicio · Cambiar
+                </summary>
+                <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                    <label className="text-muted-foreground flex flex-col gap-1 text-xs">
+                        Próxima prueba hidrostática
+                        <Input
+                            type="date"
+                            value={formulario.proxima_prueba_hidrostatica}
+                            onChange={(e) =>
+                                setFormulario({
+                                    ...formulario,
+                                    proxima_prueba_hidrostatica: e.target.value,
+                                })
+                            }
+                            className="h-11 text-sm sm:h-9"
+                        />
+                        <span>
+                            Vacía: se calcula desde la última PH con el
+                            intervalo de la empresa.
+                        </span>
+                    </label>
+                    <label className="text-muted-foreground flex flex-col gap-1 text-xs">
+                        Próxima recarga
+                        <Input
+                            type="date"
+                            value={formulario.proxima_fecha_atencion}
+                            onChange={(e) =>
+                                setFormulario({
+                                    ...formulario,
+                                    proxima_fecha_atencion: e.target.value,
+                                })
+                            }
+                            className="h-11 text-sm sm:h-9"
+                        />
+                        <span>
+                            Al terminar el servicio se renueva por un año.
+                        </span>
+                    </label>
+                </div>
+            </details>
             <div className="flex items-end gap-2 sm:col-span-3 sm:justify-end">
                 <Button
                     type="button"

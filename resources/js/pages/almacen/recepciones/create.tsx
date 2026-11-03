@@ -1060,7 +1060,13 @@ export default function RecepcionesCreate({
                                                                         serie
                                                                     </TableHead>
                                                                     <TableHead>
-                                                                        Marca
+                                                                        Marca{' '}
+                                                                        <span
+                                                                            aria-hidden="true"
+                                                                            className="text-primary-strong"
+                                                                        >
+                                                                            *
+                                                                        </span>
                                                                     </TableHead>
                                                                     <TableHead className="w-24">
                                                                         Año fab.

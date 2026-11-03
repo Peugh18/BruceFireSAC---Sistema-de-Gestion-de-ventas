@@ -19,16 +19,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { fechaLocal } from '@/lib/utils';
+import { sumarDias } from '@/lib/utils';
 
 export type Cuota = { fecha_vencimiento: string; monto: number };
-
-function sumarDias(fecha: string, dias: number) {
-    const d = new Date(`${fecha}T00:00:00`);
-    d.setDate(d.getDate() + dias);
-
-    return fechaLocal(d);
-}
 
 function redondear(valor: number) {
     return Math.round(valor * 100) / 100;

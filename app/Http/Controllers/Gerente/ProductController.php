@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Gerente;
 
+use App\Actions\Certificates\EmitirCertificadosDeProducto;
 use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gerente\StoreProductRequest;
 use App\Http\Requests\Gerente\UpdateProductRequest;
+use App\Models\CertificateType;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Team;
@@ -28,7 +30,7 @@ class ProductController extends Controller
         $estado = (string) $request->input('estado', 'todos');
         $bajoMinimo = $request->boolean('bajo_minimo', false);
 
-        $query = Product::query()
+        $query = Product::query()->with('certificateType')
             ->conStock()
             ->when($buscar !== '', function ($q) use ($buscar) {
                 $q->where(function ($sub) use ($buscar) {
@@ -66,6 +68,8 @@ class ProductController extends Controller
                 'stock_minimo' => $p->stock_minimo !== null ? (int) $p->stock_minimo : null,
                 'activo' => (bool) $p->activo,
                 'stock_disponible' => $p->stockDisponible(),
+                'certificate_type_id' => $p->certificate_type_id,
+                'ficha_pendiente' => $p->certificate_type_id !== null && EmitirCertificadosDeProducto::fichaIncompleta($p),
             ];
         });
 
@@ -78,6 +82,10 @@ class ProductController extends Controller
             'siguienteCodigo' => Product::siguienteCodigo(),
             'categorias' => ProductCategory::conUsos(),
             'unidadesMedida' => UnidadMedidaSunat::opciones(),
+            // Solo las plantillas que salen solas con la venta.
+            'certificados' => CertificateType::query()->where('activo', true)->orderBy('nombre')->get()
+                ->filter(fn (CertificateType $tipo) => EmitirCertificadosDeProducto::seLlenaSolo($tipo))
+                ->map(fn (CertificateType $tipo) => ['id' => $tipo->id, 'nombre' => $tipo->nombre])->values(),
             'productos' => $productos,
             'filters' => [
                 'buscar' => $buscar,

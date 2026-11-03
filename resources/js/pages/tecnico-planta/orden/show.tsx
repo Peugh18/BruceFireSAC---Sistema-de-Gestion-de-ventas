@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -7,7 +8,6 @@ import {
     CircleX,
     FileCheck2,
     FireExtinguisher,
-    Printer,
     UserRound,
     Wrench,
 } from 'lucide-react';
@@ -26,9 +26,6 @@ import EquiposDeLaOrden, {
     type EquipoCasillero,
 } from '@/components/equipos-de-la-orden';
 import InputError from '@/components/input-error';
-import SelectorFormatoStickers, {
-    type FormatoStickers,
-} from '@/components/formato-stickers';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
@@ -51,6 +48,7 @@ import EjecucionRoutes from '@/routes/tecnico-planta/ejecucion';
 import RecepcionesRoutes from '@/routes/tecnico-planta/recepciones';
 import EquiposRoutes from '@/routes/tecnico-planta/recepciones/equipos';
 import type { Team } from '@/types';
+import { hace } from '@/lib/utils';
 
 type Revision = EquipoCasillero & {
     es_co2: boolean;
@@ -132,25 +130,6 @@ const ESTADOS_DE_TRABAJO = [
 
 const errorDe = (errores: Record<string, string>) =>
     Object.values(errores)[0] ?? 'No se pudo guardar.';
-
-function hace(fecha: string | null): string {
-    if (!fecha) {
-        return '';
-    }
-
-    const minutos = Math.max(
-        0,
-        Math.round((Date.now() - new Date(fecha).getTime()) / 60000),
-    );
-
-    if (minutos < 60) {
-        return `hace ${minutos} min`;
-    }
-
-    const horas = Math.round(minutos / 60);
-
-    return horas < 24 ? `hace ${horas} h` : `hace ${Math.round(horas / 24)} d`;
-}
 
 const ETIQUETA_DEFICIENCIA: Record<
     Deficiencia['estado'],
@@ -403,9 +382,7 @@ export default function OrdenTaller({
                                 ? ` · ${paso.detalle.toUpperCase()}`
                                 : ''}
                         </p>
-                        <h1 className="text-foreground text-xl font-bold">
-                            {TITULOS[vista - 1]}
-                        </h1>
+                        <h1 className={pageTitleClass}>{TITULOS[vista - 1]}</h1>
                     </div>
 
                     <TomarOrden asignacion={asignacion} />
@@ -517,7 +494,6 @@ function PasoRecibir({
     ruta: Ruta;
     onSeguir: () => void;
 }) {
-    const [formato, setFormato] = useState<FormatoStickers>('rollo');
     const pendiente = order.estado === 'pendiente_recepcion';
     const equipos = casilleros.equipos;
     const anteriores = useRef(equipos.map((e) => e.id));
@@ -573,25 +549,6 @@ function PasoRecibir({
                     <h2 className="text-foreground text-sm font-bold">
                         Escanea el sticker o la serie de fábrica
                     </h2>
-                    {equipos.length > 0 && (
-                        <>
-                            <SelectorFormatoStickers
-                                value={formato}
-                                onChange={setFormato}
-                            />
-                            <a
-                                href={RecepcionesRoutes.stickers.url(ruta, {
-                                    query: { formato },
-                                })}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="border-border text-foreground inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold"
-                            >
-                                <Printer className="size-4" />
-                                Stickers
-                            </a>
-                        </>
-                    )}
                 </div>
                 <EquiposDeLaOrden
                     casilleros={casilleros}
@@ -1006,7 +963,9 @@ function FilaReparar({
         product_id: d.cotizado ? String(d.cotizado.product_id) : '',
         cantidad: d.cotizado?.cantidad ?? 1,
     });
-    const sinRepuesto = useForm({ resolucion: 'Reparado en taller' });
+    // P-030: sin repuesto no se descuenta el Kardex, así que queda dicho qué se hizo.
+    const sinRepuesto = useForm({ resolucion: '' });
+    const [explicando, setExplicando] = useState(false);
     const opciones = {
         preserveScroll: true,
         onError: (e: Record<string, string>) => toast.error(errorDe(e)),
@@ -1078,23 +1037,52 @@ function FilaReparar({
                 >
                     Marcar reparado
                 </button>
-                {!d.repuesto_sugerido && !d.cotizado && (
+                {!d.repuesto_sugerido && !d.cotizado && !explicando && (
                     <button
                         type="button"
-                        disabled={sinRepuesto.processing}
-                        onClick={() =>
-                            sinRepuesto.post(
-                                DeficienciasRoutes.resolve.url({
-                                    current_team: currentTeam?.slug ?? '',
-                                    deficiency: d.id,
-                                }),
-                                opciones,
-                            )
-                        }
+                        onClick={() => setExplicando(true)}
                         className="text-foreground min-h-11 w-full text-sm font-semibold underline"
                     >
                         Se reparó sin usar repuesto
                     </button>
+                )}
+                {explicando && (
+                    <div className="border-border space-y-2 rounded-xl border p-2">
+                        <label className="text-foreground block text-xs font-bold">
+                            ¿Qué se hizo? (no descuenta stock)
+                            <input
+                                autoFocus
+                                value={sinRepuesto.data.resolucion}
+                                onChange={(e) =>
+                                    sinRepuesto.setData(
+                                        'resolucion',
+                                        e.target.value,
+                                    )
+                                }
+                                placeholder="Ej. Se limpió y ajustó la válvula"
+                                className="border-input bg-card mt-1 min-h-11 w-full rounded-xl border px-2 text-sm font-normal"
+                            />
+                        </label>
+                        <button
+                            type="button"
+                            disabled={
+                                sinRepuesto.processing ||
+                                sinRepuesto.data.resolucion.trim().length < 5
+                            }
+                            onClick={() =>
+                                sinRepuesto.post(
+                                    DeficienciasRoutes.resolve.url({
+                                        current_team: currentTeam?.slug ?? '',
+                                        deficiency: d.id,
+                                    }),
+                                    opciones,
+                                )
+                            }
+                            className="bg-success-strong text-background min-h-11 w-full rounded-xl text-sm font-bold disabled:opacity-50"
+                        >
+                            Marcar reparado sin repuesto
+                        </button>
+                    </div>
                 )}
             </form>
         </TarjetaDeficiencia>

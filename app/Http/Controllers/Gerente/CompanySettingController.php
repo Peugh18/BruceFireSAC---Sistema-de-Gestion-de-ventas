@@ -39,6 +39,7 @@ class CompanySettingController extends Controller
                 'condiciones_comprobante' => $company->condiciones_comprobante,
                 'cuenta_detraccion' => $company->cuenta_detraccion,
                 'logo_url' => $company->logoUrl(),
+                'intervalo_ph_anios' => $company->intervalo_ph_anios ?? 5,
             ],
             'bankAccounts' => CompanyBankAccount::query()->orderBy('orden')->get(),
             'firmasPendientes' => Signer::query()->where('activo', true)->whereNull('firma_path')->count(),

@@ -23,12 +23,17 @@ use Illuminate\Validation\ValidationException;
  * @property float|null $monto_esperado_calculado
  * @property-read float|null $diferencia
  * @property string|null $observacion
+ * @property int|null $revisada_por
+ * @property Carbon|null $revisada_at
+ * @property string|null $revision_nota
  * @property string $estado
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $vendedor
  * @property-read Sede|null $sede
  * @property-read Collection<int, CashRegisterWithdrawal> $salidas
+ * @property-read Collection<int, CashRegisterCount> $conteos
+ * @property-read bool|null $esperando_explicacion
  */
 #[Fillable([
     'vendedor_id',
@@ -40,6 +45,9 @@ use Illuminate\Validation\ValidationException;
     'monto_esperado_calculado',
     'observacion',
     'estado',
+    'revisada_por',
+    'revisada_at',
+    'revision_nota',
 ])]
 class CashRegister extends Model
 {
@@ -51,6 +59,7 @@ class CashRegister extends Model
         return [
             'fecha_apertura' => 'datetime',
             'fecha_cierre' => 'datetime',
+            'revisada_at' => 'datetime',
             'monto_apertura' => 'decimal:2',
             'monto_contado_cierre' => 'decimal:2',
             'monto_esperado_calculado' => 'decimal:2',
@@ -93,6 +102,22 @@ class CashRegister extends Model
         return round((float) $this->monto_apertura + $efectivo - (float) $this->salidas()->sum('monto'), 2);
     }
 
+    /**
+     * @return HasMany<CashRegisterCount, $this>
+     */
+    public function conteos(): HasMany
+    {
+        return $this->hasMany(CashRegisterCount::class)->orderBy('id');
+    }
+
+    /**
+     * El conteo que vale para cerrar: el último que el Gerente no anuló.
+     */
+    public function conteoVigente(): ?CashRegisterCount
+    {
+        return $this->conteos()->whereNull('anulado_at')->latest('id')->first();
+    }
+
     public function estaAbierto(): bool
     {
         return $this->estado === 'abierto';
@@ -127,6 +152,7 @@ class CashRegister extends Model
         return self::query()
             ->where('vendedor_id', $vendedorId)
             ->where('estado', 'abierto')
+            ->whereDoesntHave('conteos', fn ($q) => $q->whereNull('anulado_at'))
             ->latest('fecha_apertura')
             ->first();
     }
@@ -143,6 +169,7 @@ class CashRegister extends Model
         return self::query()
             ->where('vendedor_id', $vendedorId)
             ->where('estado', 'abierto')
+            ->whereDoesntHave('conteos', fn ($q) => $q->whereNull('anulado_at'))
             ->lockForUpdate()
             ->latest('fecha_apertura')
             ->first();
@@ -154,10 +181,36 @@ class CashRegister extends Model
      */
     public static function exigirAbiertaParaEfectivo(int $vendedorId, string $campo = 'medio_pago'): void
     {
+        self::exigirAbierta(
+            $vendedorId,
+            $campo,
+            'Estás cerrando tu turno de caja: termina el cierre antes de cobrar en efectivo, o elige otro medio de pago.',
+            'Para cobrar en efectivo abre primero tu turno en Caja, o elige otro medio de pago.',
+        );
+    }
+
+    /**
+     * Toda venta del vendedor cae en un turno, como en un punto de venta:
+     * sin turno abierto no se emite, se pague como se pague.
+     */
+    public static function exigirAbiertaParaVender(int $vendedorId): void
+    {
+        self::exigirAbierta(
+            $vendedorId,
+            'caja',
+            'Estás cerrando tu turno de caja: termina el cierre y abre uno nuevo para emitir ventas.',
+            'Para emitir una venta abre primero tu turno en Caja y cobranzas.',
+        );
+    }
+
+    private static function exigirAbierta(int $vendedorId, string $campo, string $siEstaCerrando, string $siNoHayTurno): void
+    {
+        if (self::query()->where('vendedor_id', $vendedorId)->where('estado', 'abierto')->whereHas('conteos', fn ($q) => $q->whereNull('anulado_at'))->exists()) {
+            throw ValidationException::withMessages([$campo => $siEstaCerrando]);
+        }
+
         if (! self::abiertaDe($vendedorId)) {
-            throw ValidationException::withMessages([
-                $campo => 'Para cobrar en efectivo abre primero tu turno en Caja, o elige otro medio de pago.',
-            ]);
+            throw ValidationException::withMessages([$campo => $siNoHayTurno]);
         }
     }
 

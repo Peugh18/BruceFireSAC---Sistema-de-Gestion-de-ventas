@@ -24,6 +24,43 @@ class CarteraDeCobranzas
     public const DEBEN = ['pendiente', 'parcial', 'vencido'];
 
     /**
+     * Cuentas de una venta: lo que se facturó, lo que cambiaron las notas que
+     * SUNAT aceptó, lo cobrado, lo devuelto y lo que falta cobrar.
+     *
+     * `devolvible` es lo que aún se puede devolver por caja: sin detracción.
+     *
+     * @return array{total:float,notas_credito:float,notas_debito:float,cobrado:float,devuelto:float,devolvible:float,pendiente:float}
+     */
+    public static function resumenDeVenta(Sale $sale): array
+    {
+        $sale->loadMissing(['installments.payments', 'payments', 'refunds', 'electronicDocuments']);
+        $notas = $sale->electronicDocuments->whereIn('sunat_estado', ['aceptado', 'observado']);
+
+        return [
+            'total' => (float) $sale->total,
+            'notas_credito' => (float) $notas->where('tipo', 'nota_credito')->sum('importe'),
+            'notas_debito' => (float) $notas->where('tipo', 'nota_debito')->sum('importe'),
+            'cobrado' => (float) $sale->payments->sum('monto'),
+            'devuelto' => (float) $sale->refunds->sum('monto'),
+            'devolvible' => max(0, round((float) $sale->payments->where('es_detraccion', false)->sum('monto') - (float) $sale->refunds->sum('monto'), 2)),
+            'pendiente' => $sale->estado === 'confirmada'
+                ? round((float) $sale->installments->whereIn('estado', self::DEBEN)->sum(fn (Installment $cuota) => $cuota->saldo()), 2)
+                : 0.0,
+        ];
+    }
+
+    /**
+     * Lo que falta cubrir de una venta: su total ya ajustado por las notas que
+     * SUNAT aceptó, menos lo cobrado neto de devoluciones.
+     */
+    public static function saldoDeVenta(Sale $sale): float
+    {
+        $resumen = self::resumenDeVenta($sale);
+
+        return round($resumen['total'] - $resumen['notas_credito'] + $resumen['notas_debito'] - $resumen['cobrado'] + $resumen['devuelto'], 2);
+    }
+
+    /**
      * Saldos de la venta original, compartidos por todas sus cuotas. La reserva
      * SPOT no es un cobro comercial y no se suma una vez por cada cuota.
      *

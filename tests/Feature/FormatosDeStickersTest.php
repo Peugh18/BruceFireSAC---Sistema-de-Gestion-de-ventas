@@ -36,7 +36,8 @@ test('cada punto de impresion permite A4 y rechaza formatos desconocidos', funct
     $this->seed(RolesAndPermissionsSeeder::class);
     $sede = Sede::factory()->create(['tipo' => 'mixta', 'activo' => true]);
     $user = User::factory()->create();
-    $user->assignRole($origen === 'taller' ? 'TecnicoPlanta' : 'Almacen');
+    $user->assignRole($origen === 'taller' ? 'Vendedor' : 'Almacen');
+    $user->update(['sede_id' => $sede->id]);
     $product = Product::factory()->create(['serializado' => true]);
     $unit = InventoryUnit::create([
         'product_id' => $product->id, 'sede_almacen_id' => $sede->id,
@@ -56,7 +57,7 @@ test('cada punto de impresion permite A4 y rechaza formatos desconocidos', funct
     $url = match ($origen) {
         'recepcion' => route('almacen.recepciones.stickers', $parametros + ['reception' => $reception]),
         'unidad' => route('almacen.stickers.unidad', $parametros + ['serie' => $unit->numero_serie]),
-        'taller' => route('tecnico-planta.recepciones.stickers', $parametros + ['service_order' => $order]),
+        'taller' => route('vendedor.ordenes-servicio.stickers', $parametros + ['service_order' => $order]),
     };
     $separador = str_contains($url, '?') ? '&' : '?';
 

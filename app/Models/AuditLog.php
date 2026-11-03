@@ -84,4 +84,29 @@ class AuditLog extends Model
     {
         return $this->morphTo();
     }
+
+    /**
+     * El evento en palabras del vendedor, con el número del documento si lo tiene.
+     */
+    public function texto(): string
+    {
+        $numero = $this->new_values['numero_interno'] ?? $this->new_values['numero'] ?? $this->new_values['nota'] ?? null;
+        $texto = [
+            'venta.creada' => 'Se registró una venta',
+            'venta.borrador_editado' => 'Se editó el borrador de una venta',
+            'venta.editada' => 'Se editó la venta',
+            'venta.anulada' => 'Se anuló una venta',
+            'venta.nota_venta_confirmada' => 'Se emitió una nota de venta',
+            'venta.nota_venta_formalizada' => 'Se emitió el comprobante de la nota de venta',
+            'venta.extintor_cambiado' => 'Se cambió un extintor de la venta',
+            'cobranza.nota_aplicada' => 'Una nota cambió el saldo',
+            'cobro.anulado' => 'Se anuló un cobro',
+            'detraccion.acreditada' => 'Se acreditó la detracción',
+            'cotizacion.creada' => 'Se creó una cotización',
+            'cliente.creado' => 'Se registró el cliente',
+            'cliente.actualizado' => 'Se actualizaron los datos del cliente',
+        ][$this->action] ?? ucfirst(str_replace(['.', '_'], ' ', $this->action));
+
+        return $numero ? "{$texto} ({$numero})" : $texto;
+    }
 }

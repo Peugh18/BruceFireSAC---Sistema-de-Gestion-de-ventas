@@ -1,30 +1,42 @@
-import GraficosDashboard, {
-    type DatosGraficos,
-} from '@/components/graficos-dashboard';
-import { ProgresoConMarcador } from '@/components/progreso';
+import { pageTitleClass } from '@/components/page-header';
+import { cn } from '@/lib/utils';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
-    AlertTriangle,
-    ArrowRight,
-    Boxes,
+    ArrowLeftRight,
     Building2,
-    Calendar,
-    History,
     PackageCheck,
+    PackagePlus,
     ScanBarcode,
-    TrendingDown,
-    Truck,
+    SlidersHorizontal,
+    Sticker,
     User,
 } from 'lucide-react';
 
-import { Card } from '@/components/ui/card';
+import {
+    Apilada,
+    Atajos,
+    Atencion,
+    cantidad,
+    cambioPorcentual,
+    Indicador,
+    MapaDeCalor,
+    Ranking,
+    Tarjeta,
+    Tendencia,
+    Vacio,
+    type Atajo,
+    type Aviso,
+    type Punto,
+} from '@/components/bi';
 import { Empty } from '@/components/ui/empty';
 import AlmacenLayout from '@/layouts/almacen-layout';
-import recepcionesRutas from '@/routes/almacen/recepciones';
-import type { Team } from '@/types';
-import StockRoutes from '@/routes/almacen/stock';
 import AjustesRoutes from '@/routes/almacen/ajustes';
+import ConsultaRoutes from '@/routes/almacen/consulta';
+import recepcionesRutas from '@/routes/almacen/recepciones';
+import StickersRoutes from '@/routes/almacen/stickers';
+import StockRoutes from '@/routes/almacen/stock';
 import TrasladosRoutes from '@/routes/almacen/traslados';
+import type { Team } from '@/types';
 
 export type SedeStock = {
     sede_id: number;
@@ -32,11 +44,6 @@ export type SedeStock = {
     tipo: string;
     ciudad: string | null;
     unidades_disponibles: number;
-};
-
-export type StockKpis = {
-    total_disponible: number;
-    por_sede: SedeStock[];
 };
 
 export type MovimientoReciente = {
@@ -67,17 +74,6 @@ export type ProductoBajoMinimo = {
     diferencia: number;
 };
 
-export type AlmacenDashboardProps = {
-    graficos: DatosGraficos;
-    stock: StockKpis;
-    recepciones_hoy: number;
-    recepciones_de_hoy: ReceptionToday[];
-    traslados_pendientes: number;
-    movimientos_recientes: MovimientoReciente[];
-    productos_bajo_minimo: ProductoBajoMinimo[];
-    lotes_por_vencer: LotePorVencer[];
-};
-
 export type ReceptionToday = {
     id: number;
     proveedor: string;
@@ -96,63 +92,55 @@ export type LotePorVencer = {
     saldo: number;
 };
 
-function formatNumber(value: number): string {
-    return new Intl.NumberFormat('es-PE').format(value);
-}
+export type AlmacenDashboardProps = {
+    graficos: {
+        categorias: Punto[];
+        estados: Punto[];
+        movimientos: Punto[];
+        dias: { fecha: string; valor: number }[];
+    };
+    stock: { total_disponible: number; por_sede: SedeStock[] };
+    recepciones_hoy: number;
+    recepciones_de_hoy: ReceptionToday[];
+    traslados_pendientes: number;
+    movimientos_recientes: MovimientoReciente[];
+    productos_bajo_minimo: ProductoBajoMinimo[];
+    lotes_por_vencer: LotePorVencer[];
+};
+
+const ETIQUETA_MOVIMIENTO: Record<string, string> = {
+    ingreso: 'Ingreso',
+    salida_venta: 'Venta',
+    salida_servicio: 'Consumo de taller',
+    ajuste: 'Ajuste',
+    traslado: 'Traslado',
+};
 
 function formatDate(isoString: string | null): string {
-    if (!isoString) return '—';
-    const date = new Date(isoString);
-    return date.toLocaleString('es-PE', {
+    if (!isoString) {
+        return '—';
+    }
+
+    return new Date(isoString).toLocaleString('es-PE', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
     });
 }
 
-function getTipoMovimientoBadge(tipo: string): {
-    label: string;
-    className: string;
-} {
-    switch (tipo) {
-        case 'ingreso':
-            return {
-                label: 'Ingreso',
-                className:
-                    'bg-emerald-500/10 text-success-strong border border-emerald-500/20 border-emerald-500/20',
-            };
-        case 'salida_venta':
-            return {
-                label: 'Venta',
-                className:
-                    'bg-destructive/10 text-primary-strong border-destructive/20',
-            };
-        case 'salida_servicio':
-            return {
-                label: 'Consumo Taller',
-                className: 'bg-muted text-foreground  border-border',
-            };
-        case 'ajuste':
-            return {
-                label: 'Ajuste',
-                className:
-                    'bg-amber-500/10 text-warning-strong border-amber-500/20',
-            };
-        case 'traslado':
-            return {
-                label: 'Traslado',
-                className: 'bg-muted text-foreground  border-border',
-            };
-        default:
-            return {
-                label: tipo,
-                className: 'bg-muted text-muted-foreground border-border',
-            };
+function variacionSemanal(actual: number, anterior: number): number | null {
+    if (anterior === 0) {
+        return actual === 0 ? 0 : null;
     }
+
+    return Math.round(((actual - anterior) / anterior) * 100);
 }
 
+/**
+ * Inicio de Almacén: atajos, lo que requiere atención, indicadores de la
+ * semana y el BI de stock y movimientos.
+ */
 export default function AlmacenDashboard({
     graficos,
     stock,
@@ -163,419 +151,401 @@ export default function AlmacenDashboard({
     productos_bajo_minimo,
     lotes_por_vencer,
 }: AlmacenDashboardProps) {
-    const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
-    const teamSlug =
-        currentTeam?.slug ||
-        (typeof window !== 'undefined'
-            ? window.location.pathname.split('/')[1]
-            : '');
+    const { currentTeam, puedeTrasladar } = usePage<{
+        currentTeam?: Team | null;
+        puedeTrasladar?: boolean;
+    }>().props;
+    const teamSlug = currentTeam?.slug ?? '';
+    const hoy = new Date().toLocaleDateString('es-PE', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        timeZone: 'America/Lima',
+    });
+    const lugar =
+        stock.por_sede.length === 1
+            ? stock.por_sede[0].nombre
+            : 'Todos los almacenes';
+
+    const atajos: Atajo[] = [
+        {
+            texto: 'Nueva recepción',
+            href: recepcionesRutas.create.url(teamSlug),
+            icono: PackagePlus,
+            principal: true,
+        },
+        {
+            texto: 'Buscar producto',
+            href: ConsultaRoutes.index.url(teamSlug),
+            icono: ScanBarcode,
+        },
+        {
+            texto: 'Ajuste',
+            href: AjustesRoutes.index.url(teamSlug),
+            icono: SlidersHorizontal,
+        },
+        {
+            texto: 'Stickers',
+            href: StickersRoutes.index.url(teamSlug),
+            icono: Sticker,
+        },
+        ...(puedeTrasladar
+            ? [
+                  {
+                      texto: 'Traslados',
+                      href: TrasladosRoutes.index.url(teamSlug),
+                      icono: ArrowLeftRight,
+                  },
+              ]
+            : []),
+    ];
+
+    const vencidos = lotes_por_vencer.filter((lote) => lote.vencido).length;
+    const avisos: Aviso[] = [
+        ...(productos_bajo_minimo.length > 0
+            ? [
+                  {
+                      texto: `${cantidad(productos_bajo_minimo.length, 'producto', 'productos')} bajo el mínimo`,
+                      accion: 'Reponer',
+                      href: StockRoutes.index.url(teamSlug),
+                      alerta: true,
+                  },
+              ]
+            : []),
+        ...(vencidos > 0
+            ? [
+                  {
+                      texto: `${cantidad(vencidos, 'lote vencido', 'lotes vencidos')} con stock`,
+                      accion: 'Dar de baja',
+                      href: AjustesRoutes.index.url(teamSlug),
+                      alerta: true,
+                  },
+              ]
+            : []),
+        ...(lotes_por_vencer.length - vencidos > 0
+            ? [
+                  {
+                      texto: `${cantidad(lotes_por_vencer.length - vencidos, 'lote', 'lotes')} por vencer`,
+                      accion: 'Ver',
+                      href: StockRoutes.index.url(teamSlug),
+                  },
+              ]
+            : []),
+        ...(puedeTrasladar && traslados_pendientes > 0
+            ? [
+                  {
+                      texto: `${cantidad(traslados_pendientes, 'traslado', 'traslados')} por despachar o recibir`,
+                      accion: 'Abrir',
+                      href: TrasladosRoutes.index.url(teamSlug),
+                  },
+              ]
+            : []),
+    ];
+
+    const [disponibles, reservados, enTaller] = graficos.estados.map(
+        (punto) => punto.valor,
+    );
+    const semanas = graficos.movimientos;
+    const estaSemana = semanas[semanas.length - 1] ?? {
+        valor: 0,
+        secundario: 0,
+    };
+    const semanaPasada = semanas[semanas.length - 2] ?? {
+        valor: 0,
+        secundario: 0,
+    };
+    const categorias = [...graficos.categorias]
+        .filter((punto) => punto.valor > 0)
+        .sort((a, b) => b.valor - a.valor);
+    const porReponer: Punto[] = productos_bajo_minimo
+        .slice(0, 5)
+        .map((producto) => ({
+            nombre: `${producto.nombre} · ${producto.stock_disponible} de ${producto.stock_minimo}`,
+            valor: Math.max(0, producto.stock_disponible),
+            secundario: producto.stock_minimo,
+        }));
 
     return (
-        <AlmacenLayout title="Dashboard de Almacén">
-            <Head title="Dashboard Almacén" />
+        <AlmacenLayout title="Inicio de Almacén">
+            <Head title="Inicio de Almacén" />
 
-            <div className="flex flex-col gap-6">
-                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h1 className="text-foreground text-lg font-bold">
-                                Prioridades de hoy
-                            </h1>
-                            <p className="text-muted-foreground text-sm">
-                                Recibe mercadería, atiende alertas de stock y
-                                confirma traslados.
-                            </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            <Link
-                                href={recepcionesRutas.create.url(teamSlug)}
-                                className="bg-primary text-primary-foreground focus-visible:ring-ring inline-flex min-h-10 items-center rounded-md px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
-                            >
-                                Recibir hoy ({recepciones_hoy})
-                            </Link>
-                            <Link
-                                href={TrasladosRoutes.index.url(teamSlug)}
-                                className="border-border bg-background text-foreground focus-visible:ring-ring inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
-                            >
-                                Traslados ({traslados_pendientes})
-                            </Link>
-                        </div>
-                    </div>
-                    {recepciones_de_hoy.length > 0 ? (
-                        <ul className="divide-border mt-4 divide-y border-t text-sm">
-                            {recepciones_de_hoy.map((reception) => (
-                                <li
-                                    key={reception.id}
-                                    className="flex flex-wrap justify-between gap-1 py-2"
-                                >
-                                    <span className="font-medium">
-                                        {reception.proveedor}
-                                    </span>
-                                    <span className="text-muted-foreground">
-                                        {reception.documento_referencia ??
-                                            'Sin documento'}{' '}
-                                        · {reception.sede ?? 'Almacén'}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p className="text-muted-foreground mt-3 text-sm">
-                            Aún no hay recepciones registradas hoy.
+            <div className="flex flex-col gap-5">
+                <header className="flex flex-col gap-4">
+                    <div>
+                        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase">
+                            Almacén · {lugar}
                         </p>
-                    )}
-                </Card>
-                <GraficosDashboard rol="almacen" datos={graficos} />
-                {/* Banner de alerta si hay productos bajo el stock mínimo de almacén */}
-                {productos_bajo_minimo.length > 0 && (
-                    <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#B9151A] to-[#E31E24] px-5 py-3.5 text-white shadow-xs">
-                        <AlertTriangle className="size-5 shrink-0 text-white" />
-                        <span className="flex-1 text-[13px]">
-                            Hay{' '}
-                            <b>{productos_bajo_minimo.length} producto(s)</b>{' '}
-                            con existencias bajo el nivel mínimo en el almacén.
-                            Se requiere compra / reabastecimiento.
-                        </span>
-                        <Link
-                            href={StockRoutes.index.url({
-                                current_team: teamSlug,
-                            })}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/30"
+                        <h1
+                            className={cn(
+                                pageTitleClass,
+                                'mt-1 first-letter:uppercase',
+                            )}
                         >
-                            <span>Ver stock</span>
-                            <ArrowRight className="size-3.5" />
-                        </Link>
+                            {hoy}
+                        </h1>
                     </div>
-                )}
+                    <Atajos atajos={atajos} />
+                </header>
 
-                {/* EPP y consumibles: lotes vencidos o por vencer (60 días) */}
-                {lotes_por_vencer.length > 0 && (
-                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                        <div className="flex items-center justify-between">
-                            <span className="text-foreground text-[13.5px] font-bold">
-                                Lotes vencidos o por vencer
-                            </span>
-                            <Link
-                                href={AjustesRoutes.index.url({
-                                    current_team: teamSlug,
-                                })}
-                                className="text-primary-strong text-xs font-bold"
-                            >
-                                Dar de baja un vencido
-                            </Link>
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-xs">
-                            Los vencidos no se venden; los próximos salen
-                            primero en cada venta.
-                        </p>
-                        <div className="divide-border mt-3 flex flex-col divide-y">
-                            {lotes_por_vencer.map((lote) => (
-                                <div
-                                    key={lote.id}
-                                    className="flex flex-wrap items-center justify-between gap-2 py-2 text-xs"
+                <Atencion avisos={avisos} />
+
+                <section
+                    aria-label="Indicadores"
+                    className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-3.5"
+                >
+                    <Indicador
+                        etiqueta="Extintores disponibles"
+                        valor={String(disponibles ?? 0)}
+                        detalle={`${reservados ?? 0} reservados`}
+                    />
+                    <Indicador
+                        etiqueta="Entradas esta semana"
+                        valor={String(estaSemana.valor)}
+                        serie={semanas.map((s) => s.valor)}
+                        cambio={cambioPorcentual(
+                            variacionSemanal(
+                                estaSemana.valor,
+                                semanaPasada.valor,
+                            ),
+                            false,
+                            'vs. la semana pasada',
+                        )}
+                    />
+                    <Indicador
+                        etiqueta="Salidas esta semana"
+                        valor={String(estaSemana.secundario ?? 0)}
+                        serie={semanas.map((s) => s.secundario ?? 0)}
+                        detalle="ventas, servicios y ajustes"
+                    />
+                    <Indicador
+                        etiqueta="En taller (de clientes)"
+                        valor={String(enTaller ?? 0)}
+                        detalle="no cuentan como stock"
+                    />
+                </section>
+
+                <div className="grid gap-3.5 lg:grid-cols-3">
+                    <Tarjeta
+                        titulo="Entradas y salidas · 8 semanas"
+                        className="lg:col-span-2"
+                    >
+                        {semanas.some(
+                            (s) => s.valor + (s.secundario ?? 0) > 0,
+                        ) ? (
+                            <Tendencia
+                                titulo="Entradas y salidas por semana"
+                                datos={semanas}
+                                series={['Entradas', 'Salidas']}
+                                alto={230}
+                            />
+                        ) : (
+                            <Vacio>
+                                Sin movimientos en las últimas 8 semanas.
+                            </Vacio>
+                        )}
+                    </Tarjeta>
+                    <Tarjeta titulo="Por reponer">
+                        {porReponer.length > 0 ? (
+                            <>
+                                <Ranking
+                                    datos={porReponer.map((p) => ({
+                                        nombre: p.nombre,
+                                        valor: p.valor,
+                                    }))}
+                                    colorDe={(p) => {
+                                        const minimo =
+                                            porReponer.find(
+                                                (r) => r.nombre === p.nombre,
+                                            )?.secundario ?? 1;
+
+                                        return p.valor / minimo < 0.5
+                                            ? 'bi-alerta'
+                                            : 'bi-1';
+                                    }}
+                                />
+                                <Link
+                                    href={StockRoutes.index.url(teamSlug)}
+                                    className="text-primary-strong text-sm font-semibold hover:underline"
                                 >
-                                    <div>
-                                        <div className="text-foreground font-bold">
-                                            {lote.producto}
-                                        </div>
-                                        <div className="text-muted-foreground text-xs">
-                                            Lote {lote.lote} · {lote.saldo}{' '}
-                                            {lote.unidad_medida} · {lote.sede}
-                                        </div>
-                                    </div>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                                            lote.vencido
-                                                ? 'bg-destructive/10 text-destructive-strong'
-                                                : 'text-warning-strong bg-amber-500/10'
-                                        }`}
-                                    >
-                                        {lote.vencido ? 'Vencido' : 'Vence'}{' '}
-                                        {lote.fecha_vencimiento
-                                            ?.split('-')
-                                            .reverse()
-                                            .join('/')}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                )}
-
-                {/* 3-Column Top Grid: Unidades en Stock, Recepciones de Hoy, Alerta Reabastecimiento */}
-                <div className="grid gap-4 md:grid-cols-3">
-                    {/* 1. Unidades Disponibles */}
-                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                        <div className="flex items-center justify-between">
-                            <span className="text-foreground text-[13.5px] font-bold">
-                                Unidades disponibles
-                            </span>
-                            <div className="bg-muted text-foreground flex size-7 items-center justify-center rounded-lg">
-                                <Boxes className="size-4" />
-                            </div>
-                        </div>
-
-                        <div className="mt-4">
-                            <div className="text-foreground font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
-                                {formatNumber(stock.total_disponible)}
-                            </div>
-                            <div className="text-muted-foreground mt-2 text-xs">
-                                Unidades físicas serializadas en almacenes
-                            </div>
-                        </div>
-
-                        <div className="border-border mt-4 border-t pt-3">
-                            <div className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-                                Por almacén
-                            </div>
-                            <div className="mt-2 flex flex-col gap-1.5">
-                                {stock.por_sede.map((sede) => (
-                                    <div
-                                        key={sede.sede_id}
-                                        className="flex items-center justify-between text-[12px]"
-                                    >
-                                        <span className="text-foreground/80 flex items-center gap-1.5">
-                                            <Building2 className="text-muted-foreground size-3.5" />
-                                            {sede.nombre}
-                                        </span>
-                                        <span className="text-foreground font-bold">
-                                            {formatNumber(
-                                                sede.unidades_disponibles,
-                                            )}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* 2. Recepciones de Hoy */}
-                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                        <div className="flex items-center justify-between">
-                            <span className="text-foreground text-[13.5px] font-bold">
-                                Recepciones de hoy
-                            </span>
-                            <div className="text-success-strong flex size-7 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10">
-                                <Truck className="size-4" />
-                            </div>
-                        </div>
-
-                        <div className="mt-4">
-                            <div className="text-foreground font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
-                                {formatNumber(recepciones_hoy)}
-                            </div>
-                            <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs">
-                                <span className="text-success-strong inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 font-bold">
-                                    <Calendar className="size-3" />
-                                    <span>Hoy</span>
-                                </span>
-                                <span>Ingresos registrados al Kardex</span>
-                            </div>
-                        </div>
-
-                        <div className="border-border mt-5 border-t pt-4">
-                            <Link
-                                href={recepcionesRutas.create.url({
-                                    current_team: teamSlug,
-                                })}
-                                className="text-primary-strong inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
-                            >
-                                <span>Registrar nueva recepción</span>
-                                <ArrowRight className="size-3.5" />
-                            </Link>
-                        </div>
-                    </Card>
-
-                    {/* 3. Reabastecimiento de Almacén */}
-                    <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                        <div className="flex items-center justify-between">
-                            <span className="text-foreground text-[13.5px] font-bold">
-                                Bajo stock mínimo
-                            </span>
-                            <div className="bg-destructive/10 text-primary-strong flex size-7 items-center justify-center rounded-lg">
-                                <TrendingDown className="size-4" />
-                            </div>
-                        </div>
-
-                        <div className="mt-4">
-                            <div className="text-primary-strong font-['Oswald',sans-serif] text-[34px] leading-none font-semibold">
-                                {formatNumber(productos_bajo_minimo.length)}
-                            </div>
-                            <div className="text-muted-foreground mt-2 text-xs">
-                                Productos que requieren reposición
-                            </div>
-                        </div>
-
-                        <div className="border-border mt-5 border-t pt-4">
-                            <Link
-                                href={StockRoutes.index.url({
-                                    current_team: teamSlug,
-                                })}
-                                className="text-foreground inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
-                            >
-                                <span>Ver reporte de inventario</span>
-                                <ArrowRight className="size-3.5" />
-                            </Link>
-                        </div>
-                    </Card>
+                                    Ver los mínimos ›
+                                </Link>
+                            </>
+                        ) : (
+                            <Vacio>Todo el stock está sobre el mínimo.</Vacio>
+                        )}
+                    </Tarjeta>
                 </div>
 
-                {/* Bottom Section: Movimientos Recientes & Productos Bajo Mínimo Table */}
-                <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Movimientos Recientes del Kardex (2 cols) */}
-                    <div className="lg:col-span-2">
-                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                            <div className="border-border flex items-center justify-between border-b pb-4">
-                                <div className="flex items-center gap-2">
-                                    <History className="text-muted-foreground size-4" />
-                                    <span className="text-foreground text-[14px] font-bold">
-                                        Últimos 10 movimientos del Kardex
-                                    </span>
-                                </div>
-                                <span className="text-muted-foreground text-xs font-medium">
-                                    Tiempo real
-                                </span>
-                            </div>
+                <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+                    <Tarjeta titulo="Stock disponible por categoría">
+                        {categorias.length > 0 ? (
+                            <Ranking datos={categorias.slice(0, 6)} />
+                        ) : (
+                            <Vacio>Aún no hay stock disponible.</Vacio>
+                        )}
+                    </Tarjeta>
+                    <Tarjeta titulo="Extintores por estado">
+                        <b className="text-2xl tabular-nums">
+                            {(disponibles ?? 0) +
+                                (reservados ?? 0) +
+                                (enTaller ?? 0)}{' '}
+                            <span className="text-muted-foreground text-sm font-normal">
+                                en total
+                            </span>
+                        </b>
+                        <Apilada
+                            partes={[
+                                {
+                                    nombre: 'Disponibles',
+                                    valor: disponibles ?? 0,
+                                    color: 'bi-1',
+                                },
+                                {
+                                    nombre: 'Reservados',
+                                    valor: reservados ?? 0,
+                                    color: 'bi-2',
+                                },
+                                {
+                                    nombre: 'En taller',
+                                    valor: enTaller ?? 0,
+                                    color: 'bi-neutro',
+                                },
+                            ]}
+                        />
+                    </Tarjeta>
+                    <Tarjeta titulo="Movimientos por día" extra="6 semanas">
+                        <MapaDeCalor dias={graficos.dias} />
+                    </Tarjeta>
+                </div>
 
-                            {movimientos_recientes.length === 0 ? (
-                                <Empty
-                                    icon={<PackageCheck />}
-                                    title="Aún no se registran movimientos en el Kardex."
-                                />
-                            ) : (
-                                <div className="divide-border divide-y overflow-x-auto">
-                                    {movimientos_recientes.map((mov) => {
-                                        const badge = getTipoMovimientoBadge(
-                                            mov.tipo,
-                                        );
-                                        return (
-                                            <div
-                                                key={mov.id}
-                                                className="flex flex-col gap-2 py-3 text-[12.5px] sm:flex-row sm:items-center sm:justify-between"
-                                            >
-                                                <div className="flex min-w-0 items-start gap-3">
-                                                    <span
-                                                        className={`inline-flex shrink-0 items-center rounded-md border px-2 py-0.5 text-xs font-bold ${badge.className}`}
-                                                    >
-                                                        {badge.label}
+                <div className="grid gap-3.5 lg:grid-cols-3">
+                    <Tarjeta
+                        titulo="Últimos movimientos del Kardex"
+                        className="lg:col-span-2"
+                    >
+                        {movimientos_recientes.length === 0 ? (
+                            <Empty
+                                icon={<PackageCheck />}
+                                title="Aún no se registran movimientos en el Kardex."
+                            />
+                        ) : (
+                            <ul className="divide-border divide-y">
+                                {movimientos_recientes.map((mov) => (
+                                    <li
+                                        key={mov.id}
+                                        className="flex flex-col gap-1 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between"
+                                    >
+                                        <div className="min-w-0">
+                                            <span className="text-foreground block truncate font-semibold">
+                                                {mov.producto.nombre}
+                                            </span>
+                                            <span className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
+                                                {ETIQUETA_MOVIMIENTO[
+                                                    mov.tipo
+                                                ] ?? mov.tipo}
+                                                {mov.unidad_serie && (
+                                                    <span className="font-mono">
+                                                        {mov.unidad_serie}
                                                     </span>
-
-                                                    <div className="min-w-0">
-                                                        <div className="text-foreground truncate font-bold">
-                                                            {
-                                                                mov.producto
-                                                                    .nombre
-                                                            }
-                                                        </div>
-                                                        <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
-                                                            <span>
-                                                                Cód:{' '}
-                                                                {
-                                                                    mov.producto
-                                                                        .codigo
-                                                                }
-                                                            </span>
-                                                            {mov.unidad_serie && (
-                                                                <span className="text-foreground flex items-center gap-1 font-mono">
-                                                                    <ScanBarcode className="size-3" />
-                                                                    {
-                                                                        mov.unidad_serie
-                                                                    }
-                                                                </span>
-                                                            )}
-                                                            {mov.sede && (
-                                                                <span className="flex items-center gap-1">
-                                                                    <Building2 className="size-3" />
-                                                                    {mov.sede}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex shrink-0 items-center justify-between gap-1 text-xs sm:flex-col sm:items-end">
-                                                    <span className="text-foreground font-mono font-bold">
-                                                        {Number(mov.cantidad) <
-                                                        0
-                                                            ? `${mov.cantidad}`
-                                                            : `+${mov.cantidad}`}{' '}
-                                                        <span className="text-muted-foreground text-xs font-normal">
-                                                            {
-                                                                mov.producto
-                                                                    .unidad_medida
-                                                            }
-                                                        </span>
+                                                )}
+                                                {mov.sede && (
+                                                    <span className="flex items-center gap-1">
+                                                        <Building2
+                                                            className="size-3"
+                                                            aria-hidden="true"
+                                                        />
+                                                        {mov.sede}
                                                     </span>
-                                                    <div className="text-muted-foreground flex items-center gap-1 text-xs">
-                                                        {mov.usuario && (
-                                                            <span className="flex items-center gap-0.5">
-                                                                <User className="size-3" />
-                                                                {mov.usuario}
-                                                            </span>
-                                                        )}
-                                                        <span>•</span>
-                                                        <span>
-                                                            {formatDate(
-                                                                mov.fecha,
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </Card>
-                    </div>
-
-                    {/* Lista detallada de productos bajo stock mínimo (1 col) */}
-                    <div className="lg:col-span-1">
-                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                            <div className="border-border flex items-center justify-between border-b pb-4">
-                                <span className="text-foreground text-[14px] font-bold">
-                                    Stock en el mínimo o por debajo
-                                </span>
-                                <span className="bg-destructive/10 text-primary-strong rounded-full px-2 py-0.5 text-xs font-bold">
-                                    {productos_bajo_minimo.length}
-                                </span>
-                            </div>
-
-                            {productos_bajo_minimo.length === 0 ? (
-                                <Empty
-                                    icon={<PackageCheck />}
-                                    title="Todos los productos cumplen con el stock mínimo."
-                                />
-                            ) : (
-                                <div className="divide-border divide-y">
-                                    {productos_bajo_minimo.map((prod) => (
-                                        <div
-                                            key={prod.id}
-                                            className="py-3 text-[12px]"
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-foreground max-w-[180px] truncate font-bold">
-                                                    {prod.nombre}
-                                                </span>
-                                                <span className="text-primary-strong font-mono text-xs font-bold">
-                                                    {prod.diferencia > 0
-                                                        ? `Faltan ${prod.diferencia}`
-                                                        : 'En el mínimo'}
-                                                </span>
-                                            </div>
-                                            <div className="text-muted-foreground mt-1 flex items-center justify-between text-xs">
-                                                <span>Cód: {prod.codigo}</span>
-                                            </div>
-                                            <ProgresoConMarcador
-                                                label={`Stock de ${prod.nombre}`}
-                                                value={prod.stock_disponible}
-                                                minimo={prod.stock_minimo}
-                                            />
+                                                )}
+                                            </span>
                                         </div>
+                                        <div className="text-muted-foreground flex shrink-0 items-center gap-2 text-xs">
+                                            <b className="text-foreground font-mono text-sm">
+                                                {mov.cantidad > 0
+                                                    ? `+${mov.cantidad}`
+                                                    : mov.cantidad}{' '}
+                                                <span className="font-normal">
+                                                    {mov.producto.unidad_medida}
+                                                </span>
+                                            </b>
+                                            {mov.usuario && (
+                                                <span className="flex items-center gap-0.5">
+                                                    <User
+                                                        className="size-3"
+                                                        aria-hidden="true"
+                                                    />
+                                                    {mov.usuario}
+                                                </span>
+                                            )}
+                                            <span>{formatDate(mov.fecha)}</span>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </Tarjeta>
+                    <div className="flex flex-col gap-3.5">
+                        <Tarjeta
+                            titulo="Recepciones de hoy"
+                            extra={String(recepciones_hoy)}
+                        >
+                            {recepciones_de_hoy.length > 0 ? (
+                                <ul className="divide-border divide-y text-sm">
+                                    {recepciones_de_hoy.map((recepcion) => (
+                                        <li key={recepcion.id} className="py-2">
+                                            <span className="block font-semibold">
+                                                {recepcion.proveedor}
+                                            </span>
+                                            <span className="text-muted-foreground text-xs">
+                                                {recepcion.documento_referencia ??
+                                                    'Sin documento'}{' '}
+                                                · {recepcion.sede ?? 'Almacén'}
+                                            </span>
+                                        </li>
                                     ))}
-                                </div>
+                                </ul>
+                            ) : (
+                                <Vacio>Aún no hay recepciones hoy.</Vacio>
                             )}
-                        </Card>
+                        </Tarjeta>
+                        {lotes_por_vencer.length > 0 && (
+                            <Tarjeta titulo="Lotes vencidos o por vencer">
+                                <ul className="divide-border divide-y text-sm">
+                                    {lotes_por_vencer.map((lote) => (
+                                        <li
+                                            key={lote.id}
+                                            className="flex items-center justify-between gap-2 py-2"
+                                        >
+                                            <span className="min-w-0">
+                                                <span className="block truncate font-semibold">
+                                                    {lote.producto}
+                                                </span>
+                                                <span className="text-muted-foreground text-xs">
+                                                    Lote {lote.lote} ·{' '}
+                                                    {lote.saldo}{' '}
+                                                    {lote.unidad_medida}
+                                                </span>
+                                            </span>
+                                            <span
+                                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${
+                                                    lote.vencido
+                                                        ? 'bg-destructive/10 text-destructive-strong'
+                                                        : 'bg-muted text-foreground'
+                                                }`}
+                                            >
+                                                {lote.vencido
+                                                    ? 'Vencido'
+                                                    : 'Vence'}{' '}
+                                                {lote.fecha_vencimiento
+                                                    ?.split('-')
+                                                    .reverse()
+                                                    .join('/')}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Tarjeta>
+                        )}
                     </div>
                 </div>
             </div>

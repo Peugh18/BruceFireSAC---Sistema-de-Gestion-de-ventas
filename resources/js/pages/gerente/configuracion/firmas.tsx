@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
@@ -64,9 +65,7 @@ export default function FirmasYSellos({ firmantes }: Props) {
                         <PenLine className="size-5" />
                     </div>
                     <div>
-                        <h1 className="text-foreground font-['Oswald',sans-serif] text-[20px] font-semibold uppercase">
-                            Firmas y sellos
-                        </h1>
+                        <h1 className={pageTitleClass}>Firmas y sellos</h1>
                         <p className="text-muted-foreground text-[12px]">
                             Las personas que firman y sus fotos. Quién firma
                             cada certificado se elige en el editor del

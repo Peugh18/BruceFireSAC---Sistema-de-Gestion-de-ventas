@@ -7,12 +7,15 @@ use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Certificates\EmitirCertificadoDeServicio;
 use App\Actions\Sales\CambiarUnidadVendida;
 use App\Actions\Sales\ConfirmSale;
+use App\Actions\Sales\CorregirVenta;
 use App\Actions\Sales\CreateSale;
 use App\Actions\Sales\DescartarVentaSinComprobante;
 use App\Actions\Sales\EditarVentaEmitida;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\FiltraPorFechas;
+use App\Http\Controllers\Vendedor\Concerns\ValidaVentaVisible;
 use App\Http\Requests\Sales\StoreSaleRequest;
+use App\Models\AuditLog;
 use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
@@ -23,9 +26,12 @@ use App\Models\SaleItem;
 use App\Models\Sede;
 use App\Models\ServiceOrder;
 use App\Models\Team;
+use App\Services\Billing\AfectacionIgv;
 use App\Services\Billing\ComprobantePdfService;
 use App\Services\Billing\DetraccionCalculator;
+use App\Services\Billing\DocumentosRelacionados;
 use App\Services\Certificates\CertificadosDeVenta;
+use App\Services\Cobranzas\CarteraDeCobranzas;
 use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +44,7 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
 class SaleController extends Controller
 {
     use FiltraPorFechas;
+    use ValidaVentaVisible;
 
     /**
      * Ventas de un rango de fechas (por defecto, las de hoy), con los totales
@@ -136,11 +143,9 @@ class SaleController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         return Inertia::render('vendedor/ventas/nueva', [
+            'noGravados' => AfectacionIgv::noGravados(),
             'reglasDetraccion' => app(DetraccionCalculator::class)->reglasParaFormulario(),
-            'caja_abierta' => CashRegister::query()
-                ->where('vendedor_id', $request->user()->id)
-                ->where('estado', 'abierto')
-                ->exists(),
+            'caja_abierta' => CashRegister::abiertaDe((int) $request->user()->id) !== null,
             'clientesVarios' => Client::clientesVarios()->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             'limiteBoletaSinIdentificar' => Sale::LIMITE_BOLETA_SIN_IDENTIFICAR,
             'sedes' => Sede::query()
@@ -150,11 +155,11 @@ class SaleController extends Controller
                 ->get(['id', 'nombre']),
             'quote' => $request->filled('cotizacion')
                 ? $this->cotizacionParaVenta($request->integer('cotizacion'), $sedeId)
-                : null,
+                : ($request->filled('orden_servicio') ? $this->seriesCotizadasDeLaOrden($request->integer('orden_servicio'), $sedeId) : null),
             // Precarga desde el enlace "Nueva venta" de la ficha del cliente (?client_id=).
             'cliente' => $request->filled('client_id')
+                // Los clientes no pertenecen a una sede (E-039): cualquier tienda les vende.
                 ? Client::query()
-                    ->when($request->user()->sedeRestringidaId(), fn ($query, int $sede) => $query->where('sede_id', $sede))
                     ->whereKey($request->integer('client_id'))
                     ->first(['id', 'tipo_documento', 'razon_social', 'numero_documento'])
                 : null,
@@ -188,11 +193,9 @@ class SaleController extends Controller
         $sedeId = $request->user()->sedeRestringidaId();
 
         return Inertia::render('vendedor/ventas/nueva', [
+            'noGravados' => AfectacionIgv::noGravados(),
             'reglasDetraccion' => app(DetraccionCalculator::class)->reglasParaFormulario(),
-            'caja_abierta' => CashRegister::query()
-                ->where('vendedor_id', $request->user()->id)
-                ->where('estado', 'abierto')
-                ->exists(),
+            'caja_abierta' => CashRegister::abiertaDe((int) $request->user()->id) !== null,
             'clientesVarios' => Client::clientesVarios()->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
             'limiteBoletaSinIdentificar' => Sale::LIMITE_BOLETA_SIN_IDENTIFICAR,
             'sedes' => Sede::query()
@@ -209,7 +212,8 @@ class SaleController extends Controller
     {
         $this->assertSedeAccess($request, $sale);
 
-        $data = $request->safe()->except(['items', 'emitir']);
+        // La venta que se corrige se fija al crearla; editar no la cambia.
+        $data = $request->safe()->except(['items', 'emitir', 'corrige_sale_id']);
         $items = $request->safe()->input('items');
 
         if ($sedeId = $request->user()->sedeRestringidaId()) {
@@ -226,6 +230,9 @@ class SaleController extends Controller
         }
 
         $emitir = $request->boolean('emitir');
+        if ($emitir) {
+            CashRegister::exigirAbiertaParaVender((int) $request->user()->id);
+        }
 
         $sale = DB::transaction(function () use ($sale, $data, $items, $request, $createSale, $confirmSale, $emitir) {
             $sale = $createSale->actualizar($sale, $data, $items, $request->user()->id);
@@ -266,6 +273,7 @@ class SaleController extends Controller
 
         return [
             'id' => $comoCopia ? null : $sale->id,
+            'corrige_sale_id' => $comoCopia && $sale->correccion_desde ? $sale->id : null,
             'numero_interno' => $sale->numero_interno,
             'emitida' => $emitida,
             'comprobante' => $emitida ? $sale->numeroComprobante() : null,
@@ -334,6 +342,23 @@ class SaleController extends Controller
      *
      * @return array{id: int, numero: string, client: array{id: int, tipo_documento: string, razon_social: string, numero_documento: string}, items: list<array{tipo: string, product_id: int|null, service_id: int|null, nombre: string|null, codigo: string|null, serializado: bool, cantidad: int, precio_unitario: float, descuento: float}>, referencia: string|null, condicion_pago: string, observaciones: string|null, vehicle_id: int|null, destino: string}|null
      */
+    /**
+     * Al cobrar una orden nacida de una cotización, los extintores cotizados
+     * (con serie) se escanean en el mismo panel que al pasar la cotización a
+     * venta: no se emite hasta que estén todos.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function seriesCotizadasDeLaOrden(int $orderId, ?int $sedeId): ?array
+    {
+        $quoteId = ServiceOrder::query()->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->whereKey($orderId)->value('quote_id');
+        $cotizacion = $quoteId ? $this->cotizacionParaVenta((int) $quoteId, $sedeId) : null;
+        $series = array_values(array_filter($cotizacion['items'] ?? [], fn (array $item) => $item['serializado'] && ! $item['deficiency_id']));
+
+        return $series === [] ? null : [...$cotizacion, 'items' => $series];
+    }
+
+    /** @return array<string, mixed>|null */
     protected function cotizacionParaVenta(int $quoteId, ?int $sedeId): ?array
     {
         $quote = Quote::query()
@@ -373,10 +398,14 @@ class SaleController extends Controller
         ];
     }
 
-    public function store(Team $current_team, StoreSaleRequest $request, CreateSale $createSale, ServiceOrderNumberGenerator $numberGenerator): RedirectResponse
+    public function store(Team $current_team, StoreSaleRequest $request, CreateSale $createSale, ServiceOrderNumberGenerator $numberGenerator, CorregirVenta $correcciones): RedirectResponse
     {
         $data = $request->safe()->except(['items', 'emitir']);
         $items = $request->safe()->input('items');
+
+        if (! empty($data['corrige_sale_id'])) {
+            $correcciones->validar((int) $data['corrige_sale_id'], $request->user());
+        }
 
         $sedeId = $request->user()->sedeRestringidaId();
         if ($sedeId) {
@@ -386,6 +415,9 @@ class SaleController extends Controller
         // Emitir en el mismo paso: si algo falla (RUC, stock), no queda nada
         // a medias y el error sale en el formulario.
         $emitir = $request->boolean('emitir');
+        if ($emitir) {
+            CashRegister::exigirAbiertaParaVender((int) $request->user()->id);
+        }
 
         $serviceOrderId = $request->integer('service_order_id') ?: (! empty($data['quote_id']) ? ServiceOrder::query()->where('quote_id', $data['quote_id'])->whereNull('sale_id')->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->value('id') : null);
         $sale = DB::transaction(function () use ($data, $items, $request, $createSale, $emitir, $serviceOrderId, $numberGenerator, $sedeId) {
@@ -471,7 +503,7 @@ class SaleController extends Controller
     /** @return array<string, mixed>|null */
     protected function ordenParaCobro(int $orderId, ?int $sedeId): ?array
     {
-        $order = ServiceOrder::with(['client', 'equipments', 'service', 'lines.service', 'lines.quoteItem', 'deficiencies.authorization.cotizacionAdicional.items.product', 'deficiencies.authorization.cotizacionAdicional.items.service', 'quote.items.product', 'quote.items.service'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($orderId);
+        $order = ServiceOrder::with(['client', 'equipments', 'service', 'lines.service', 'lines.quoteItem', 'quote.items.product', 'deficiencies.authorization.cotizacionAdicional.items.product', 'deficiencies.authorization.cotizacionAdicional.items.service', 'quote.items.product', 'quote.items.service'])->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))->find($orderId);
         if (! $order || $order->sale_id || $order->estado === 'anulada') {
             return null;
         }
@@ -495,6 +527,13 @@ class SaleController extends Controller
                 'precio_unitario' => (float) ($order->service->precio_venta ?? 0),
                 'descuento' => 0,
             ]]);
+        // Lo que se cotizó junto con el servicio también se vende: los productos
+        // sin serie se agregan aquí; los de serie se escanean en el panel de la
+        // cotización (seriesCotizadasDeLaOrden).
+        $productosCotizados = ($order->quote ? $order->quote->items : collect())
+            ->filter(fn (QuoteItem $item) => $item->product_id && ! $item->service_id && ! $item->deficiency_id && ! $item->product?->serializado)
+            ->map(fn (QuoteItem $item): array => ['tipo_linea' => 'producto', 'service_id' => null, 'product_id' => $item->product_id, 'nombre' => $item->product?->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento]);
+        $items = $items->concat($productosCotizados);
         // V6: una misma cotización usada en varias autorizaciones se cobra una vez.
         $additionalItems = $order->deficiencies->whereIn('estado', ['autorizada', 'resuelta'])
             ->map(fn ($deficiency) => $deficiency->authorization?->cotizacionAdicional)
@@ -545,7 +584,15 @@ class SaleController extends Controller
             'detraccion' => [...$detraccion, 'acreditado' => (float) $sale->payments->where('es_detraccion', true)->sum('monto'), 'pendiente' => max(0, round($detraccion['monto'] - (float) $sale->payments->where('es_detraccion', true)->sum('monto'), 2))],
             'errorDetraccion' => $errorDetraccion,
             'certificados' => CertificadosDeVenta::deLaVenta($sale, incluirOrdenes: true),
-            'tieneEquipos' => $sale->items->contains(fn ($item) => $item->equipment_id !== null),
+            'tieneEquipos' => CertificadosDeVenta::equipos($sale)->isNotEmpty(),
+            'relacionados' => app(DocumentosRelacionados::class)->deLaVenta($sale, $current_team),
+            'resumen' => CarteraDeCobranzas::resumenDeVenta($sale),
+            'historial' => AuditLog::query()->with('user:id,name')
+                ->where(fn ($query) => $query
+                    ->where(fn ($query) => $query->where('auditable_type', Sale::class)->where('auditable_id', $sale->id))
+                    ->orWhere(fn ($query) => $query->where('auditable_type', ElectronicDocument::class)->whereIn('auditable_id', $sale->electronicDocuments->pluck('id'))))
+                ->latest('created_at')->limit(30)->get()
+                ->map(fn (AuditLog $log) => ['fecha' => $log->created_at?->toIso8601String(), 'texto' => $log->texto(), 'usuario' => $log->user?->name]),
             'tiposServicio' => EmitirCertificadoDeServicio::tiposDeServicio($sale)
                 ->map(fn ($tipo) => ['codigo' => $tipo->codigo, 'nombre' => $tipo->nombre])
                 ->values(),
@@ -568,6 +615,7 @@ class SaleController extends Controller
     public function confirm(Team $current_team, Sale $sale, ConfirmSale $confirmSale, Request $request): RedirectResponse
     {
         $this->assertSedeAccess($request, $sale);
+        CashRegister::exigirAbiertaParaVender((int) $sale->vendedor_id);
 
         $confirmSale->handle($sale);
 
@@ -655,9 +703,4 @@ class SaleController extends Controller
     /**
      * Un trabajador con sede asignada solo opera las ventas de su sede.
      */
-    protected function assertSedeAccess(Request $request, Sale $sale): void
-    {
-        // Cada vendedor corrige solo sus ventas; el Gerente, las de todos.
-        abort_unless(Sale::query()->visiblePara($request->user())->whereKey($sale->id)->exists(), 404);
-    }
 }

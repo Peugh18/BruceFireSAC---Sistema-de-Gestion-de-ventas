@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Award, Copy, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -39,7 +40,14 @@ type PuntoChecklist = {
 };
 
 type Fila = Record<string, string>;
-type Prueba = { estado: 'C' | 'NC' | 'NA'; valor: string };
+type Prueba = { estado: '' | 'C' | 'NC' | 'NA'; valor: string };
+
+type Capacitacion = {
+    curso: string;
+    horas: number | string;
+    instructor: string;
+    fecha: string;
+};
 
 type Props = {
     sale: {
@@ -58,6 +66,10 @@ type Props = {
         nombre: string;
         columnas: Columna[];
         checklist: PuntoChecklist[];
+        requiere_tabla?: boolean;
+        requiere_pruebas?: boolean;
+        requiere_diploma?: boolean;
+        composicion?: { tipo: string }[] | null;
     };
     atenciones: string[];
     existente: {
@@ -69,6 +81,7 @@ type Props = {
         filas: Fila[];
         pruebas: { estado?: string; valor?: string | null }[];
         observaciones: string | null;
+        capacitacion?: Capacitacion | null;
     } | null;
 };
 
@@ -122,21 +135,28 @@ export default function CertificadoServicio({
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug = currentTeam?.slug ?? '';
+    const requiereTabla = tipo.requiere_tabla ?? true;
 
     const filaVacia = (): Fila =>
         Object.fromEntries(
             tipo.columnas.map((c) => [
                 c.clave,
-                c.tipo === 'resultado' ? 'operativo' : '',
+                c.tipo === 'resultado' && !tipo.composicion ? 'operativo' : '',
             ]),
         );
 
     const [filas, setFilas] = useState<Fila[]>(
-        existente?.filas.length ? existente.filas : [filaVacia()],
+        requiereTabla
+            ? existente?.filas.length
+                ? existente.filas
+                : [filaVacia()]
+            : [],
     );
     const [pruebas, setPruebas] = useState<Prueba[]>(
         tipo.checklist.map((_, i) => ({
-            estado: (existente?.pruebas[i]?.estado as Prueba['estado']) ?? 'C',
+            estado:
+                (existente?.pruebas[i]?.estado as Prueba['estado']) ??
+                (tipo.requiere_pruebas ? '' : 'C'),
             valor: existente?.pruebas[i]?.valor ?? '',
         })),
     );
@@ -152,6 +172,14 @@ export default function CertificadoServicio({
     );
     const [enviando, setEnviando] = useState(false);
     const [errores, setErrores] = useState<Record<string, string>>({});
+    const [capacitacion, setCapacitacion] = useState<Capacitacion>(
+        existente?.capacitacion ?? {
+            curso: '',
+            horas: '',
+            instructor: '',
+            fecha: '',
+        },
+    );
 
     // Ficha del cliente (sedes y vehículos) para las referencias.
     const [ficha] = useClienteFicha(teamSlug, sale.client.id);
@@ -178,6 +206,7 @@ export default function CertificadoServicio({
                 filas,
                 pruebas,
                 observaciones,
+                ...(tipo.requiere_diploma ? { capacitacion } : {}),
             },
             {
                 onError: (e) => {
@@ -212,9 +241,7 @@ export default function CertificadoServicio({
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="font-['Oswald',sans-serif] text-[22px] font-semibold uppercase">
-                            {tipo.nombre}
-                        </h1>
+                        <h1 className={pageTitleClass}>{tipo.nombre}</h1>
                         <p className="text-muted-foreground text-[12.5px]">
                             {sale.client.razon_social}
                             {existente
@@ -275,206 +302,283 @@ export default function CertificadoServicio({
                     </div>
                 </Card>
 
-                <Card className="border-border bg-card gap-3 rounded-2xl p-5 shadow-none">
-                    <div className="flex items-center justify-between">
-                        <h2 className="font-['Oswald',sans-serif] text-[17px] font-semibold uppercase">
-                            Equipos o ambientes ({filas.length})
+                {tipo.requiere_diploma && (
+                    <Card className="border-border bg-card gap-4 rounded-2xl p-5 shadow-none">
+                        <h2 className="text-base font-semibold">
+                            Datos de la capacitación
                         </h2>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setFilas([...filas, filaVacia()])}
-                            className="rounded-lg shadow-none"
-                        >
-                            <Plus className="size-3.5" />
-                            Agregar fila
-                        </Button>
-                    </div>
-                    <div className="border-border overflow-x-auto rounded-lg border">
-                        <Table className="w-full min-w-[720px] text-[12.5px]">
-                            <TableHeader className="bg-muted/50 text-muted-foreground text-left text-xs font-bold uppercase">
-                                <TableRow>
-                                    {tipo.columnas.map((c) => (
-                                        <TableHead key={c.clave}>
-                                            {c.titulo}
-                                            {c.unidad ? ` (${c.unidad})` : ''}
-                                            {c.obligatorio ? (
-                                                <span className="text-destructive-strong">
-                                                    {' '}
-                                                    *
-                                                </span>
-                                            ) : null}
-                                        </TableHead>
-                                    ))}
-                                    <TableHead className="w-16" />
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filas.map((fila, i) => (
-                                    <TableRow
-                                        key={i}
-                                        className="border-border border-t align-top"
-                                    >
-                                        {tipo.columnas.map((c) => {
-                                            const error =
-                                                errores[
-                                                    `filas.${i}.${c.clave}`
-                                                ];
-                                            const valor = fila[c.clave] ?? '';
-                                            const aviso =
-                                                c.tipo === 'numero' &&
-                                                fueraDeRango(
-                                                    valor,
-                                                    c.minimo,
-                                                    c.maximo,
-                                                );
-
-                                            return (
-                                                <TableCell
-                                                    key={c.clave}
-                                                    className="px-2 py-1.5"
-                                                >
-                                                    {c.tipo === 'resultado' ? (
-                                                        <NativeSelect
-                                                            aria-label={`Resultado de ${c.clave}`}
-                                                            value={
-                                                                valor ||
-                                                                'operativo'
-                                                            }
-                                                            onChange={(e) =>
-                                                                cambiarCelda(
-                                                                    i,
-                                                                    c.clave,
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            className="border-border bg-card h-8 w-full rounded-md border px-2 text-[12px]"
-                                                        >
-                                                            {RESULTADOS.map(
-                                                                (r) => (
-                                                                    <option
-                                                                        key={
-                                                                            r.valor
-                                                                        }
-                                                                        value={
-                                                                            r.valor
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            r.texto
-                                                                        }
-                                                                    </option>
-                                                                ),
-                                                            )}
-                                                        </NativeSelect>
-                                                    ) : (
-                                                        <Input
-                                                            aria-label={`${c.titulo}: fila ${i + 1}`}
-                                                            value={valor}
-                                                            inputMode={
-                                                                c.tipo ===
-                                                                'numero'
-                                                                    ? 'decimal'
-                                                                    : undefined
-                                                            }
-                                                            placeholder={
-                                                                c.clave ===
-                                                                'item'
-                                                                    ? String(
-                                                                          i + 1,
-                                                                      ).padStart(
-                                                                          2,
-                                                                          '0',
-                                                                      )
-                                                                    : ''
-                                                            }
-                                                            onChange={(e) =>
-                                                                cambiarCelda(
-                                                                    i,
-                                                                    c.clave,
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            className={`h-8 rounded-md text-[12px] ${error ? 'border-destructive' : aviso ? 'border-amber-500' : ''}`}
-                                                        />
-                                                    )}
-                                                    {aviso ? (
-                                                        <div className="text-warning-strong mt-0.5 text-xs">
-                                                            Fuera de rango (
-                                                            {rango(
-                                                                c.minimo,
-                                                                c.maximo,
-                                                                c.unidad,
-                                                            )}
-                                                            )
-                                                        </div>
-                                                    ) : null}
-                                                    {error ? (
-                                                        <div
-                                                            className="text-destructive-strong mt-0.5 text-xs"
-                                                            role="alert"
-                                                        >
-                                                            {error}
-                                                        </div>
-                                                    ) : null}
-                                                </TableCell>
-                                            );
-                                        })}
-                                        <TableCell className="px-2 py-1.5">
-                                            <div className="flex gap-1">
-                                                <button
-                                                    aria-label="Duplicar fila"
-                                                    type="button"
-                                                    title="Duplicar fila"
-                                                    onClick={() =>
-                                                        setFilas([
-                                                            ...filas.slice(
-                                                                0,
-                                                                i + 1,
-                                                            ),
-                                                            {
-                                                                ...fila,
-                                                                item: '',
-                                                            },
-                                                            ...filas.slice(
-                                                                i + 1,
-                                                            ),
-                                                        ])
-                                                    }
-                                                    className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
-                                                >
-                                                    <Copy className="size-3" />
-                                                </button>
-                                                <button
-                                                    aria-label="Quitar fila"
-                                                    type="button"
-                                                    title="Quitar fila"
-                                                    disabled={
-                                                        filas.length === 1
-                                                    }
-                                                    onClick={() =>
-                                                        setFilas(
-                                                            filas.filter(
-                                                                (_, j) =>
-                                                                    j !== i,
-                                                            ),
-                                                        )
-                                                    }
-                                                    className="border-border text-destructive-strong hover:bg-muted flex size-7 items-center justify-center rounded-md border disabled:opacity-40"
-                                                >
-                                                    <Trash2 className="size-3" />
-                                                </button>
-                                            </div>
-                                        </TableCell>
+                        <p className="text-muted-foreground text-sm">
+                            El diploma se emite para {sale.client.razon_social}.
+                        </p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            {(
+                                [
+                                    'curso',
+                                    'horas',
+                                    'fecha',
+                                    'instructor',
+                                ] as const
+                            ).map((campo) => (
+                                <label
+                                    key={campo}
+                                    className="grid gap-1.5 text-sm font-medium"
+                                >
+                                    {
+                                        {
+                                            curso: 'Nombre del curso',
+                                            horas: 'Duración (horas)',
+                                            fecha: 'Fecha del curso',
+                                            instructor: 'Instructor',
+                                        }[campo]
+                                    }
+                                    <Input
+                                        type={
+                                            campo === 'horas'
+                                                ? 'number'
+                                                : campo === 'fecha'
+                                                  ? 'date'
+                                                  : 'text'
+                                        }
+                                        min={campo === 'horas' ? 1 : undefined}
+                                        step={campo === 'horas' ? 1 : undefined}
+                                        value={capacitacion[campo]}
+                                        onChange={(e) =>
+                                            setCapacitacion((actual) => ({
+                                                ...actual,
+                                                [campo]: e.target.value,
+                                            }))
+                                        }
+                                    />
+                                    {errores[`capacitacion.${campo}`] && (
+                                        <span
+                                            role="alert"
+                                            className="text-destructive-strong text-xs"
+                                        >
+                                            {errores[`capacitacion.${campo}`]}
+                                        </span>
+                                    )}
+                                </label>
+                            ))}
+                        </div>
+                    </Card>
+                )}
+                {requiereTabla && (
+                    <Card className="border-border bg-card gap-3 rounded-2xl p-5 shadow-none">
+                        <div className="flex items-center justify-between">
+                            <h2 className="font-['Oswald',sans-serif] text-[17px] font-semibold uppercase">
+                                Equipos o ambientes ({filas.length})
+                            </h2>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    setFilas([...filas, filaVacia()])
+                                }
+                                className="rounded-lg shadow-none"
+                            >
+                                <Plus className="size-3.5" />
+                                Agregar fila
+                            </Button>
+                        </div>
+                        <div className="border-border overflow-x-auto rounded-lg border">
+                            <Table className="w-full min-w-[720px] text-[12.5px]">
+                                <TableHeader className="bg-muted/50 text-muted-foreground text-left text-xs font-bold uppercase">
+                                    <TableRow>
+                                        {tipo.columnas.map((c) => (
+                                            <TableHead key={c.clave}>
+                                                {c.titulo}
+                                                {c.unidad
+                                                    ? ` (${c.unidad})`
+                                                    : ''}
+                                                {c.obligatorio ? (
+                                                    <span className="text-destructive-strong">
+                                                        {' '}
+                                                        *
+                                                    </span>
+                                                ) : null}
+                                            </TableHead>
+                                        ))}
+                                        <TableHead className="w-16" />
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </Card>
+                                </TableHeader>
+                                <TableBody>
+                                    {filas.map((fila, i) => (
+                                        <TableRow
+                                            key={i}
+                                            className="border-border border-t align-top"
+                                        >
+                                            {tipo.columnas.map((c) => {
+                                                const error =
+                                                    errores[
+                                                        `filas.${i}.${c.clave}`
+                                                    ];
+                                                const valor =
+                                                    fila[c.clave] ?? '';
+                                                const aviso =
+                                                    c.tipo === 'numero' &&
+                                                    fueraDeRango(
+                                                        valor,
+                                                        c.minimo,
+                                                        c.maximo,
+                                                    );
+
+                                                return (
+                                                    <TableCell
+                                                        key={c.clave}
+                                                        className="px-2 py-1.5"
+                                                    >
+                                                        {c.tipo ===
+                                                        'resultado' ? (
+                                                            <NativeSelect
+                                                                aria-label={`Resultado de ${c.clave}`}
+                                                                value={
+                                                                    valor ||
+                                                                    (tipo.composicion
+                                                                        ? ''
+                                                                        : 'operativo')
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiarCelda(
+                                                                        i,
+                                                                        c.clave,
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="border-border bg-card h-8 w-full rounded-md border px-2 text-[12px]"
+                                                            >
+                                                                {tipo.composicion && (
+                                                                    <option value="">
+                                                                        Elegir
+                                                                        resultado
+                                                                    </option>
+                                                                )}
+                                                                {RESULTADOS.map(
+                                                                    (r) => (
+                                                                        <option
+                                                                            key={
+                                                                                r.valor
+                                                                            }
+                                                                            value={
+                                                                                r.valor
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                r.texto
+                                                                            }
+                                                                        </option>
+                                                                    ),
+                                                                )}
+                                                            </NativeSelect>
+                                                        ) : (
+                                                            <Input
+                                                                aria-label={`${c.titulo}: fila ${i + 1}`}
+                                                                value={valor}
+                                                                inputMode={
+                                                                    c.tipo ===
+                                                                    'numero'
+                                                                        ? 'decimal'
+                                                                        : undefined
+                                                                }
+                                                                placeholder={
+                                                                    c.clave ===
+                                                                    'item'
+                                                                        ? String(
+                                                                              i +
+                                                                                  1,
+                                                                          ).padStart(
+                                                                              2,
+                                                                              '0',
+                                                                          )
+                                                                        : ''
+                                                                }
+                                                                onChange={(e) =>
+                                                                    cambiarCelda(
+                                                                        i,
+                                                                        c.clave,
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className={`h-8 rounded-md text-[12px] ${error ? 'border-destructive' : aviso ? 'border-amber-500' : ''}`}
+                                                            />
+                                                        )}
+                                                        {aviso ? (
+                                                            <div className="text-warning-strong mt-0.5 text-xs">
+                                                                Fuera de rango (
+                                                                {rango(
+                                                                    c.minimo,
+                                                                    c.maximo,
+                                                                    c.unidad,
+                                                                )}
+                                                                )
+                                                            </div>
+                                                        ) : null}
+                                                        {error ? (
+                                                            <div
+                                                                className="text-destructive-strong mt-0.5 text-xs"
+                                                                role="alert"
+                                                            >
+                                                                {error}
+                                                            </div>
+                                                        ) : null}
+                                                    </TableCell>
+                                                );
+                                            })}
+                                            <TableCell className="px-2 py-1.5">
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        aria-label="Duplicar fila"
+                                                        type="button"
+                                                        title="Duplicar fila"
+                                                        onClick={() =>
+                                                            setFilas([
+                                                                ...filas.slice(
+                                                                    0,
+                                                                    i + 1,
+                                                                ),
+                                                                {
+                                                                    ...fila,
+                                                                    item: '',
+                                                                },
+                                                                ...filas.slice(
+                                                                    i + 1,
+                                                                ),
+                                                            ])
+                                                        }
+                                                        className="border-border hover:bg-muted flex size-7 items-center justify-center rounded-md border"
+                                                    >
+                                                        <Copy className="size-3" />
+                                                    </button>
+                                                    <button
+                                                        aria-label="Quitar fila"
+                                                        type="button"
+                                                        title="Quitar fila"
+                                                        disabled={
+                                                            filas.length === 1
+                                                        }
+                                                        onClick={() =>
+                                                            setFilas(
+                                                                filas.filter(
+                                                                    (_, j) =>
+                                                                        j !== i,
+                                                                ),
+                                                            )
+                                                        }
+                                                        className="border-border text-destructive-strong hover:bg-muted flex size-7 items-center justify-center rounded-md border disabled:opacity-40"
+                                                    >
+                                                        <Trash2 className="size-3" />
+                                                    </button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </Card>
+                )}
 
                 {tipo.checklist.length > 0 ? (
                     <Card className="border-border bg-card gap-3 rounded-2xl p-5 shadow-none">

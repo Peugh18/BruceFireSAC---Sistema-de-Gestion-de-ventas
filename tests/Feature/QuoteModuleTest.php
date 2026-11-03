@@ -108,11 +108,14 @@ test('vendedor creates a quote with items and totals are computed', function () 
 test('a quote cannot skip states', function () {
     $quote = Quote::factory()->create(['estado' => 'borrador']);
 
-    expect($quote->canTransitionTo('aceptada'))->toBeFalse()
+    // D-10: el cliente puede aceptar en tienda sin envío previo, pero nunca
+    // se salta la aceptación para quedar convertida.
+    expect($quote->canTransitionTo('convertida'))->toBeFalse()
+        ->and($quote->canTransitionTo('aceptada'))->toBeTrue()
         ->and($quote->canTransitionTo('emitida'))->toBeTrue();
 });
 
-test('vendedor can send, then accept a quote, but not accept directly from borrador', function () {
+test('aceptar una cotizacion pide quien acepto y por donde', function () {
     $user = vendedorUser();
     $quote = Quote::factory()->create(['vendedor_id' => $user->id, 'estado' => 'borrador']);
 

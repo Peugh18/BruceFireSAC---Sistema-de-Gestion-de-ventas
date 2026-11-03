@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowRight,
@@ -8,7 +9,7 @@ import {
     Search,
     Wrench,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { useBusquedaDinamica } from '@/hooks/use-busqueda-dinamica';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
@@ -152,7 +153,7 @@ export default function InstalacionesIndex({
 
             {/* Header Mobile Title */}
             <div className="mb-4">
-                <h1 className="text-foreground flex items-center gap-2 text-xl font-black">
+                <h1 className={`${pageTitleClass} flex items-center gap-2`}>
                     <Wrench className="text-foreground size-6" />
                     Instalaciones en Campo
                 </h1>

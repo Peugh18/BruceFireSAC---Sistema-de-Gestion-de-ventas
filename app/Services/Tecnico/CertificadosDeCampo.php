@@ -22,8 +22,8 @@ class CertificadosDeCampo
         return CertificateType::query()
             ->whereHas('services', fn ($query) => $query->whereIn('services.id', $servicios))
             ->whereNotIn('codigo', EmitirCertificadoDeServicio::TIPOS_DE_EXTINTORES)
-            ->where('activo', true)->whereNotNull('columnas')->orderBy('id')->get()
-            ->filter(fn (CertificateType $tipo): bool => ! empty($tipo->columnas))->values();
+            ->where('activo', true)->where(fn ($query) => $query->whereNotNull('columnas')->orWhereNotNull('composicion'))->orderBy('id')->get()
+            ->filter(fn (CertificateType $tipo): bool => EmitirCertificadoDeServicio::esFormulario($tipo) && ! EmitirCertificadoDeServicio::usaBloque($tipo, 'diploma'))->values();
     }
 
     /** @return list<array<string, mixed>> */
@@ -34,11 +34,17 @@ class CertificadosDeCampo
         return array_values($this->tipos($orden)->map(function (CertificateType $tipo) use ($emitidos): array {
             $emitido = $emitidos->get($tipo->id);
             $plantilla = $emitido?->typeVersion?->configuracion;
+            $esquema = clone $tipo;
+            if ($plantilla !== null) {
+                $esquema->fill(array_intersect_key($plantilla, array_flip(CertificateType::CAMPOS_PLANTILLA)));
+                $esquema->composicion = $plantilla['composicion'] ?? null;
+            }
 
             return [
                 ...$tipo->only(['id', 'codigo', 'nombre', 'version', 'columnas', 'checklist']),
-                'columnas' => $plantilla['columnas'] ?? $tipo->columnas,
-                'checklist' => $plantilla['checklist'] ?? $tipo->checklist,
+                'columnas' => EmitirCertificadoDeServicio::usaBloque($esquema, 'tabla') ? ($esquema->columnas ?? []) : [],
+                'checklist' => EmitirCertificadoDeServicio::usaBloque($esquema, 'pruebas') ? ($esquema->checklist ?? []) : [],
+                'requiere_tabla' => EmitirCertificadoDeServicio::usaBloque($esquema, 'tabla'),
                 'mediciones' => $emitido?->datos,
             ];
         })->all());
@@ -52,7 +58,7 @@ class CertificadosDeCampo
             'certificados_servicio.*' => ['required', 'array:tipo_id,version,filas,pruebas'],
             'certificados_servicio.*.tipo_id' => ['required', 'integer', 'distinct'],
             'certificados_servicio.*.version' => ['required', 'integer', 'min:1'],
-            'certificados_servicio.*.filas' => ['required', 'array', 'min:1', 'max:200'],
+            'certificados_servicio.*.filas' => ['sometimes', 'array', 'max:200'],
             'certificados_servicio.*.filas.*' => ['required', 'array'],
             'certificados_servicio.*.filas.*.*' => ['nullable', 'string', 'max:1000'],
             'certificados_servicio.*.pruebas' => ['sometimes', 'array', 'max:100'],
@@ -89,7 +95,7 @@ class CertificadosDeCampo
             try {
                 $filas = $validador->filas($tipo, $dato['filas'] ?? []);
                 $pruebas = $validador->pruebas($tipo, $dato['pruebas'] ?? []);
-                foreach ($tipo->checklist ?? [] as $posicion => $prueba) {
+                foreach (EmitirCertificadoDeServicio::usaBloque($tipo, 'pruebas') ? ($tipo->checklist ?? []) : [] as $posicion => $prueba) {
                     $entrada = $dato['pruebas'][$posicion] ?? null;
                     if ($entrada === null || ! in_array($entrada['estado'] ?? null, EmitirCertificadoDeServicio::ESTADOS_PRUEBA, true)) {
                         throw ValidationException::withMessages(["pruebas.{$posicion}.estado" => 'Registra el resultado de esta prueba.']);

@@ -65,7 +65,8 @@ class CashRegisterController extends Controller
         $action->handle(
             $cash_register,
             (float) $request->validated('monto_contado_cierre'),
-            $request->validated('observacion')
+            $request->validated('observacion'),
+            $request->validated('denominaciones'),
         );
 
         return back();

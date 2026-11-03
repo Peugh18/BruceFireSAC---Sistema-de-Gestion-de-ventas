@@ -3,6 +3,7 @@
 namespace App\Actions\Equipment;
 
 use App\Models\Equipment;
+use App\Services\Certificates\CertificateDateCalculator;
 use Illuminate\Support\Collection;
 
 class RenewEquipmentAttentionDate
@@ -20,7 +21,8 @@ class RenewEquipmentAttentionDate
         ];
 
         if ($phRealizada) {
-            $payload['proxima_prueba_hidrostatica'] = now()->addYears(5)->toDateString();
+            $payload['fecha_ultima_ph'] = today()->toDateString();
+            $payload['proxima_prueba_hidrostatica'] = CertificateDateCalculator::proximaPruebaHidrostatica(today())->toDateString();
         }
 
         Equipment::whereKey($equipments->pluck('id'))->update($payload);

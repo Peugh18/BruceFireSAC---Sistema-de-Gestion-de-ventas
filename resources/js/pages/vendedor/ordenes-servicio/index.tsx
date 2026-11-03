@@ -4,10 +4,8 @@ import { Eye, Plus, RotateCcw, Wrench } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { toast } from 'sonner';
 
+import QuoteController from '@/actions/App/Http/Controllers/Vendedor/QuoteController';
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
-import CatalogPicker from '@/components/catalog-picker';
-import ClientPicker, { type ClientFicha } from '@/components/client-picker';
-import ReferenciaField from '@/components/referencia-field';
 import { PageHeader } from '@/components/page-header';
 import { ServiciosTabs } from '@/components/servicios-tabs';
 import { Badge } from '@/components/ui/badge';
@@ -74,14 +72,15 @@ export type Props = {
         estado?: string;
     };
     tecnicos: TecnicoOption[];
-    // Catálogo de servicios activos: atajos para elegir el tipo de servicio.
-    services?: ServicioOption[];
+    // D-10: la orden nace de una cotización aceptada.
+    cotizaciones_aceptadas?: CotizacionAceptada[];
 };
 
-type ServicioOption = {
+type CotizacionAceptada = {
     id: number;
-    nombre: string;
-    precio_venta?: number | string | null;
+    numero: string;
+    cliente: string;
+    total: number;
 };
 
 const TABS = [
@@ -139,7 +138,7 @@ export default function ServiceOrdersIndex({
     orders,
     filters,
     tecnicos,
-    services = [],
+    cotizaciones_aceptadas = [],
 }: Props) {
     const { currentTeam, sidebarCounts } = usePage<{
         currentTeam?: Team | null;
@@ -152,22 +151,14 @@ export default function ServiceOrdersIndex({
             : '');
 
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [cliente, setCliente] = useState<ClientFicha | null>(null);
-    const [destino, setDestino] = useState<'local_cliente' | 'vehiculo'>(
-        'local_cliente',
-    );
     const currentEstado = filters?.estado || '';
 
     // Form para crear nueva orden
     const createForm = useForm({
-        client_id: '',
-        service_id: '',
-        tipo_servicio: '',
+        quote_id: '',
         fecha: fechaLocal(),
         departamento_tecnico: 'planta' as 'planta' | 'campo',
         tecnico_id: '',
-        referencia: '',
-        vehicle_id: null as number | null,
         prioridad: 'normal',
         observaciones: '',
     });
@@ -188,7 +179,6 @@ export default function ServiceOrdersIndex({
             preserveScroll: true,
             onSuccess: () => {
                 setDialogOpen(false);
-                setCliente(null);
                 createForm.reset();
             },
         });
@@ -523,8 +513,9 @@ export default function ServiceOrdersIndex({
                                     Nueva orden de servicio
                                 </DialogTitle>
                                 <DialogDescription className="text-muted-foreground text-xs">
-                                    Para el taller de planta o un servicio en
-                                    campo. Toda el área la ve; el responsable es
+                                    Sale de una cotización aceptada, para el
+                                    taller de planta o un servicio en campo.
+                                    Toda el área la ve; el responsable es
                                     opcional.
                                 </DialogDescription>
                             </div>
@@ -532,93 +523,64 @@ export default function ServiceOrdersIndex({
                     </DialogHeader>
 
                     <form onSubmit={submitCreate} className="mt-3 space-y-4">
-                        <ClientPicker
-                            teamSlug={teamSlug}
-                            value={cliente}
-                            onChange={(ficha) => {
-                                setCliente(ficha);
-                                createForm.setData((data) => ({
-                                    ...data,
-                                    client_id: ficha ? String(ficha.id) : '',
-                                    referencia: '',
-                                }));
-                            }}
-                            error={createForm.errors.client_id}
-                        />
-
                         <div>
-                            <Label className="text-foreground text-sm font-medium">
-                                Tipo de servicio *
+                            <Label
+                                htmlFor="quote_id"
+                                className="text-foreground text-sm font-medium"
+                            >
+                                Cotización aceptada *
                             </Label>
-                            {createForm.data.tipo_servicio ? (
-                                <div className="border-primary/40 bg-destructive/5 mt-1 flex items-center justify-between rounded-lg border px-3 py-2">
-                                    <span className="text-foreground text-[13px] font-bold">
-                                        {createForm.data.tipo_servicio}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            createForm.setData((data) => ({
-                                                ...data,
-                                                service_id: '',
-                                                tipo_servicio: '',
-                                            }))
-                                        }
-                                        className="text-muted-foreground hover:text-foreground text-xs font-semibold"
-                                    >
-                                        Cambiar
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="mt-1">
-                                    <CatalogPicker
-                                        teamSlug={teamSlug}
-                                        soloServicios
-                                        onPick={(servicio) =>
-                                            createForm.setData((data) => ({
-                                                ...data,
-                                                service_id: String(servicio.id),
-                                                tipo_servicio: servicio.nombre,
-                                            }))
-                                        }
-                                        placeholder="Busca el servicio: recarga, prueba hidrostática, instalación..."
-                                    />
-                                    {services.length > 0 && (
-                                        <div className="mt-2 flex flex-wrap gap-1.5">
-                                            {services.map((servicio) => (
-                                                <button
-                                                    key={servicio.id}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        createForm.setData(
-                                                            (data) => ({
-                                                                ...data,
-                                                                service_id:
-                                                                    String(
-                                                                        servicio.id,
-                                                                    ),
-                                                                tipo_servicio:
-                                                                    servicio.nombre,
-                                                            }),
-                                                        )
-                                                    }
-                                                    className="border-border bg-card text-foreground/80 hover:border-primary/40 rounded-full border px-2.5 py-1 text-xs font-semibold"
-                                                >
-                                                    {servicio.nombre}
-                                                </button>
-                                            ))}
-                                        </div>
+                            {cotizaciones_aceptadas.length > 0 ? (
+                                <NativeSelect
+                                    id="quote_id"
+                                    required
+                                    value={createForm.data.quote_id}
+                                    onChange={(e) =>
+                                        createForm.setData(
+                                            'quote_id',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="border-border bg-card text-foreground focus-visible:border-ring focus-visible:ring-ring/50 mt-1 h-9 w-full rounded-lg border px-3 text-[13px] outline-none focus-visible:ring-[3px]"
+                                >
+                                    <option value="">
+                                        Elige la cotización
+                                    </option>
+                                    {cotizaciones_aceptadas.map(
+                                        (cotizacion) => (
+                                            <option
+                                                key={cotizacion.id}
+                                                value={cotizacion.id}
+                                            >
+                                                {cotizacion.numero} ·{' '}
+                                                {cotizacion.cliente} · S/{' '}
+                                                {cotizacion.total.toFixed(2)}
+                                            </option>
+                                        ),
                                     )}
-                                </div>
+                                </NativeSelect>
+                            ) : (
+                                <p className="border-border bg-muted text-muted-foreground mt-1 rounded-lg border p-3 text-xs">
+                                    No hay cotizaciones aceptadas con servicio.
+                                    Primero cotiza y registra que el cliente
+                                    aceptó: de ahí salen el cliente, los
+                                    servicios y los extintores.{' '}
+                                    <Link
+                                        href={QuoteController.create.url(
+                                            teamSlug,
+                                        )}
+                                        className="text-primary-strong font-bold underline"
+                                    >
+                                        Nueva cotización
+                                    </Link>
+                                </p>
                             )}
-                            {/* El backend valida la clave "service_id"
-                                (StoreServiceOrderRequest), no "tipo_servicio". */}
-                            {createForm.errors.service_id && (
+                            {createForm.errors.quote_id && (
                                 <p
                                     role="alert"
                                     className="text-destructive-strong mt-1 text-xs"
                                 >
-                                    {createForm.errors.service_id}
+                                    {createForm.errors.quote_id}
                                 </p>
                             )}
                         </div>
@@ -685,50 +647,6 @@ export default function ServiceOrdersIndex({
                                     </p>
                                 )}
                             </div>
-                        </div>
-
-                        <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
-                            <div>
-                                <Label className="text-foreground text-sm font-medium">
-                                    Para
-                                </Label>
-                                <div className="bg-muted mt-1 flex rounded-lg p-[3px]">
-                                    {(
-                                        [
-                                            ['local_cliente', 'Local'],
-                                            ['vehiculo', 'Vehículo'],
-                                        ] as const
-                                    ).map(([valor, texto]) => (
-                                        <button
-                                            key={valor}
-                                            type="button"
-                                            onClick={() => {
-                                                setDestino(valor);
-                                                createForm.setData({
-                                                    ...createForm.data,
-                                                    referencia: '',
-                                                    vehicle_id: null,
-                                                });
-                                            }}
-                                            className={`flex-1 rounded-md px-2 py-1.5 text-xs font-bold transition-all ${destino === valor ? 'bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]' : 'text-muted-foreground hover:text-foreground'}`}
-                                        >
-                                            {texto}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <ReferenciaField
-                                cliente={cliente}
-                                destino={destino}
-                                value={createForm.data.referencia}
-                                onChange={(valor, vehicleId) =>
-                                    createForm.setData({
-                                        ...createForm.data,
-                                        referencia: valor,
-                                        vehicle_id: vehicleId ?? null,
-                                    })
-                                }
-                            />
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">

@@ -25,7 +25,7 @@ test('una nota de crédito de anulación total devuelve stock kardex y anula la 
     // Si lo cobrado fue en efectivo, la devolución sale de la caja abierta.
     CashRegister::factory()->create(['vendedor_id' => $sale->vendedor_id]);
 
-    $nota = aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total, ['devolucion_fisica' => true]));
+    $nota = aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total));
 
     expect($nota->serie)->toBe('FC01')
         ->and($nota->importe)->toBe(number_format((float) $sale->total, 2, '.', ''))
@@ -57,7 +57,7 @@ test('las notas de crédito acumuladas no pueden superar el total del comprobant
 
 test('una venta anulada rechaza nuevas notas de crédito y de débito', function () {
     [$sale, $factura] = ventaConFactura();
-    aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total, ['devolucion_fisica' => true]));
+    aceptarNota(app(IssueCreditNote::class)->handle($factura, '01', 'Anulación', (float) $sale->total));
 
     expect(fn () => app(IssueCreditNote::class)->handle($factura, '04', 'Descuento', 1))
         ->toThrow(ValidationException::class)
@@ -169,4 +169,15 @@ test('el pdf de una nota de crédito muestra la misma línea e importe que su xm
         ->and($html)->toContain('DESCUENTO GLOBAL')
         ->and($html)->toContain('S/ 59.00')
         ->and($html)->not->toContain($sale->items->first()->product->nombre);
+});
+
+test('el pdf de una nota identifica su comprobante con tipo y numero completos', function () {
+    config(['billing.sunat.cert_path' => base_path('tests/Fixtures/certificates/test-certificate.pem')]);
+    [, $factura] = ventaConFactura();
+    $credito = app(IssueCreditNote::class)->handle($factura, '04', 'Rebaja acordada', 59);
+    ['xml' => $xml] = app(EmitElectronicDocument::class)->prepararDocumento($credito);
+
+    $html = app(ComprobantePdfService::class)->html($credito->refresh(), $xml);
+
+    expect($html)->toContain('Factura '.$factura->serie.'-'.str_pad((string) $factura->correlativo, 8, '0', STR_PAD_LEFT));
 });

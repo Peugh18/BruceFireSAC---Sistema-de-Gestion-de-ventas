@@ -420,7 +420,7 @@ export default function RecojoShow({
                                 faltan datos, quedarán pendientes para Planta.
                             </p>
                             <input
-                                aria-label="Numero serie"
+                                aria-label="Número de serie"
                                 value={equipmentForm.data.numero_serie}
                                 onChange={(event) =>
                                     equipmentForm.setData(

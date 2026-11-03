@@ -2,11 +2,15 @@
 
 use App\Enums\TeamRole;
 use App\Models\Certificate;
+use App\Models\ChispaRegistro;
 use App\Models\Client;
 use App\Models\ClientRetentionScore;
+use App\Models\MlEntrenamiento;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\Ml\RetentionModel;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -62,6 +66,64 @@ test('inteligencia filtra por cliente categoria y vigencia del calculo sin perde
         ->assertInertia(fn (Assert $page) => $page->has('clientes.data', 0));
     $this->get(route('gerente.inteligencia', ['current_team' => $this->team, 'vigencia' => 'desactualizados']))
         ->assertInertia(fn (Assert $page) => $page->has('clientes.data', 0));
+});
+
+test('inteligencia muestra el modelo, lo que más pesa, el historial, Chispa y los clientes fuera del calendario', function () {
+    $this->freezeTime();
+    $ruta = storage_path('framework/testing/ml/modelo_pantalla.json');
+    File::ensureDirectoryExists(dirname($ruta));
+    File::put($ruta, json_encode([
+        'type' => 'xgboost', 'trees' => [], 'base_margin' => 0, 'trained_at' => '2026-10-01T04:00:00',
+        'metrics' => [
+            'test' => ['roc_auc' => 0.81, 'top_100_volvieron' => 72, 'samples' => 3920],
+            'importancia_shap' => ['recencia_dias' => 0.6, 'frecuencia_compras' => 0.3, 'monto_total' => 0.1],
+        ],
+    ]));
+    $this->app->instance(RetentionModel::class, new RetentionModel($ruta));
+    MlEntrenamiento::query()->create(['entrenado_at' => now()->subMonth(), 'modelo' => 'logistic', 'roc_auc' => 0.74, 'accuracy' => 0, 'precision' => 0, 'recall' => 0, 'muestras' => 10, 'cortes' => []]);
+    MlEntrenamiento::query()->create(['entrenado_at' => now(), 'modelo' => 'xgboost', 'roc_auc' => 0.81, 'accuracy' => 0, 'precision' => 0, 'recall' => 0, 'muestras' => 10, 'cortes' => []]);
+    ChispaRegistro::query()->create(['user_id' => $this->gerente->id, 'rol' => 'Vendedor', 'pregunta' => '¿Cómo anulo una guía?', 'respuesta' => '-', 'fuente' => 'sin_respuesta']);
+    ChispaRegistro::query()->create(['user_id' => $this->gerente->id, 'rol' => 'Almacen', 'pregunta' => 'Kardex', 'respuesta' => '-', 'fuente' => 'gemini', 'util' => true]);
+
+    $puntuar = function (string $nombre) {
+        $cliente = Client::factory()->create(['razon_social' => $nombre]);
+        ClientRetentionScore::query()->create([
+            'client_id' => $cliente->id, 'probabilidad' => 0.9, 'categoria' => 'alta',
+            'recencia_dias' => 1, 'frecuencia_compras' => 2, 'monto_total' => 200, 'ticket_promedio' => 100,
+            'antiguedad_dias' => 100, 'diversidad_productos' => 1, 'compro_recarga' => true, 'scored_at' => now(),
+        ]);
+
+        return $cliente;
+    };
+    $porFecha = $puntuar('Le toca por fecha');
+    Certificate::factory()->create(['client_id' => $porFecha->id, 'fecha_vigencia_hasta' => today()->addDays(40)]);
+    $puntuar('Vuelve por uso');
+
+    $this->actingAs($this->gerente)->get(route('gerente.inteligencia', $this->team))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('modelo.tipo', 'xgboost')
+            ->where('modelo.rocAuc', 0.81)
+            ->where('modelo.top100', 72)
+            ->where('modelo.muestras', 3920)
+            ->where('modelo.importancia.0', ['nombre' => 'Días sin comprar', 'porcentaje' => 60])
+            ->where('modelo.historial', [0.74, 0.81])
+            ->where('chispa.total', 2)
+            ->where('chispa.utiles', 50)
+            ->where('chispa.sinRespuesta', 1)
+            ->where('chispa.ultimas.0.pregunta', '¿Cómo anulo una guía?')
+            ->where('resumen.fueraDelCalendario', 1));
+
+    $this->get(route('gerente.inteligencia', ['current_team' => $this->team, 'calendario' => 'fuera']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('clientes.data', 1)
+            ->where('clientes.data.0.cliente', 'Vuelve por uso'));
+});
+
+test('inteligencia funciona sin archivo de modelo', function () {
+    $this->app->instance(RetentionModel::class, new RetentionModel(storage_path('framework/testing/ml/no-existe.json')));
+
+    $this->actingAs($this->gerente)->get(route('gerente.inteligencia', $this->team))
+        ->assertOk()->assertInertia(fn (Assert $page) => $page->where('modelo', null));
 });
 
 test('inteligencia exige rol gerente y pertenencia al equipo', function () {

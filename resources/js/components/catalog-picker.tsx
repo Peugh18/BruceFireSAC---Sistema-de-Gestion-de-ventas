@@ -3,6 +3,7 @@ import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { Cargando } from '@/components/cargando';
 import catalogo from '@/routes/vendedor/catalogo';
+import { soles } from '@/lib/utils';
 
 export type CatalogItem = {
     tipo: 'product' | 'service';
@@ -27,13 +28,6 @@ export type CatalogUnit = {
 };
 
 type Respuesta = { unidad: CatalogUnit | null; items: CatalogItem[] };
-
-function money(value: number) {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-    }).format(value || 0);
-}
 
 /**
  * Buscador de productos y servicios por nombre, código o código de barras.
@@ -205,7 +199,7 @@ export default function CatalogPicker({
                                 </span>
                             </span>
                             <span className="text-[12px] font-bold">
-                                {money(respuesta.unidad.precio_venta)}
+                                {soles(respuesta.unidad.precio_venta)}
                             </span>
                         </button>
                     ) : null}
@@ -252,7 +246,7 @@ export default function CatalogPicker({
                                         </span>
                                     ) : null}
                                     <span className="font-['IBM_Plex_Mono',monospace] text-[12px] font-bold">
-                                        {money(item.precio_venta)}
+                                        {soles(item.precio_venta)}
                                     </span>
                                 </span>
                             </button>
@@ -265,7 +259,7 @@ export default function CatalogPicker({
                 <p className="text-muted-foreground mt-1 text-xs">
                     {/^\d{8,14}$/.test(busqueda.trim())
                         ? `El código ${busqueda.trim()} no está registrado: pide que lo agreguen al producto en Productos (Gerente) y vuelve a escanear.`
-                        : `No hay productos, servicios ni series que coincidan con "${busqueda.trim()}".`}
+                        : `No hay productos, servicios ni series que coincidan con "${busqueda.trim()}". Si lo venden, pide a almacén que lo agregue al catálogo.`}
                 </p>
             ) : null}
         </div>

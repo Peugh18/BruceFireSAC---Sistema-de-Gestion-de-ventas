@@ -33,7 +33,7 @@ class CertificatePdfService
                 ->all());
 
             if ($paginas !== []) {
-                return $this->diplomaPaginas($paginas);
+                return $this->diplomaPaginas(array_map(self::conTextoDelDiploma(...), $paginas));
             }
         }
 
@@ -103,7 +103,32 @@ class CertificatePdfService
      */
     public static function esDiploma(array $tipo): bool
     {
+        if (isset($tipo['composicion'])) {
+            // Un diploma armado por bloques sale con la plantilla de capacitación
+            // en horizontal; en vertical, como bloque de la plantilla general.
+            return ($tipo['orientacion'] ?? 'vertical') === 'horizontal'
+                && in_array('diploma', array_column($tipo['composicion'], 'tipo'), true);
+        }
+
         return ($tipo['familia'] ?? null) === 'diploma' || ($tipo['codigo'] ?? null) === 'capacitacion';
+    }
+
+    /**
+     * El texto escrito en el bloque de diploma reemplaza la declaración de la
+     * plantilla de capacitación.
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array<string, mixed>
+     */
+    protected static function conTextoDelDiploma(array $datos): array
+    {
+        foreach ($datos['tipo']['composicion'] ?? [] as $bloque) {
+            if (($bloque['tipo'] ?? null) === 'diploma' && ! empty($bloque['texto'])) {
+                $datos['tipo']['declaracion'] = $bloque['texto'];
+            }
+        }
+
+        return $datos;
     }
 
     /**
@@ -114,67 +139,96 @@ class CertificatePdfService
      */
     public function dibujar(array $datos): DompdfWrapper
     {
-        $recursos = $this->recursos();
+        return $this->aPdf($this->vista($datos), $datos['empresa']);
+    }
 
+    /**
+     * El HTML del certificado tal como se convierte a PDF (dompdf vacía el
+     * cuerpo de su árbol al dibujar, así que lo que lleva se revisa aquí).
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    public function html(array $datos): string
+    {
+        $vista = $this->vista($datos);
+
+        return view($vista['vista'], $vista['datos'])->render();
+    }
+
+    /**
+     * Qué plantilla dibuja el certificado y con qué datos: la de capacitación
+     * para los diplomas horizontales; la general (estilo C) para todo lo demás.
+     *
+     * @param  array<string, mixed>  $datos
+     * @return array{vista: view-string, datos: array<string, mixed>, horizontal: bool}
+     */
+    protected function vista(array $datos): array
+    {
         if (self::esDiploma($datos['tipo'])) {
-            return $this->diploma($datos, $recursos);
+            return $this->vistaDiploma([self::conTextoDelDiploma($datos)]);
         }
 
         // Las versiones anteriores a la orientación salen verticales, como siempre.
         $horizontal = ($datos['tipo']['orientacion'] ?? 'vertical') === 'horizontal';
 
-        $pdf = Pdf::setOption('isFontSubsettingEnabled', true)
-            ->loadView('pdf.certificado-operatividad', [
+        return [
+            'vista' => 'pdf.certificado-operatividad',
+            'datos' => [
                 ...$datos,
-                'recursos' => $recursos,
+                'recursos' => $this->recursos(),
                 'titulo' => $this->titulo($datos['tipo']),
                 'resultados' => CertificateDocumentData::RESULTADOS,
                 'horizontal' => $horizontal,
-            ])
-            ->setPaper('a4', $horizontal ? 'landscape' : 'portrait');
-
-        $pdf->render();
-        $this->pie($pdf, $datos['empresa']);
-
-        return $pdf;
+            ],
+            'horizontal' => $horizontal,
+        ];
     }
 
     /**
-     * Diploma de capacitación en A4 horizontal. El nombre y el curso toman el
-     * tamaño más grande que entra en una línea.
+     * Diploma de capacitación en A4 horizontal, una hoja por persona. El nombre
+     * y el curso toman el tamaño más grande que entra en una línea.
      *
-     * @param  array<string, mixed>  $datos
-     * @param  array<string, mixed>  $recursos
+     * @param  list<array<string, mixed>>  $paginas
+     * @return array{vista: view-string, datos: array<string, mixed>, horizontal: bool}
      */
-    protected function diploma(array $datos, array $recursos): DompdfWrapper
+    protected function vistaDiploma(array $paginas): array
     {
-        return $this->diplomaPaginas([$datos], $recursos);
-    }
-
-    /** @param list<array<string, mixed>> $paginas */
-    protected function diplomaPaginas(array $paginas, ?array $recursos = null): DompdfWrapper
-    {
-        $recursos ??= $this->recursos();
+        $recursos = $this->recursos();
         $fuentes = $recursos['fuentes'];
         $paginas = array_map(fn (array $datos) => [
             ...$datos,
             'diploma' => [
                 'tamano_nombre' => $this->tamanoQueEntra(mb_strtoupper((string) $datos['cliente']['razon_social']), $fuentes['subtitulo'], 30, 620),
                 'tamano_curso' => $this->tamanoQueEntra($datos['capacitacion']['curso'], $fuentes['subtitulo'], 26, 640),
+                'tamano_titulo' => $this->tamanoQueEntra(mb_strtoupper((string) (($datos['tipo']['titulo'] ?? null) ?: 'CERTIFICADO')), $fuentes['titulo'], 55, 660),
             ],
         ], $paginas);
-        $datos = $paginas[0];
 
+        return [
+            'vista' => 'pdf.certificado-diploma',
+            'datos' => [...$paginas[0], 'recursos' => $recursos, 'paginas' => $paginas],
+            'horizontal' => true,
+        ];
+    }
+
+    /** @param list<array<string, mixed>> $paginas */
+    protected function diplomaPaginas(array $paginas): DompdfWrapper
+    {
+        return $this->aPdf($this->vistaDiploma($paginas), $paginas[0]['empresa']);
+    }
+
+    /**
+     * @param  array{vista: view-string, datos: array<string, mixed>, horizontal: bool}  $vista
+     * @param  array<string, mixed>  $empresa
+     */
+    protected function aPdf(array $vista, array $empresa): DompdfWrapper
+    {
         $pdf = Pdf::setOption('isFontSubsettingEnabled', true)
-            ->loadView('pdf.certificado-diploma', [
-                ...$datos,
-                'recursos' => $recursos,
-                'paginas' => $paginas,
-            ])
-            ->setPaper('a4', 'landscape');
+            ->loadView($vista['vista'], $vista['datos'])
+            ->setPaper('a4', $vista['horizontal'] ? 'landscape' : 'portrait');
 
         $pdf->render();
-        $this->pie($pdf, $datos['empresa']);
+        $this->pie($pdf, $empresa);
 
         return $pdf;
     }

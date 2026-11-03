@@ -313,14 +313,14 @@ test('el buscador y el filtro de notas del listado de facturacion funcionan', fu
         ->assertInertia(fn ($page) => $page->where('totalFiltrados', 1)->where('documents.data.0.tipo', 'nota_credito'));
 });
 
-test('comprobantes sunat muestra los de hoy y filtra por fecha de emision', function () {
+test('comprobantes sunat filtra por fecha de emision', function () {
     $user = vendedorUser();
     $sale = Sale::factory()->create(['vendedor_id' => $user->id]);
     ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 70, 'fecha_emision' => today()]);
     ElectronicDocument::factory()->create(['sale_id' => $sale->id, 'tipo' => 'factura', 'serie' => 'F001', 'correlativo' => 71, 'fecha_emision' => today()->subDays(5)]);
     $team = ['current_team' => $user->currentTeam];
 
-    $this->actingAs($user)->get(route('vendedor.facturacion.index', $team))
+    $this->actingAs($user)->get(route('vendedor.facturacion.index', [...$team, 'desde' => today()->toDateString(), 'hasta' => today()->toDateString()]))
         ->assertInertia(fn ($page) => $page
             ->where('totalFiltrados', 1)
             ->where('documents.data.0.correlativo', 70)

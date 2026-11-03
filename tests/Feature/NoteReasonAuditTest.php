@@ -4,6 +4,9 @@ use App\Actions\Billing\AplicarNotaAlSaldo;
 use App\Actions\Billing\IssueCreditNote;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryMovement;
+use App\Models\Product;
+use App\Models\SaleItem;
+use App\Models\Service;
 use App\Services\Billing\DatosEmision;
 use App\Services\Billing\DesgloseNota;
 use App\Services\Billing\GreenterService;
@@ -57,17 +60,38 @@ test('anulación exige el total del original y no emite anulaciones parciales', 
     expect(fn () => app(IssueCreditNote::class)->handle($original, '01', 'Anulación parcial inválida', 10))->toThrow(ValidationException::class);
 });
 
-test('anulación fiscal sin recepción física explícita conserva unidades vendidas', function () {
+test('anular siempre regresa las unidades al stock', function () {
     [$sale, $original, $unit] = ventaConFactura();
-    $nota = aceptarNota(app(IssueCreditNote::class)->handle($original, '01', 'Anular solo documento', (float) $sale->total, ['devolucion_fisica' => false]));
+    $nota = aceptarNota(app(IssueCreditNote::class)->handle($original, '01', 'Anular solo documento', (float) $sale->total));
     app(IssueCreditNote::class)->aplicarSiFueAceptada($nota);
-    expect($sale->fresh()->estado)->toBe('anulada')->and($unit->fresh()->estado)->toBe('vendido')
-        ->and(InventoryMovement::where('tipo', 'ingreso')->where('referencia_id', $sale->id)->count())->toBe(0);
+    expect($sale->fresh()->estado)->toBe('anulada')->and($unit->fresh()->estado)->toBe('disponible')
+        ->and(InventoryMovement::where('tipo', 'ingreso')->where('referencia_id', $sale->id)->count())->toBe(1);
+});
+
+test('anular regresa los productos sin serie y no mueve los servicios', function () {
+    [$sale, $original] = ventaConFactura();
+    $guantes = Product::factory()->create();
+    SaleItem::factory()->create(['sale_id' => $sale->id, 'tipo_linea' => 'producto', 'product_id' => $guantes->id, 'inventory_unit_id' => null, 'cantidad' => 2]);
+    SaleItem::factory()->forService(Service::factory()->create())->create(['sale_id' => $sale->id, 'tipo_linea' => 'servicio', 'cantidad' => 1]);
+    $salida = new InventoryMovement;
+    $salida->product_id = $guantes->id;
+    $salida->sede_id = $sale->sede_id;
+    $salida->tipo = 'salida_venta';
+    $salida->cantidad = -2;
+    $salida->referencia_type = $sale->getMorphClass();
+    $salida->referencia_id = $sale->id;
+    $salida->save();
+
+    $nota = aceptarNota(app(IssueCreditNote::class)->handle($original, '01', 'Error del comprobante', (float) $sale->total));
+    app(IssueCreditNote::class)->aplicarSiFueAceptada($nota);
+
+    expect((int) InventoryMovement::where('referencia_id', $sale->id)->where('product_id', $guantes->id)->sum('cantidad'))->toBe(0)
+        ->and(InventoryMovement::where('referencia_id', $sale->id)->whereNull('product_id')->exists())->toBeFalse();
 });
 
 test('recepción física total confirmada reintegra una sola vez', function () {
     [$sale, $original, $unit] = ventaConFactura();
-    $nota = aceptarNota(app(IssueCreditNote::class)->handle($original, '06', 'Recepción total', (float) $sale->total, ['devolucion_fisica' => true]));
+    $nota = aceptarNota(app(IssueCreditNote::class)->handle($original, '06', 'Recepción total', (float) $sale->total));
     app(IssueCreditNote::class)->aplicarSiFueAceptada($nota);
     expect($unit->fresh()->estado)->toBe('disponible')
         ->and(InventoryMovement::where('tipo', 'ingreso')->where('referencia_id', $sale->id)->count())->toBe(1);

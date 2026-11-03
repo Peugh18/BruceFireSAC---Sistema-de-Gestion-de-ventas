@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Cash\OpenCashRegister;
 use App\Actions\Sales\ConfirmSale;
 use App\Contracts\SunatClientInterface;
 use App\Models\Client;
@@ -105,6 +106,8 @@ test('endpoint http de confirmar venta funciona para el vendedor', function () {
     $user = vendedorUser();
     $sale = draftSaleFor(Client::factory()->create());
     $sale->update(['vendedor_id' => $user->id]);
+    // Toda venta se emite dentro de un turno de caja.
+    app(OpenCashRegister::class)->handle($user, null, 0);
 
     $this->actingAs($user)
         ->post(route('vendedor.ventas.confirmar', ['current_team' => $user->currentTeam, 'sale' => $sale]))
@@ -144,7 +147,7 @@ test('los KPIs del listado de ventas solo cuentan las ventas del vendedor autent
         ->and($kpis['ventas'])->toBe(1);
 });
 
-test('el listado de ventas muestra solo las de hoy y se filtra por rango de fechas y busqueda', function () {
+test('el listado de ventas se filtra por rango de fechas y busqueda', function () {
     $user = vendedorUser();
     $roble = Client::factory()->create(['razon_social' => 'CONSTRUCTORA EL ROBLE S.A.C.']);
     $hoy = Sale::factory()->create(['vendedor_id' => $user->id, 'client_id' => $roble->id, 'estado' => 'confirmada', 'fecha' => today(), 'total' => 100]);
@@ -154,7 +157,7 @@ test('el listado de ventas muestra solo las de hoy y se filtra por rango de fech
     $mesPasado = Sale::factory()->create(['vendedor_id' => $user->id, 'client_id' => $otro->id, 'estado' => 'confirmada', 'fecha' => today()->subDays(40), 'total' => 30]);
     $url = route('vendedor.ventas.index', ['current_team' => $user->currentTeam]);
 
-    $this->actingAs($user)->get($url)->assertInertia(fn ($page) => $page
+    $this->actingAs($user)->get($url.'?desde='.today()->toDateString().'&hasta='.today()->toDateString())->assertInertia(fn ($page) => $page
         ->has('sales.data', 1)
         ->where('sales.data.0.id', $hoy->id)
         ->where('filters.desde', today()->toDateString())

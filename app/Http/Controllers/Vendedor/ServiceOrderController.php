@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Vendedor;
 
+use App\Actions\Cotizaciones\IniciarOrdenDesdeCotizacion;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
 use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
 use App\Models\Deficiency;
+use App\Models\Quote;
 use App\Models\Sede;
-use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\ServiceOrders\CasillerosDeLaOrden;
-use App\Services\ServiceOrders\ServiceOrderNumberGenerator;
 use App\Services\Tecnico\ConversacionDeLaOrden;
 use App\Services\Tecnico\PasoDelTaller;
 use Illuminate\Database\Eloquent\Builder;
@@ -63,7 +63,24 @@ class ServiceOrderController extends Controller
         return Inertia::render('vendedor/ordenes-servicio/index', [
             'orders' => $orders,
             'filters' => ['estado' => $estado],
-            'services' => Service::query()->where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'precio_venta']),
+            // D-10: la orden nace de una cotización aceptada con servicio y aún sin orden ni venta.
+            'cotizaciones_aceptadas' => Quote::query()
+                ->with('client:id,razon_social')
+                ->where('estado', 'aceptada')
+                ->when($sedeId, fn ($query) => $query->where('sede_id', $sedeId))
+                ->whereHas('items', fn ($query) => $query->whereNotNull('service_id'))
+                ->whereDoesntHave('sale')
+                ->whereDoesntHave('serviceOrders', fn ($query) => $query->where('estado', '!=', 'anulada'))
+                ->latest('aceptada_at')
+                ->limit(100)
+                ->get()
+                ->map(fn (Quote $quote) => [
+                    'id' => $quote->id,
+                    'numero' => $quote->numero,
+                    'cliente' => $quote->client->razon_social,
+                    'total' => (float) $quote->total,
+                ])
+                ->values(),
             // Técnicos de la sede para asignar un responsable; toda el área
             // (planta o campo) ve la orden aunque no se elija a nadie.
             'tecnicos' => User::role(['TecnicoPlanta', 'TecnicoCampo'])
@@ -79,13 +96,16 @@ class ServiceOrderController extends Controller
         ]);
     }
 
-    public function store(Team $current_team, StoreServiceOrderRequest $request, ServiceOrderNumberGenerator $numberGenerator): RedirectResponse
+    public function store(Team $current_team, StoreServiceOrderRequest $request, IniciarOrdenDesdeCotizacion $iniciar): RedirectResponse
     {
+        $quote = Quote::query()->findOrFail($request->integer('quote_id'));
+        $this->asegurarSede($quote->sede_id);
+
         if ($request->filled('tecnico_id')) {
             // Solo un técnico del área que atiende la sede de la orden.
             $borrador = new ServiceOrder([
                 'departamento_tecnico' => $request->input('departamento_tecnico'),
-                'sede_id' => $request->user()->sedeRestringidaId() ?? $request->input('sede_id'),
+                'sede_id' => $quote->sede_id ?? $request->user()->sedeRestringidaId(),
             ]);
 
             if (! $this->tecnicosQueAtienden($borrador)->whereKey($request->integer('tecnico_id'))->exists()) {
@@ -95,25 +115,7 @@ class ServiceOrderController extends Controller
             }
         }
 
-        $order = ServiceOrder::create([
-            ...$request->validated(),
-            ...($request->user()->sedeRestringidaId() ? ['sede_id' => $request->user()->sedeRestringidaId()] : []),
-            'codigo' => $numberGenerator->next(),
-            'prioridad' => $request->input('prioridad', 'normal'),
-            'estado' => 'pendiente_recepcion',
-        ]);
-        $order->lines()->create([
-            'service_id' => $order->service_id,
-            'cantidad' => 1,
-        ]);
-
-        $order->events()->create([
-            'tipo' => 'creada',
-            'user_id' => $request->user()->id,
-            'payload' => [
-                'mensaje' => 'Orden de servicio creada por vendedor.',
-            ],
-        ]);
+        $iniciar->handle($quote, $request->user(), array_filter($request->safe()->except('quote_id')));
 
         return back();
     }

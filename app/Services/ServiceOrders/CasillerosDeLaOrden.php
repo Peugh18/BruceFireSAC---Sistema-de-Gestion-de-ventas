@@ -36,6 +36,9 @@ class CasillerosDeLaOrden
                 'marca' => $equipo->marca,
                 'serie_fabricante' => $equipo->serie_fabricante,
                 'anio_fabricacion' => $equipo->anio_fabricacion,
+                'fecha_ultima_ph' => $equipo->fecha_ultima_ph?->toDateString(),
+                'proxima_prueba_hidrostatica' => $equipo->proxima_prueba_hidrostatica?->toDateString(),
+                'proxima_fecha_atencion' => $equipo->proxima_fecha_atencion?->toDateString(),
                 'linea_id' => $equipo->getRelation('pivot')->getAttribute('service_order_line_id'),
                 'recibido' => (bool) $equipo->getRelation('pivot')->getAttribute('recibido'),
             ]);

@@ -41,7 +41,7 @@ class IssueCreditNote
     ) {}
 
     /**
-     * @param  array<string, mixed>  $opciones  `lineas` (motivos 03, 05 y 07) y `devolucion_fisica` (01, 02 y 06).
+     * @param  array<string, mixed>  $opciones  `lineas` (motivos 03, 05 y 07) y `correccion` (la venta se rehará).
      */
     public function handle(ElectronicDocument $original, string $motivoCatalogo09, string $detalle, float $importe, array $opciones = []): ElectronicDocument
     {
@@ -61,6 +61,10 @@ class IssueCreditNote
                 throw ValidationException::withMessages([
                     'electronic_document_id' => 'La venta ya esta anulada: no admite mas notas de credito.',
                 ]);
+            }
+
+            if ($motivoCatalogo09 === DevolucionParcial::MOTIVO) {
+                app(DevolucionParcial::class)->validar($sale, $original, $opciones['lineas'] ?? []);
             }
 
             // Una nota que SUNAT rechazo no cuenta: se puede emitir otra.
@@ -152,6 +156,8 @@ class IssueCreditNote
      */
     public function aplicarSiFueAceptada(ElectronicDocument $nota): void
     {
+        app(DevolucionParcial::class)->aplicar($nota);
+
         if ($nota->tipo !== 'nota_credito'
             || ! in_array($nota->sunat_estado, ['aceptado', 'observado'], true)
             || ! in_array($nota->motivo_catalogo, self::MOTIVOS_QUE_ANULAN, true)) {
@@ -172,7 +178,7 @@ class IssueCreditNote
                 ->sum('importe');
 
             if ($aceptado >= (float) $sale->total - 0.001) {
-                $this->revertSale->handle($sale, 'por nota de crédito', devolverStock: (bool) ($nota->nota_datos['opciones']['devolucion_fisica'] ?? false));
+                $this->revertSale->handle($sale, 'por nota de crédito', correccion: (bool) ($nota->nota_datos['opciones']['correccion'] ?? false));
             }
         });
     }

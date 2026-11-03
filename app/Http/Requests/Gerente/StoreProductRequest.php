@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Gerente;
 
+use App\Actions\Certificates\EmitirCertificadosDeProducto;
 use App\Enums\EquipmentType;
 use App\Models\ProductCategory;
 use App\Support\CatalogosSunat;
@@ -52,6 +53,8 @@ class StoreProductRequest extends FormRequest
             'factor_compra' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'stock_minimo' => ['nullable', 'integer', 'min:0'],
             'activo' => ['boolean'],
+            // El certificado que sale solo al vender el producto.
+            'certificate_type_id' => EmitirCertificadosDeProducto::reglaDePlantilla(),
         ];
     }
 

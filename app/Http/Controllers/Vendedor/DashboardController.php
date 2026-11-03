@@ -23,8 +23,8 @@ use Inertia\Response;
 class DashboardController extends Controller
 {
     /**
-     * Dashboard del Vendedor: SOLO métricas del día para el vendedor autenticado.
-     * Regla de negocio estricta: NUNCA expone acumulados mensuales ni datos globales de la empresa.
+     * Dashboard del Vendedor: solo sus propias métricas, nunca datos globales
+     * de la empresa.
      */
     public function __invoke(Team $current_team, Request $request): Response
     {
@@ -154,6 +154,11 @@ class DashboardController extends Controller
             ])
             ->all();
 
+        // Clientes para ofrecer la recarga: con extintores vencidos o que
+        // vencen en los próximos 3 meses, del más urgente al más lejano.
+        $oportunidades = collect(app(ExtintoresPorVencer::class)->porEmpresa(today(), user: $user))
+            ->filter(fn (array $empresa) => $empresa['vencidos'] > 0 || ($empresa['dias'] !== null && $empresa['dias'] <= 90));
+
         return Inertia::render('vendedor/dashboard', [
             'graficos' => $this->graficos($user, $cotizacionesMes),
             'ventas_hoy' => $ventasHoy,
@@ -164,10 +169,8 @@ class DashboardController extends Controller
             'agenda_hoy' => $agendaHoy,
             'por_vencer_semana' => app(ExtintoresPorVencer::class)->segmentos(today(), 5, $user)['esta_semana'],
             'pendientes' => $this->pendientes($user->id, $user->sedeRestringidaId()),
-            // Clientes para ofrecer la recarga: con extintores vencidos o que
-            // vencen en los próximos 3 meses, del más urgente al más lejano.
-            'oportunidades' => collect(app(ExtintoresPorVencer::class)->porEmpresa(today(), user: $user))
-                ->filter(fn (array $empresa) => $empresa['vencidos'] > 0 || ($empresa['dias'] !== null && $empresa['dias'] <= 90))
+            'por_renovar' => $oportunidades->count(),
+            'oportunidades' => $oportunidades
                 ->take(5)
                 ->map(fn (array $empresa) => collect($empresa)->except('equipos')->all())
                 ->values()
@@ -207,7 +210,48 @@ class DashboardController extends Controller
                 ['nombre' => 'Por vencer', 'valor' => max(0, CarteraDeCobranzas::saldo((clone $cuotas)->whereDate('fecha_vencimiento', '>=', today())))],
                 ['nombre' => 'Vencida', 'valor' => max(0, CarteraDeCobranzas::saldo((clone $cuotas)->whereDate('fecha_vencimiento', '<', today())))],
             ],
+            'acumulado' => $this->acumuladoDiario($ventas),
         ];
+    }
+
+    /**
+     * Ventas propias acumuladas día a día: este mes (hasta hoy) contra el mes
+     * anterior, neto de notas de crédito y débito, igual que el total del mes.
+     *
+     * @param  Builder<Sale>  $ventas
+     * @return list<array{nombre: string, valor: float|null, secundario: float}>
+     */
+    private function acumuladoDiario(Builder $ventas): array
+    {
+        $mes = now()->startOfMonth();
+        $anterior = $mes->copy()->subMonthNoOverflow();
+        $porDia = function ($desde) use ($ventas) {
+            $hasta = $desde->copy()->endOfMonth();
+            $brutos = (clone $ventas)->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()])
+                ->selectRaw('DAY(fecha) as dia, SUM(total) as total')->groupByRaw('DAY(fecha)')->pluck('total', 'dia');
+            $notas = ElectronicDocument::query()->whereIn('sale_id', (clone $ventas)->select('id'))
+                ->whereIn('sunat_estado', ['aceptado', 'observado'])->whereIn('tipo', ['nota_credito', 'nota_debito'])
+                ->whereBetween('fecha_emision', [$desde, $hasta])
+                ->selectRaw("DAY(fecha_emision) as dia, SUM(CASE WHEN tipo = 'nota_debito' THEN importe ELSE -importe END) as neto")
+                ->groupByRaw('DAY(fecha_emision)')->pluck('neto', 'dia');
+            $acumulado = 0.0;
+
+            $porDia = [];
+            foreach (range(1, $desde->daysInMonth) as $dia) {
+                $acumulado += (float) $brutos->get($dia, 0) + (float) $notas->get($dia, 0);
+                $porDia[] = round($acumulado, 2);
+            }
+
+            return $porDia;
+        };
+        $actual = $porDia($mes);
+        $previo = $porDia($anterior);
+
+        return array_map(fn (int $dia) => [
+            'nombre' => (string) $dia,
+            'valor' => $dia <= now()->day ? $actual[$dia - 1] : null,
+            'secundario' => $previo[min($dia, count($previo)) - 1],
+        ], range(1, $mes->daysInMonth));
     }
 
     /**

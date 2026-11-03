@@ -1,4 +1,5 @@
-import { router, usePage } from '@inertiajs/react';
+import { pageTitleClass } from '@/components/page-header';
+import { router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     Clock,
@@ -7,7 +8,7 @@ import {
     TrendingDown,
     Wallet,
 } from 'lucide-react';
-import { useState } from 'react';
+import { type FormEvent, useState } from 'react';
 
 import GerenteLayout from '@/layouts/gerente-layout';
 import CajasRoutes from '@/routes/gerente/cajas';
@@ -28,6 +29,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { soles } from '@/lib/utils';
 
 type CashDetail = {
     id: number;
@@ -48,10 +50,19 @@ type CashDetail = {
     monto_contado_cierre: number | null;
     diferencia: number | null;
     observacion: string;
+    /** Cada conteo del cajón; el anulado lleva quién autorizó el reconteo. */
+    conteos: Array<{
+        monto: number;
+        fecha: string | null;
+        reconteo_autorizado_por: string | null;
+        lineas: Array<{ denominacion: number; cantidad: number }>;
+    }>;
 };
 
 type CashRegisterItem = {
     id: number;
+    /** Contó el cajón, no cuadró y aún no explica (arqueo ciego). */
+    esperando_explicacion: boolean;
     vendedor: {
         id: number;
         name: string;
@@ -66,6 +77,7 @@ type CashRegisterItem = {
     diferencia: number | null;
     tipo_diferencia: 'cuadrado' | 'sobrante' | 'faltante' | null;
     observacion: string | null;
+    revision: { nota: string; fecha: string } | null;
 };
 
 type PaginationLink = {
@@ -110,20 +122,6 @@ type PageProps = {
     [key: string]: unknown;
 };
 
-function formatCurrency(amount: number): string {
-    // Un cero negativo (-0, o un -0.001 que redondea a cero) se renderiza como
-    // "-S/ 0.00" en el servidor y como "S/ 0.00" en el navegador: React rompe la
-    // hidratación. El cero no tiene signo, así que se normaliza antes de formatear
-    // y el resultado es idéntico en ambos lados.
-    const normalizado = Math.round(Math.abs(amount) * 100) === 0 ? 0 : amount;
-
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-        minimumFractionDigits: 2,
-    }).format(normalizado);
-}
-
 export default function CajasConsolidadasIndex() {
     const { currentTeam, cajas, detalle, filters, kpis, vendedores, sedes } =
         usePage<PageProps>().props;
@@ -137,6 +135,26 @@ export default function CajasConsolidadasIndex() {
     const [fechaDesde, setFechaDesde] = useState(filters.fecha_desde || '');
     const [fechaHasta, setFechaHasta] = useState(filters.fecha_hasta || '');
     const [loadingDetail, setLoadingDetail] = useState<number | null>(null);
+    // P-006: el Gerente da por revisada la diferencia con su comentario.
+    const [revisando, setRevisando] = useState<CashRegisterItem | null>(null);
+    const revisionForm = useForm({ revision_nota: '' });
+    const guardarRevision = (e: FormEvent) => {
+        e.preventDefault();
+        if (!revisando) return;
+        revisionForm.post(
+            CajasRoutes.revisar.url({
+                current_team: currentTeam.slug,
+                cash_register: revisando.id,
+            }),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setRevisando(null);
+                    revisionForm.reset();
+                },
+            },
+        );
+    };
 
     const viewDetail = (id: number | null) => {
         router.get(
@@ -157,17 +175,55 @@ export default function CajasConsolidadasIndex() {
         );
     };
 
+    const autorizarReconteo = (caja: CashRegisterItem) => {
+        router.post(
+            CajasRoutes.reconteo.url({
+                current_team: currentTeam.slug,
+                cash_register: caja.id,
+            }),
+            {},
+            { preserveScroll: true },
+        );
+    };
+
     const detailButton = (caja: CashRegisterItem) =>
-        caja.estado === 'cerrado' ? (
+        caja.esperando_explicacion ? (
             <Button
                 variant="outline"
                 size="sm"
-                disabled={loadingDetail !== null}
-                aria-label={`Ver detalle del turno ${caja.id} de ${caja.vendedor.name}`}
-                onClick={() => viewDetail(caja.id)}
+                aria-label={`Autorizar que ${caja.vendedor.name} vuelva a contar el cajón`}
+                onClick={() => autorizarReconteo(caja)}
             >
-                {loadingDetail === caja.id ? 'Cargando…' : 'Ver detalle'}
+                Autorizar reconteo
             </Button>
+        ) : caja.estado === 'cerrado' ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={loadingDetail !== null}
+                    aria-label={`Ver detalle del turno ${caja.id} de ${caja.vendedor.name}`}
+                    onClick={() => viewDetail(caja.id)}
+                >
+                    {loadingDetail === caja.id ? 'Cargando…' : 'Ver detalle'}
+                </Button>
+                {caja.revision ? (
+                    <span
+                        className="text-success-strong text-xs font-semibold"
+                        title={caja.revision.nota}
+                    >
+                        Revisada
+                    </span>
+                ) : caja.diferencia ? (
+                    <Button
+                        size="sm"
+                        aria-label={`Marcar revisada la diferencia del turno ${caja.id}`}
+                        onClick={() => setRevisando(caja)}
+                    >
+                        Marcar revisada
+                    </Button>
+                ) : null}
+            </div>
         ) : (
             <span className="text-muted-foreground text-xs">
                 Turno en curso
@@ -175,10 +231,12 @@ export default function CajasConsolidadasIndex() {
         );
 
     const differenceText = (caja: CashRegisterItem) => {
+        if (caja.esperando_explicacion && caja.diferencia !== null)
+            return `Espera explicación · ${caja.diferencia < 0 ? 'Faltante' : 'Sobrante'}: ${soles(Math.abs(caja.diferencia))}`;
         if (caja.estado === 'abierto') return 'En curso';
         if (caja.diferencia === null) return 'Sin dato';
         if (caja.diferencia === 0) return 'Sin diferencia';
-        return `${caja.diferencia < 0 ? 'Faltante' : 'Sobrante'}: ${formatCurrency(Math.abs(caja.diferencia))}`;
+        return `${caja.diferencia < 0 ? 'Faltante' : 'Sobrante'}: ${soles(Math.abs(caja.diferencia))}`;
     };
 
     const applyFilters = () => {
@@ -215,9 +273,7 @@ export default function CajasConsolidadasIndex() {
             <div className="min-w-0 space-y-6 pb-24 sm:pb-0">
                 {/* Cabecera */}
                 <div>
-                    <h1 className="text-foreground font-['Oswald',sans-serif] text-2xl font-bold tracking-wide uppercase">
-                        Caja consolidada
-                    </h1>
+                    <h1 className={pageTitleClass}>Caja consolidada</h1>
                     <p className="text-muted-foreground mt-1 text-sm">
                         Consulta de turnos, cobros, salidas y diferencias de
                         cierre de los vendedores.
@@ -285,12 +341,11 @@ export default function CajasConsolidadasIndex() {
                                     : 'text-success-strong'
                             }`}
                         >
-                            {formatCurrency(kpis.faltantesMes)}
+                            {soles(kpis.faltantesMes)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-xs">
                             Faltantes del mes · sobrantes{' '}
-                            {formatCurrency(kpis.sobrantesMes)} (no se
-                            compensan)
+                            {soles(kpis.sobrantesMes)} (no se compensan)
                         </p>
                     </div>
                 </div>
@@ -489,7 +544,7 @@ export default function CajasConsolidadasIndex() {
                                                     {c.monto_contado_cierre ===
                                                     null
                                                         ? '—'
-                                                        : formatCurrency(
+                                                        : soles(
                                                               c.monto_contado_cierre,
                                                           )}
                                                 </dd>
@@ -567,7 +622,7 @@ export default function CajasConsolidadasIndex() {
                                                     {c.monto_esperado_calculado ===
                                                     null
                                                         ? '—'
-                                                        : formatCurrency(
+                                                        : soles(
                                                               c.monto_esperado_calculado,
                                                           )}
                                                 </TableCell>
@@ -575,7 +630,7 @@ export default function CajasConsolidadasIndex() {
                                                     {c.monto_contado_cierre ===
                                                     null
                                                         ? '—'
-                                                        : formatCurrency(
+                                                        : soles(
                                                               c.monto_contado_cierre,
                                                           )}
                                                 </TableCell>
@@ -696,7 +751,7 @@ export default function CajasConsolidadasIndex() {
                             <dl className="bg-muted flex items-center justify-between gap-3 rounded-lg p-3">
                                 <dt>Fondo inicial</dt>
                                 <dd className="font-mono font-semibold">
-                                    {formatCurrency(detalle.monto_apertura)}
+                                    {soles(detalle.monto_apertura)}
                                 </dd>
                             </dl>
                             <section aria-labelledby="caja-cobros">
@@ -726,7 +781,7 @@ export default function CajasConsolidadasIndex() {
                                                     {medio.replaceAll('_', ' ')}
                                                 </dt>
                                                 <dd className="shrink-0 font-mono">
-                                                    {formatCurrency(monto)}
+                                                    {soles(monto)}
                                                 </dd>
                                             </div>
                                         ))}
@@ -753,9 +808,7 @@ export default function CajasConsolidadasIndex() {
                                                         {salida.motivo}
                                                     </p>
                                                     <span className="shrink-0 font-mono">
-                                                        {formatCurrency(
-                                                            salida.monto,
-                                                        )}
+                                                        {soles(salida.monto)}
                                                     </span>
                                                 </div>
                                                 <p className="text-muted-foreground mt-1 text-xs">
@@ -769,7 +822,7 @@ export default function CajasConsolidadasIndex() {
                                 <dl className="mt-2 flex justify-between gap-3 font-medium">
                                     <dt>Total de salidas</dt>
                                     <dd className="font-mono">
-                                        {formatCurrency(detalle.total_salidas)}
+                                        {soles(detalle.total_salidas)}
                                     </dd>
                                 </dl>
                             </section>
@@ -806,7 +859,7 @@ export default function CajasConsolidadasIndex() {
                                             <dt>{label}</dt>
                                             <dd className="shrink-0 font-mono font-semibold">
                                                 {typeof value === 'number'
-                                                    ? formatCurrency(value)
+                                                    ? soles(value)
                                                     : 'Sin dato'}
                                             </dd>
                                         </div>
@@ -821,6 +874,45 @@ export default function CajasConsolidadasIndex() {
                                         </p>
                                     )}
                             </section>
+                            {detalle.conteos.length > 0 && (
+                                <section
+                                    aria-labelledby="caja-conteos"
+                                    className="border-border rounded-lg border p-3"
+                                >
+                                    <h2
+                                        id="caja-conteos"
+                                        className="font-semibold"
+                                    >
+                                        Conteo por billetes y monedas
+                                    </h2>
+                                    <ul className="mt-2 space-y-3">
+                                        {detalle.conteos.map((conteo, i) => (
+                                            <li key={i}>
+                                                <p className="flex justify-between gap-3 font-medium">
+                                                    <span>
+                                                        {conteo.reconteo_autorizado_por
+                                                            ? `Primer conteo (reconteo autorizado por ${conteo.reconteo_autorizado_por})`
+                                                            : 'Conteo final'}
+                                                    </span>
+                                                    <span className="shrink-0 font-mono">
+                                                        {soles(conteo.monto)}
+                                                    </span>
+                                                </p>
+                                                {conteo.lineas.length > 0 && (
+                                                    <p className="text-muted-foreground mt-1 text-xs">
+                                                        {conteo.lineas
+                                                            .map(
+                                                                (l) =>
+                                                                    `${l.cantidad} × ${soles(l.denominacion)}`,
+                                                            )
+                                                            .join(' · ')}
+                                                    </p>
+                                                )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </section>
+                            )}
                             <section aria-labelledby="caja-observacion">
                                 <h2
                                     id="caja-observacion"
@@ -841,6 +933,61 @@ export default function CajasConsolidadasIndex() {
                             </Button>
                         </div>
                     )}
+                </DialogContent>
+            </Dialog>
+            <Dialog
+                open={revisando !== null}
+                onOpenChange={(abierto) => {
+                    if (!abierto) setRevisando(null);
+                }}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Revisar diferencia</DialogTitle>
+                        <DialogDescription>
+                            {revisando
+                                ? `${revisando.vendedor.name} · ${differenceText(revisando)}`
+                                : ''}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={guardarRevision} className="space-y-3">
+                        <label className="text-foreground block text-sm font-medium">
+                            ¿Qué se concluyó?
+                            <textarea
+                                required
+                                autoFocus
+                                value={revisionForm.data.revision_nota}
+                                onChange={(e) =>
+                                    revisionForm.setData(
+                                        'revision_nota',
+                                        e.target.value,
+                                    )
+                                }
+                                placeholder="Ej. Vuelto mal dado; se descuenta al vendedor."
+                                className="border-border bg-card mt-1 min-h-20 w-full rounded-lg border px-3 py-2 text-sm"
+                            />
+                        </label>
+                        {revisionForm.errors.revision_nota ? (
+                            <p className="text-destructive-strong text-xs font-semibold">
+                                {revisionForm.errors.revision_nota}
+                            </p>
+                        ) : null}
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setRevisando(null)}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                type="submit"
+                                loading={revisionForm.processing}
+                            >
+                                Guardar revisión
+                            </Button>
+                        </div>
+                    </form>
                 </DialogContent>
             </Dialog>
         </GerenteLayout>

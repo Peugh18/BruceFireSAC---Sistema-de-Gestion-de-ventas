@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Truck } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
@@ -156,7 +157,7 @@ export default function IniciarRecojo({ sedes }: Props) {
                         <p className="text-primary-strong text-xs font-bold uppercase">
                             Campo
                         </p>
-                        <h1 className="text-2xl font-bold">Iniciar recojo</h1>
+                        <h1 className={pageTitleClass}>Iniciar recojo</h1>
                     </div>
                 </div>
                 <p className="text-muted-foreground text-sm">
@@ -345,7 +346,7 @@ export default function IniciarRecojo({ sedes }: Props) {
                         {sedes.length === 1 ? (
                             <div className="border-border bg-muted/40 rounded-2xl border p-3">
                                 <p className="text-muted-foreground text-xs font-semibold">
-                                    Equipo responsable
+                                    Sede responsable
                                 </p>
                                 <p className="mt-1 font-semibold">
                                     {sedes[0].nombre}
@@ -354,13 +355,13 @@ export default function IniciarRecojo({ sedes }: Props) {
                                     <p className="text-muted-foreground mt-1 text-xs">
                                         Planta lo recibirá en{' '}
                                         {sedes[0].almacen.nombre}. El recojo y
-                                        la cotización quedan en el mismo equipo.
+                                        la cotización quedan en la misma sede.
                                     </p>
                                 )}
                             </div>
                         ) : (
                             <div>
-                                <Label htmlFor="sede">Equipo responsable</Label>
+                                <Label htmlFor="sede">Sede responsable</Label>
                                 <NativeSelect
                                     id="sede"
                                     required
@@ -493,6 +494,14 @@ export default function IniciarRecojo({ sedes }: Props) {
                         Continuar con equipos y fotos
                         <ArrowRight />
                     </Button>
+                    {!cliente && !nuevo ? (
+                        <p
+                            role="status"
+                            className="text-warning-strong text-center text-xs font-semibold"
+                        >
+                            Falta elegir el cliente para continuar.
+                        </p>
+                    ) : null}
                     <p className="text-muted-foreground text-center text-xs">
                         El recojo se confirma en el siguiente paso. Planta y
                         Vendedor reutilizan estos datos.

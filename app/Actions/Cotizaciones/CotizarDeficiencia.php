@@ -44,6 +44,8 @@ class CotizarDeficiencia
             if ($existente && $quote && $existente->quote_id !== $quote->id) {
                 throw ValidationException::withMessages(['quote_id' => 'Edita la cotización donde ya está este adicional.']);
             }
+            // El «antes» se toma antes de crear la cotización: si nace aquí, no había adicional previo.
+            $antes = $existente?->only(['product_id', 'service_id', 'cantidad', 'precio_unitario', 'descuento', 'subtotal']);
             if (! $quote) {
                 $base = [];
                 if ($orden->sale_id === null && $orden->service) {
@@ -61,7 +63,6 @@ class CotizarDeficiencia
                     $orden->update(['quote_id' => $quote->id]);
                 }
             }
-            $antes = $existente?->only(['product_id', 'service_id', 'cantidad', 'precio_unitario', 'descuento', 'subtotal']);
             $cantidad = (int) $datos['cantidad'];
             $precio = (float) ($datos['precio_unitario'] ?? $catalogo->precio_venta);
             $linea = $quote->items()->updateOrCreate(['deficiency_id' => $deficiency->id], [

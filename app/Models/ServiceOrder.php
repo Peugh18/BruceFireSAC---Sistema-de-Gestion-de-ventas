@@ -226,6 +226,17 @@ class ServiceOrder extends Model
     }
 
     /**
+     * Al entregarse (en mostrador o por Campo), los extintores vuelven con el
+     * cliente: dejan de figurar en el taller (E-030).
+     */
+    public function marcarEquiposEntregados(): void
+    {
+        Equipment::query()
+            ->whereIn('id', $this->equipments()->pluck('equipment.id'))
+            ->update(['ubicacion_actual' => 'Sede cliente']);
+    }
+
+    /**
      * @return BelongsToMany<Equipment, $this>
      */
     public function equipments(): BelongsToMany

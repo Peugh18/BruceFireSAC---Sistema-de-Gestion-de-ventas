@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import {
@@ -218,7 +219,7 @@ export default function EntregaShow({
                         <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
                             Cliente Receptor
                         </span>
-                        <h1 className="text-foreground text-base leading-snug font-black">
+                        <h1 className={pageTitleClass}>
                             {order.client.razon_social}
                         </h1>
                         {order.client.numero_documento && (

@@ -74,6 +74,13 @@ return [
     | cubren el turno y dejan casi 3 días de margen para reintentos. Con 0 se
     | envía al confirmar.
     */
+    /*
+    | D-10 (29/10/2026): los servicios y las ventas a empresas con RUC salen de
+    | una cotización aceptada. Siempre activo en el sistema; solo las pruebas
+    | antiguas, escritas antes de esta regla, lo apagan (tests/Pest.php).
+    */
+    'exigir_cotizacion' => true,
+
     'envio_diferido_horas' => (float) env('BILLING_ENVIO_DIFERIDO_HORAS', 6),
 
     /*

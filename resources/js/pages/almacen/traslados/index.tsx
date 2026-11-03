@@ -1,3 +1,4 @@
+import { pageTitleClass } from '@/components/page-header';
 import { Pasos } from '@/components/progreso';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { X } from 'lucide-react';
@@ -77,7 +78,7 @@ export default function Transfers({
             <AlmacenLayout title="Traslados">
                 <Head title="Traslados entre sedes" />
                 <Card className="mx-auto max-w-2xl space-y-2 p-6">
-                    <h1 className="text-xl font-bold">Traslado entre sedes</h1>
+                    <h1 className={pageTitleClass}>Traslado entre sedes</h1>
                     <p className="text-muted-foreground text-sm">
                         No hay un almacén activo desde el cual trasladar. Activa
                         una sede de tipo almacén o mixta en Sedes para empezar.
@@ -92,7 +93,7 @@ export default function Transfers({
             <Head title="Traslados entre sedes" />
             <Card className="mx-auto max-w-2xl space-y-5 p-6">
                 <div>
-                    <h1 className="text-xl font-bold">Traslado entre sedes</h1>
+                    <h1 className={pageTitleClass}>Traslado entre sedes</h1>
                     <p className="text-muted-foreground text-sm">
                         Origen: {sourceSede.nombre}. Escanea unidades BF-EQ o
                         indica un producto sin serie.

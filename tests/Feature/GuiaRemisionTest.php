@@ -388,3 +388,14 @@ test('el aviso al enviar una guía dice lo que realmente pasó', function (array
     'rechazada' => [['en_proceso' => false, 'aceptada' => false, 'cdr_zip' => null, 'codigo' => '99', 'mensaje' => 'Dato inválido'], 'error', 'SUNAT rechazó la guía'],
     'pendiente' => [['en_proceso' => true, 'aceptada' => false, 'cdr_zip' => null, 'codigo' => '98', 'mensaje' => 'proceso'], 'success', 'Consulta el ticket'],
 ]);
+
+test('la guía se imprime en PDF con la hoja de todos los documentos', function () {
+    $team = Team::factory()->create();
+    $team->members()->attach($this->user, ['role' => TeamRole::Admin->value]);
+    $guide = app(CreateDispatchGuide::class)->handle(datosGuia(), $this->user);
+
+    $respuesta = $this->actingAs($this->user)->get('/'.$team->slug.'/guias/'.$guide->id.'/documentos/pdf')->assertOk();
+
+    expect($respuesta->headers->get('Content-Type'))->toBe('application/pdf')
+        ->and(str_starts_with((string) $respuesta->getContent(), '%PDF'))->toBeTrue();
+});

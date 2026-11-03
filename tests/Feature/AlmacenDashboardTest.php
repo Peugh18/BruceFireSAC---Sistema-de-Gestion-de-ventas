@@ -145,6 +145,12 @@ test('dashboard de almacen expone los ultimos 10 movimientos del Kardex con sus 
         ->and($movimientos[0]['unidad_serie'])->toBe('BF-001')
         ->and($movimientos[0]['sede'])->toBe('Sede Principal')
         ->and($movimientos[0]['usuario'])->toBe($user->name);
+
+    // Mapa de calor: 5 semanas completas más la actual hasta hoy, desde un lunes.
+    $dias = $response->viewData('page')['props']['graficos']['dias'];
+    expect($dias)->toHaveCount(35 + today()->dayOfWeekIso)
+        ->and($dias[0]['fecha'])->toBe(today()->startOfWeek()->subWeeks(5)->toDateString())
+        ->and(end($dias))->toBe(['fecha' => today()->toDateString(), 'valor' => 15]);
 });
 
 test('dashboard de almacen lista los productos cuyo stock disponible esta bajo el minimo', function () {

@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\Services\Billing\ComprobantePdfService;
 use App\Services\Billing\DatosEmision;
 use App\Services\Billing\DesgloseNota;
+use App\Services\Billing\DocumentosRelacionados;
 use App\Services\Billing\MensajeSunat;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -44,7 +45,9 @@ class BillingController extends Controller
         $vendedorId = $request->user()->id;
 
         $documents = $this->consulta($request)
-            ->with('sale.client')
+            ->with('sale.client', 'cpeAfectado')
+            // Primero lo que hay que resolver: rechazados, por enviar y observados.
+            ->orderByRaw("CASE WHEN sunat_estado IN ('rechazado', 'excepcion') THEN 0 WHEN sunat_estado IN ('por_enviar', 'pendiente', 'baja_pendiente') THEN 1 WHEN sunat_estado = 'observado' THEN 2 ELSE 3 END")
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString()
@@ -54,12 +57,15 @@ class BillingController extends Controller
                 'tipo' => $document->tipo,
                 'serie' => $document->serie,
                 'correlativo' => $document->correlativo,
+                'modifica' => DocumentosRelacionados::referencia($document),
                 'cliente' => $document->sale->client->razon_social,
                 // Una nota de crédito o débito vale su importe, no el de la venta.
                 'total' => in_array($document->tipo, ['nota_credito', 'nota_debito'], true) && $document->importe !== null
                     ? $document->importe
                     : $document->sale->total,
                 'sunat_estado' => $document->sunat_estado,
+                'tiene_xml' => ! in_array($document->sunat_estado, ElectronicDocument::ESTADOS_SIN_ENVIAR, true) && filled($document->xml_path),
+                'tiene_cdr' => filled($document->cdr_path),
                 'sunat_codigo_respuesta' => $document->sunat_codigo_respuesta,
                 'sunat_mensaje' => $document->sunat_mensaje,
                 'sunat_mensaje_simple' => MensajeSunat::simple($document->sunat_mensaje, $document->sunat_codigo_respuesta),
@@ -69,6 +75,9 @@ class BillingController extends Controller
         // KPIs acotados al vendedor autenticado: misma regla que el Dashboard
         // y el listado de Ventas (Documento Maestro §77.3/§80.2).
         $baseKpiQuery = fn () => ElectronicDocument::whereHas('sale', fn ($query) => $query->where('vendedor_id', $vendedorId));
+
+        // Lo que hay que resolver se cuenta en el periodo que se está viendo.
+        $delPeriodo = fn () => $baseKpiQuery()->whereRaw('DATE(COALESCE(fecha_emision, created_at)) BETWEEN ? AND ?', [$desde->toDateString(), $hasta->toDateString()]);
 
         return Inertia::render('vendedor/facturacion/index', [
             'documents' => $documents,
@@ -85,8 +94,8 @@ class BillingController extends Controller
             'kpis' => [
                 'emitidos_hoy' => $baseKpiQuery()->whereDate('created_at', today())->count(),
                 'aceptados_hoy' => $baseKpiQuery()->whereDate('created_at', today())->where('sunat_estado', 'aceptado')->count(),
-                'observados' => $baseKpiQuery()->where('sunat_estado', 'observado')->count(),
-                'rechazados' => $baseKpiQuery()->where('sunat_estado', 'rechazado')->count(),
+                'observados' => $delPeriodo()->where('sunat_estado', 'observado')->count(),
+                'rechazados' => $delPeriodo()->whereIn('sunat_estado', ['rechazado', 'excepcion'])->count(),
             ],
             'plazoSunat' => [
                 'por_vencer' => $baseKpiQuery()->porVencerSunat()->count(),
@@ -286,6 +295,9 @@ class BillingController extends Controller
 
     public function downloadXml(Team $current_team, ElectronicDocument $electronic_document): StreamedResponse
     {
+        // Antes de enviarlo aún se puede editar: el XML vale cuando SUNAT lo recibe.
+        abort_if(in_array($electronic_document->sunat_estado, ElectronicDocument::ESTADOS_SIN_ENVIAR, true), 404);
+
         return $this->downloadPath($electronic_document, $electronic_document->xml_path, 'xml');
     }
 

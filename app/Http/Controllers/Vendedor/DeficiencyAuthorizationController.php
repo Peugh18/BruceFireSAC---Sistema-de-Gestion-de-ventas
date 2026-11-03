@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Vendedor;
 
+use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Vendedor\Concerns\AcotaPorSede;
@@ -109,6 +110,18 @@ class DeficiencyAuthorizationController extends Controller
                 'importe' => $importe,
                 'vendedor_id' => $request->user()->id,
             ]);
+            // La autorización del adicional es la aceptación del cliente de su
+            // cotización: cuando ya no queda ningún adicional sin respuesta, la
+            // cotización queda aceptada con la misma persona, canal y fecha.
+            if ($linea && $cotizacion->estado !== 'aceptada'
+                && ! QuoteItem::query()->where('quote_id', $cotizacion->id)->whereNotNull('deficiency_id')->where('deficiency_id', '!=', $deficiency->id)
+                    ->whereHas('deficiency', fn ($query) => $query->whereNotIn('estado', ['autorizada', 'resuelta']))->exists()) {
+                app(TransitionQuoteState::class)->aceptar($cotizacion, [
+                    'aceptada_por' => $autorizacion->autorizado_por,
+                    'aceptada_canal' => $autorizacion->canal,
+                    'aceptada_at' => $autorizacion->fecha,
+                ]);
+            }
             $yaConsumido = InventoryMovement::query()->where('referencia_type', $deficiency->getMorphClass())->where('referencia_id', $deficiency->id)->where('tipo', 'salida_servicio')->exists();
             $deficiency->update(['estado' => $yaConsumido ? 'resuelta' : 'autorizada']);
 

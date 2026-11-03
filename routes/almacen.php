@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Almacen\DashboardController;
+use App\Http\Controllers\Almacen\FichaTecnicaController;
 use App\Http\Controllers\Almacen\ProductBarcodeController;
 use App\Http\Controllers\Almacen\ReceptionController;
 use App\Http\Controllers\Almacen\ReceptionStickerController;
@@ -35,6 +36,10 @@ Route::prefix('almacen')
         Route::post('productos/{producto}/codigo-barras', ProductBarcodeController::class)->name('productos.codigo-barras');
         Route::get('recepciones/{reception}', [ReceptionController::class, 'show'])->name('recepciones.show');
         Route::put('recepciones/{reception}', [ReceptionController::class, 'update'])->name('recepciones.update');
+
+        // Fichas técnicas: los datos que pide el certificado de cada producto.
+        Route::get('fichas', [FichaTecnicaController::class, 'index'])->name('fichas.index');
+        Route::put('fichas/{producto}', [FichaTecnicaController::class, 'update'])->name('fichas.update');
 
         // Stickers de código de barras (§84.9)
         Route::get('stickers', [ReceptionStickerController::class, 'index'])->name('stickers.index');

@@ -81,5 +81,7 @@ test('extintores serializados requieren su etiqueta individual y no la etiqueta 
     $producto = Product::factory()->serializado()->create();
     $url = route('almacen.stickers.index', ['current_team' => $user->currentTeam]).'/producto';
 
-    $this->actingAs($user)->get($url.'?codigo='.$producto->codigo)->assertNotFound();
+    // P-010: vuelve a Stickers con el aviso en vez de una página 404.
+    $this->actingAs($user)->get($url.'?codigo='.$producto->codigo)
+        ->assertRedirect(route('almacen.stickers.index', ['current_team' => $user->currentTeam]));
 });

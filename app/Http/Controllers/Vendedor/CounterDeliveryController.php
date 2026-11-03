@@ -58,6 +58,7 @@ class CounterDeliveryController extends Controller
                 ],
             ]);
             $service_order->update(['estado' => 'cerrado']);
+            $service_order->marcarEquiposEntregados();
 
             // Las fechas de los extintores se renuevan una sola vez: si el taller
             // ya las renovó al emitir el certificado, la entrega no las mueve.

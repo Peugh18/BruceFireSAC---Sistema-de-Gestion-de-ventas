@@ -36,6 +36,7 @@ import VendedorLayout from '@/layouts/vendedor-layout';
 import facturacion from '@/routes/vendedor/facturacion';
 import ventas from '@/routes/vendedor/ventas';
 import type { Team } from '@/types';
+import { etiquetaPaginacion, nombreDocumento, soles } from '@/lib/utils';
 
 type DocumentRow = {
     id: number;
@@ -43,9 +44,12 @@ type DocumentRow = {
     tipo: string;
     serie: string;
     correlativo: number | string;
+    modifica?: string | null;
     cliente: string;
     total: number | string;
     sunat_estado: string;
+    tiene_xml?: boolean;
+    tiene_cdr?: boolean;
     sunat_codigo_respuesta: string | null;
     sunat_mensaje?: string | null;
     sunat_mensaje_simple?: string | null;
@@ -89,17 +93,6 @@ const TYPE_FILTERS = [
     { label: 'Boletas', value: 'boleta' },
     { label: 'N. Crédito/Débito', value: 'nota' },
 ];
-
-function money(value: number | string) {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN',
-    }).format(Number(value) || 0);
-}
-
-function cleanLabel(label: string) {
-    return label.replace('&laquo;', '<').replace('&raquo;', '>');
-}
 
 function sunatBadge(estado: string) {
     const value = estado?.toLowerCase();
@@ -599,8 +592,10 @@ export default function FacturacionIndex({
                                                     />
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-[13px]">
-                                                    <span className="bg-muted text-foreground/80 mr-1.5 rounded-md px-2 py-1 font-['IBM_Plex_Mono',monospace] text-xs font-bold uppercase">
-                                                        {document.tipo}
+                                                    <span className="bg-muted text-foreground/80 mr-1.5 rounded-md px-2 py-1 font-['IBM_Plex_Mono',monospace] text-xs font-bold">
+                                                        {nombreDocumento(
+                                                            document.tipo,
+                                                        )}
                                                     </span>
                                                     {document.sale_id ? (
                                                         <Link
@@ -621,6 +616,12 @@ export default function FacturacionIndex({
                                                             {number}
                                                         </span>
                                                     )}
+                                                    {document.modifica ? (
+                                                        <span className="text-muted-foreground mt-1 block text-xs">
+                                                            Modifica a{' '}
+                                                            {document.modifica}
+                                                        </span>
+                                                    ) : null}
                                                 </TableCell>
                                                 <TableCell className="border-border text-foreground border-b px-2.5 py-[13px] font-semibold">
                                                     {document.cliente}
@@ -629,7 +630,7 @@ export default function FacturacionIndex({
                                                     {document.created_at ?? '-'}
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] font-bold whitespace-nowrap tabular-nums">
-                                                    {money(document.total)}
+                                                    {soles(document.total)}
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                     <Badge
@@ -678,32 +679,36 @@ export default function FacturacionIndex({
                                                                 )}
                                                             </Button>
                                                         )}
-                                                        <a
-                                                            href={facturacion.xml.url(
-                                                                {
-                                                                    current_team:
-                                                                        teamSlug,
-                                                                    electronic_document:
-                                                                        document.id,
-                                                                },
-                                                            )}
-                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-md border px-2 font-['IBM_Plex_Mono',monospace] text-xs font-bold no-underline"
-                                                        >
-                                                            XML
-                                                        </a>
-                                                        <a
-                                                            href={facturacion.cdr.url(
-                                                                {
-                                                                    current_team:
-                                                                        teamSlug,
-                                                                    electronic_document:
-                                                                        document.id,
-                                                                },
-                                                            )}
-                                                            className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-md border px-2 font-['IBM_Plex_Mono',monospace] text-xs font-bold no-underline"
-                                                        >
-                                                            CDR
-                                                        </a>
+                                                        {document.tiene_xml ? (
+                                                            <a
+                                                                href={facturacion.xml.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        electronic_document:
+                                                                            document.id,
+                                                                    },
+                                                                )}
+                                                                className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-md border px-2 font-['IBM_Plex_Mono',monospace] text-xs font-bold no-underline"
+                                                            >
+                                                                XML
+                                                            </a>
+                                                        ) : null}
+                                                        {document.tiene_cdr ? (
+                                                            <a
+                                                                href={facturacion.cdr.url(
+                                                                    {
+                                                                        current_team:
+                                                                            teamSlug,
+                                                                        electronic_document:
+                                                                            document.id,
+                                                                    },
+                                                                )}
+                                                                className="border-border bg-card text-foreground/80 hover:border-border inline-flex h-[26px] items-center rounded-md border px-2 font-['IBM_Plex_Mono',monospace] text-xs font-bold no-underline"
+                                                            >
+                                                                CDR
+                                                            </a>
+                                                        ) : null}
                                                         <a
                                                             href={facturacion.pdf.url(
                                                                 {
@@ -744,14 +749,14 @@ export default function FacturacionIndex({
                                         preserveState
                                         className={`flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs no-underline ${link.active ? 'bg-primary font-bold text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                     >
-                                        {cleanLabel(link.label)}
+                                        {etiquetaPaginacion(link.label)}
                                     </Link>
                                 ) : (
                                     <span
                                         key={`${link.label}-${index}`}
                                         className="text-muted-foreground flex h-[26px] min-w-[26px] items-center justify-center rounded-md px-2 font-['IBM_Plex_Mono',monospace] text-xs"
                                     >
-                                        {cleanLabel(link.label)}
+                                        {etiquetaPaginacion(link.label)}
                                     </span>
                                 ),
                             )}
