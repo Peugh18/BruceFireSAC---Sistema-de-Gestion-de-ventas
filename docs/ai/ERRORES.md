@@ -116,7 +116,7 @@
 | E-076 | Vendedor                  | Nota de crédito → excedente                                         | Crítico               | Solucionado |
 | E-077 | Vendedor                  | Venta → depósito de detracción                                      | Alto                  | Solucionado |
 | E-078 | Vendedor                  | Nueva venta y cotización → resumen                                  | Medio                 | Solucionado |
-| E-079 | Vendedor                  | Certificado de servicio                                             | Alto                  | Descartado |
+| E-079 | Vendedor                  | Certificado de servicio                                             | Alto                  | Descartado  |
 | E-080 | Vendedor                  | Envío SUNAT                                                         | Bajo                  | Solucionado |
 | E-081 | Gerente                   | Panel → filtro de mes                                               | Bajo                  | Solucionado |
 
@@ -982,6 +982,7 @@
     - 2026-10-20 · Abierto · Claude
 
 ### E-073 · Nota de crédito → corregir comprobante
+
 - Rol / pantalla / botón: Vendedor · Nota de crédito → corregir comprobante
 - Gravedad: Crítico
 - Pasó: Anular para corregir anulaba certificados y perdía orden y cotización.
@@ -991,6 +992,7 @@
     - 2026-11-01 · Solucionado · Claude
 
 ### E-074 · Nota de crédito → stock
+
 - Rol / pantalla / botón: Vendedor · Nota de crédito → stock
 - Gravedad: Crítico
 - Pasó: Anular sin marcar la casilla descontaba dos veces al rehacer.
@@ -1000,6 +1002,7 @@
     - 2026-11-01 · Solucionado · Claude
 
 ### E-075 · Nota de crédito → devolución parcial
+
 - Rol / pantalla / botón: Vendedor · Nota de crédito → devolución parcial
 - Gravedad: Crítico
 - Pasó: No regresaba stock y dejaba devolver dos veces la misma línea.
@@ -1009,6 +1012,7 @@
     - 2026-11-01 · Solucionado · Claude
 
 ### E-076 · Nota de crédito → excedente
+
 - Rol / pantalla / botón: Vendedor · Nota de crédito → excedente
 - Gravedad: Crítico
 - Pasó: El excedente registraba como devuelta la detracción, que no entró a caja.
@@ -1018,6 +1022,7 @@
     - 2026-11-01 · Solucionado · Claude
 
 ### E-077 · Venta → depósito de detracción
+
 - Rol / pantalla / botón: Vendedor · Venta → depósito de detracción
 - Gravedad: Alto
 - Pasó: Calcula el saldo sin notas de crédito ni devoluciones.
@@ -1026,6 +1031,7 @@
     - 2026-11-01 · Solucionado · Claude: Depósito de detracción validado con `saldoDeVenta` (notas y devoluciones incluidas). Prueba: `CierreErroresNotasTest`.
 
 ### E-078 · Nueva venta y cotización → resumen
+
 - Rol / pantalla / botón: Vendedor · Nueva venta y cotización → resumen
 - Gravedad: Medio
 - Pasó: El IGV en pantalla asume todo gravado; el servidor usa la afectación real.
@@ -1034,6 +1040,7 @@
     - 2026-11-01 · Solucionado · Claude: `noGravados` y `desglosarIgv` calculan igual que el comprobante en venta y cotización. Prueba: `CierreErroresNotasTest`.
 
 ### E-079 · Certificado de servicio
+
 - Rol / pantalla / botón: Vendedor · Certificado de servicio
 - Gravedad: Alto
 - Pasó: Valida solo la sede: un vendedor podría entrar al de una venta ajena de su sede.
@@ -1042,6 +1049,7 @@
     - 2026-11-01 · Descartado · Claude: Falsa alarma: el controlador ya validaba al vendedor. Se unificó con `ValidaVentaVisible` y queda prueba en `CierreErroresNotasTest`.
 
 ### E-080 · Envío SUNAT
+
 - Rol / pantalla / botón: Vendedor · Envío SUNAT
 - Gravedad: Bajo
 - Pasó: El contador de rechazados omite excepciones y suma todo el historial; una nota en excepción descuenta lo disponible para acreditar.
@@ -1050,6 +1058,7 @@
     - 2026-11-01 · Solucionado · Claude: El contador cuenta rechazos y excepciones del periodo. Descontar una nota en excepción se mantiene: se reintenta y SUNAT podría aceptarla. Prueba: `CierreErroresNotasTest`.
 
 ### E-081 · Panel → filtro de mes
+
 - Rol / pantalla / botón: Gerente · Panel → filtro de mes
 - Gravedad: Bajo
 - Pasó: El límite usa UTC: el último día del mes por la noche marca el mes siguiente.
