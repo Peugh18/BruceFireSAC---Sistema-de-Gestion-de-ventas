@@ -33,8 +33,9 @@ class ServiceOrderEquipmentController extends Controller
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
             ...FechasDelEquipo::reglas(),
+            ...FechasDelEquipo::anioObligatorio(true)['rules'],
             'observaciones_recepcion' => ['nullable', 'string', 'max:1000'],
-        ]);
+        ], FechasDelEquipo::anioObligatorio(true)['messages']);
         $action->execute($service_order, [...$data, 'recibido' => false], $request->user());
 
         return back()->with('success', 'Extintor agregado a la orden.');
@@ -83,7 +84,8 @@ class ServiceOrderEquipmentController extends Controller
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
             ...FechasDelEquipo::reglas(),
-        ]);
+            ...FechasDelEquipo::anioObligatorio(false)['rules'],
+        ], FechasDelEquipo::anioObligatorio(false)['messages']);
 
         DB::transaction(function () use ($service_order, $equipment, $data, $request): void {
             $service_order = ServiceOrder::query()->lockForUpdate()->findOrFail($service_order->id);

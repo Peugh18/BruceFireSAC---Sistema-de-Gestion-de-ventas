@@ -97,6 +97,7 @@ export type Props = {
     tecnicos: { id: number; name: string }[];
     tecnicosEntrega: { id: number; name: string }[];
     deficiencias: DeficiencyItem[];
+    extintoresPorVender?: number;
 };
 
 /** Cada estado técnico dicho como lo entiende la vendedora. */
@@ -215,6 +216,7 @@ export default function ServiceOrderShow({
     tecnicos,
     tecnicosEntrega,
     deficiencias,
+    extintoresPorVender = 0,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -697,6 +699,19 @@ export default function ServiceOrderShow({
                                             Venta: falta cobrar
                                         </span>
                                     )}
+                                    {extintoresPorVender > 0 ? (
+                                        <span
+                                            role="status"
+                                            className={`${chip} text-warning-strong bg-amber-500/15`}
+                                        >
+                                            Certificado en espera: al cobrar,
+                                            asigna{' '}
+                                            {extintoresPorVender === 1
+                                                ? 'el extintor nuevo'
+                                                : `los ${extintoresPorVender} extintores nuevos`}{' '}
+                                            y sale uno solo con todos
+                                        </span>
+                                    ) : null}
                                     {serviceOrder.certificates?.length ? (
                                         serviceOrder.certificates.map(
                                             (certificado) => (

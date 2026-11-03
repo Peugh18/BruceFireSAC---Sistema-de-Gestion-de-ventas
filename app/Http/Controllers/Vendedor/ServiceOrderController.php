@@ -141,6 +141,10 @@ class ServiceOrderController extends Controller
             'casilleros' => CasillerosDeLaOrden::paraPagina($service_order),
             // El mismo avance que ve el taller, y el chat de la orden.
             'paso' => PasoDelTaller::de($service_order),
+            // Extintores nuevos cotizados sin vender: el certificado los espera.
+            'extintoresPorVender' => $service_order->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'operatividad_garantia'))->exists()
+                ? 0
+                : $service_order->extintoresNuevosPorVender(),
             'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
             'tecnicos' => $this->tecnicosQueAtienden($service_order)->get(['id', 'name']),
             'tecnicosEntrega' => in_array($service_order->estado, ServiceOrder::ESTADOS_LISTOS, true)

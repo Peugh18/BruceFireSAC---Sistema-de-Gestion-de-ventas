@@ -488,8 +488,9 @@ export default function EquiposDeLaOrden({
                 />
             </label>
             <label className="text-muted-foreground flex flex-col gap-1 text-xs">
-                Año de fabricación
+                Año de fabricación *
                 <Input
+                    required
                     value={formulario.anio_fabricacion}
                     inputMode="numeric"
                     maxLength={4}
@@ -594,8 +595,8 @@ export default function EquiposDeLaOrden({
             </div>
             <p className="text-muted-foreground text-xs sm:col-span-3">
                 {typeof abierto === 'object' && abierto !== null
-                    ? 'Lo que dejes vacío queda como «No legible».'
-                    : 'Lo que no se lea queda como «No legible» y se corrige después. Al guardar recibe su código BF-EQ.'}
+                    ? 'Completa todos los datos: sin ellos no sale el certificado.'
+                    : 'El año es obligatorio. Si falta otro dato, el sistema te lo pide antes de emitir el certificado. Al guardar recibe su código BF-EQ.'}
             </p>
         </form>
     );

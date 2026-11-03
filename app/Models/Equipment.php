@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EquipmentType;
 use Database\Factories\EquipmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -49,6 +50,46 @@ class Equipment extends Model
             'proxima_fecha_atencion' => 'date',
             'proxima_prueba_hidrostatica' => 'date',
         ];
+    }
+
+    /**
+     * Lo que le falta para salir en un certificado: un certificado no se
+     * emite con datos pendientes ("No legible" o vacío); se pide completarlos.
+     *
+     * @return list<string>
+     */
+    public function datosQueFaltan(): array
+    {
+        $vacio = fn (mixed $valor) => blank($valor) || str_starts_with(trim((string) $valor), 'No legible');
+        $anio = trim((string) $this->anio_fabricacion);
+
+        return array_values(array_filter([
+            $vacio($this->tipo_agente) || ! EquipmentType::esConocido($this->tipo_agente) ? 'el agente extintor' : null,
+            $vacio($this->capacidad) ? 'la capacidad' : null,
+            $vacio($this->marca) ? 'la marca' : null,
+            $vacio($this->serie_fabricante) ? 'la serie de fábrica' : null,
+            preg_match('/^\d{4}$/', $anio) !== 1 || (int) $anio > today()->year ? 'el año de fabricación' : null,
+        ]));
+    }
+
+    /**
+     * "Falta el año de fabricación de BF-EQ-000006." para los equipos
+     * incompletos; null si todos se pueden certificar.
+     *
+     * @param  iterable<Equipment>  $equipos
+     */
+    public static function faltantesParaCertificar(iterable $equipos): ?string
+    {
+        $mensajes = [];
+        foreach ($equipos as $equipo) {
+            $faltan = $equipo->datosQueFaltan();
+            if ($faltan !== []) {
+                $lista = count($faltan) > 1 ? implode(', ', array_slice($faltan, 0, -1)).' y '.end($faltan) : $faltan[0];
+                $mensajes[] = 'Falta '.$lista.' de '.$equipo->numero_serie.'.';
+            }
+        }
+
+        return $mensajes === [] ? null : implode(' ', $mensajes).' Complétalo en la ficha del extintor para emitir el certificado.';
     }
 
     /**

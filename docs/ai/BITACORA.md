@@ -581,3 +581,13 @@
 - Guías: botón "Emitir guía desde una venta", filtros por estado, avance en 3 pasos y el siguiente paso en una línea.
 - Otros: botones con texto en Certificados, tema oscuro con fondos más separados, vencimiento en gris si falta más de 7 días.
 - Pruebas: `CajaYCobranzasVistasTest`. Sin commit.
+
+## 2026-11-03 — Claude: un certificado por local y datos obligatorios del extintor
+
+- Orden con extintores nuevos por vender: la operatividad (y la capacitación del local) esperan al cobro y sale un solo certificado con la recarga y los nuevos (`ServiceOrder::extintoresNuevosPorVender`, `EmitirCertificadosDeVenta::automaticos`). Si la orden ya tenía su certificado, el nuevo se suma al mismo número (revisión).
+- Arreglo en el camino: al juntar, la capacitación que dejó la orden ya no se anula.
+- Ningún certificado sale con datos pendientes: `Equipment::datosQueFaltan` y `faltantesParaCertificar` (agente, capacidad, marca, serie y año) al cerrar planta, al cobrar y en "Armar certificados".
+- Año de fabricación obligatorio al registrar o corregir un extintor (`FechasDelEquipo::anioObligatorio`).
+- La orden del vendedor avisa "Certificado en espera" mientras falte vender el extintor nuevo.
+- Factories de equipos y de unidades de stock con datos completos. Pruebas: `CertificadoEsperaLaVentaTest`; ajustadas las que fijaban la regla vieja.
+- Suite: 1,512 de 1,517 y las 5 restantes corregidas (37 de 37). Sin commit.

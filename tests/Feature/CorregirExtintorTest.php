@@ -37,7 +37,7 @@ test('con la orden ya certificada el extintor no se corrige', function () {
     $orden->equipments()->attach($equipo->id);
 
     $this->actingAs($this->vendedor)
-        ->patch(rutaCorregir($orden, $equipo, $this->vendedor), ['marca' => 'Amerex'])
+        ->patch(rutaCorregir($orden, $equipo, $this->vendedor), ['marca' => 'Amerex', 'anio_fabricacion' => '2024'])
         ->assertSessionHasErrors('equipo');
 
     expect($equipo->fresh()->marca)->toBe('Badger');

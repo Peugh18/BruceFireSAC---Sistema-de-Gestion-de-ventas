@@ -22,6 +22,22 @@ class FechasDelEquipo
     }
 
     /**
+     * El año de fabricación es obligatorio: sin él no sale el certificado.
+     * Al elegir un extintor que ya existe (`numero_serie`) no se vuelve a pedir.
+     *
+     * @return array{rules: array<string, list<string>>, messages: array<string, string>}
+     */
+    public static function anioObligatorio(bool $alAgregar): array
+    {
+        $mensaje = 'Escribe el año de fabricación: está grabado en el cilindro.';
+
+        return [
+            'rules' => ['anio_fabricacion' => [$alAgregar ? 'required_without:numero_serie' : 'required', 'nullable', 'integer', 'min:1980', 'max:'.today()->year]],
+            'messages' => ['anio_fabricacion.required' => $mensaje, 'anio_fabricacion.required_without' => $mensaje],
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $datos
      * @return array<string, mixed>
      */

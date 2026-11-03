@@ -203,10 +203,11 @@ class ReceptionController extends Controller
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
             ...FechasDelEquipo::reglas(),
+            ...FechasDelEquipo::anioObligatorio(true)['rules'],
             'ubicacion_actual' => ['nullable', 'string', 'max:255'],
             'notas' => ['nullable', 'string', 'max:500'],
             'observaciones_recepcion' => ['nullable', 'string', 'max:500'],
-        ]);
+        ], FechasDelEquipo::anioObligatorio(true)['messages']);
 
         $equipment = $action->execute($service_order, [...$validated, 'recibido' => true], $request->user());
 

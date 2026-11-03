@@ -195,7 +195,7 @@ test('no se puede agregar otro extintor a un casillero lleno', function () {
     $equipment = Equipment::factory()->create(['client_id' => $order->client_id]);
     $order->equipments()->attach($equipment->id, ['service_order_line_id' => $line->id]);
 
-    $this->actingAs($user)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $user->currentTeam, 'service_order' => $order]), ['service_order_line_id' => $line->id, 'marca' => 'Buckeye'])
+    $this->actingAs($user)->post(route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $user->currentTeam, 'service_order' => $order]), ['service_order_line_id' => $line->id, 'marca' => 'Buckeye', 'anio_fabricacion' => '2024'])
         ->assertSessionHasErrors('service_order_line_id');
 
     expect($order->equipments()->count())->toBe(1)

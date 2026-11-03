@@ -83,7 +83,7 @@ test('en el alta de un extintor el agente se elige de la lista, no se escribe a 
     $ruta = route('vendedor.ordenes-servicio.equipos.store', ['current_team' => $vendedor->currentTeam, 'service_order' => $order]);
 
     $this->actingAs($vendedor)->post($ruta, ['tipo_agente' => 'Polvo químico', 'capacidad' => '6 kg'])->assertSessionHasErrors('tipo_agente');
-    $this->actingAs($vendedor)->post($ruta, ['tipo_agente' => 'PQS BC', 'capacidad' => '6 kg'])->assertSessionHasNoErrors();
+    $this->actingAs($vendedor)->post($ruta, ['tipo_agente' => 'PQS BC', 'capacidad' => '6 kg', 'anio_fabricacion' => '2024'])->assertSessionHasNoErrors();
 
     expect($order->equipments()->first()->tipo_agente)->toBe('PQS BC');
 });

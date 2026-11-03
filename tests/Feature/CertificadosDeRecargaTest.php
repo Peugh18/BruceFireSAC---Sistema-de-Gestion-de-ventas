@@ -85,15 +85,17 @@ test('una recarga vehicular cotizada con placa manual conserva ph pendiente ante
         ->and($certificado->referencia)->toBe('PLACA: ABC-123');
 });
 
-test('los automaticos de unidades nuevas no reemplazan la operatividad de la recarga en una venta mixta', function () {
+test('en una venta mixta el extintor nuevo se suma al certificado de la recarga, con el mismo numero', function () {
     [$user, $sale, $order, $equipment] = recargaTerminada('local_cliente');
     $original = Certificate::where('service_order_id', $order->id)->whereHas('certificateType', fn ($q) => $q->where('codigo', 'operatividad_garantia'))->sole();
     $nuevo = Equipment::factory()->create(['client_id' => $sale->client_id, 'tipo_agente' => 'PQS']);
     SaleItem::factory()->create(['sale_id' => $sale->id, 'equipment_id' => $nuevo->id, 'tipo_linea' => 'unidad_nueva']);
     app(EmitirCertificadosDeVenta::class)->automaticos($sale->fresh());
-    expect($original->fresh()->certificateUnits->sole()->equipment_id)->toBe($equipment->id)
+    // Un certificado por local: la recarga y el nuevo en el mismo, que conserva su número.
+    expect($original->fresh()->certificateUnits->pluck('equipment_id')->sort()->values()->all())->toBe(collect([$equipment->id, $nuevo->id])->sort()->values()->all())
         ->and($original->fresh()->estado)->toBe('vigente')
-        ->and(Certificate::count())->toBe(3);
+        ->and($original->fresh()->numero)->toBe($original->numero)
+        ->and(Certificate::where('estado', 'vigente')->count())->toBe(2);
 });
 
 test('la venta no certifica equipos de taller pendientes no recibidos o de otra sede', function (string $caso) {
