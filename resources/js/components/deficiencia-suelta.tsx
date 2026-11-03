@@ -50,8 +50,17 @@ export default function DeficienciaSuelta({
         foto: null,
     });
 
+    // El extintor que se ve en la lista: si la orden aún no tenía extintores al
+    // abrir la pantalla, el valor inicial quedó vacío y el dibujo salía genérico.
+    const equipoId = equipos.some(
+        (e) => String(e.id) === form.data.equipment_id,
+    )
+        ? form.data.equipment_id
+        : String(equipos[0]?.id ?? '');
+
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
+        form.transform((datos) => ({ ...datos, equipment_id: equipoId }));
         form.post(
             destino ??
                 registrarDeficiencia.url({
@@ -74,7 +83,7 @@ export default function DeficienciaSuelta({
         );
     };
 
-    const equipo = equipos.find((e) => String(e.id) === form.data.equipment_id);
+    const equipo = equipos.find((e) => String(e.id) === equipoId);
     const tipo = tipoDeExtintor(
         equipo?.tipo_agente ?? null,
         equipo?.capacidad ?? null,
@@ -116,12 +125,12 @@ export default function DeficienciaSuelta({
     return (
         <form
             onSubmit={enviar}
-            className="grid w-full gap-3 rounded-2xl border border-amber-300 bg-amber-50/50 p-3.5 md:grid-cols-[minmax(0,240px)_minmax(0,1fr)] dark:border-amber-800 dark:bg-amber-950/20"
+            className="grid w-full gap-3 rounded-2xl border border-amber-300 bg-amber-50/50 p-3.5 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] dark:border-amber-800 dark:bg-amber-950/20"
         >
             <h3 className="text-xs font-bold text-neutral-900 md:col-span-2 dark:text-neutral-100">
                 Nueva deficiencia: toca la parte que falla
             </h3>
-            <div className="mx-auto w-full max-w-[220px]">
+            <div className="mx-auto w-full max-w-[280px] self-center">
                 <ExtintorPorPartes
                     tipo={tipo}
                     malas={parte ? { [parte.clave]: true } : {}}
@@ -132,7 +141,7 @@ export default function DeficienciaSuelta({
                 <label className="block text-xs font-semibold">
                     Extintor
                     <NativeSelect
-                        value={form.data.equipment_id}
+                        value={equipoId}
                         onChange={(e) =>
                             form.setData('equipment_id', e.target.value)
                         }

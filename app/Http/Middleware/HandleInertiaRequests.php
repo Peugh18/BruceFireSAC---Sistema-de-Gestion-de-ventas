@@ -12,6 +12,7 @@ use App\Models\Quote;
 use App\Models\Sede;
 use App\Models\Team;
 use App\Services\Avisos\AvisosDelVendedor;
+use App\Services\Certificates\CertificateDateCalculator;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -96,6 +97,17 @@ class HandleInertiaRequests extends Middleware
                     ->whereRaw('ROUND(monto_contado_cierre - monto_esperado_calculado, 2) <> 0')
                     ->count()
                 : 0,
+            // La hora del servidor (Lima): todos ven la misma fecha arriba.
+            'servidor' => fn () => $user ? [
+                'ahora' => now()->toIso8601String(),
+                'intervalo_ph' => CertificateDateCalculator::intervaloPh(),
+            ] : null,
+            // El turno de caja del vendedor que quedó abierto de otro día.
+            'cajaDeOtroDia' => function () use ($user): ?string {
+                $apertura = $user?->hasRole('Vendedor') ? CashRegister::abiertaDe($user->id)?->fecha_apertura : null;
+
+                return $apertura?->lt(today()) ? $apertura->toDateString() : null;
+            },
             'alertasTop' => fn () => $user?->hasRole('Vendedor')
                 ? app(AvisosDelVendedor::class)->lista($user, self::slugDelEquipo($request))
                 : [],

@@ -33,6 +33,7 @@ class StoreQuoteRequest extends FormRequest
                 'Crédito 30 días',
             ])],
             'referencia' => ['nullable', 'string', 'max:150'],
+            'direccion_del_local' => ['sometimes', 'boolean'],
             'observaciones' => ['nullable', 'string'],
 
             'items' => ['required', 'array', 'min:1'],

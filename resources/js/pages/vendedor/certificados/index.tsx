@@ -74,7 +74,7 @@ function badgeClass(estado: string) {
 }
 
 const accion =
-    'border-border bg-card text-foreground/80 size-9 rounded-lg shadow-none';
+    'border-border bg-card text-foreground h-9 gap-1.5 rounded-lg px-3 text-xs font-semibold shadow-none';
 
 type Grupo = {
     clave: string;
@@ -307,7 +307,7 @@ export default function CertificadosIndex({
                                                     {nombreDelDia(grupo.dia)}
                                                 </h2>
                                             ) : null}
-                                            <article className="border-border bg-card space-y-3 rounded-2xl border p-4">
+                                            <article className="border-border space-y-3 rounded-2xl border p-4">
                                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                                                     <div className="min-w-0 flex-[1_1_280px]">
                                                         {primero.client_id ? (
@@ -385,14 +385,14 @@ export default function CertificadosIndex({
                                                         </Button>
                                                     ) : null}
                                                 </div>
-                                                <div className="grid gap-2 md:grid-cols-2">
+                                                <div className="grid gap-2">
                                                     {grupo.certificados.map(
                                                         (certificate) => (
                                                             <div
                                                                 key={
                                                                     certificate.id
                                                                 }
-                                                                className="border-border flex flex-wrap items-center gap-2 rounded-xl border p-3"
+                                                                className="bg-muted/50 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl px-3 py-2.5"
                                                             >
                                                                 <Award
                                                                     className={`size-5 shrink-0 ${certificate.estado === 'vigente' ? 'text-primary-strong' : 'text-muted-foreground'}`}
@@ -428,7 +428,7 @@ export default function CertificadosIndex({
                                                                         aria-label={`Descargar PDF de ${certificate.numero}`}
                                                                         asChild
                                                                         variant="outline"
-                                                                        size="icon"
+                                                                        size="sm"
                                                                         className={
                                                                             accion
                                                                         }
@@ -440,13 +440,14 @@ export default function CertificadosIndex({
                                                                             )}
                                                                         >
                                                                             <FileDown className="size-4" />
+                                                                            PDF
                                                                         </a>
                                                                     </Button>
                                                                     <Button
                                                                         aria-label={`Imprimir ${certificate.numero}`}
                                                                         asChild
                                                                         variant="outline"
-                                                                        size="icon"
+                                                                        size="sm"
                                                                         className={
                                                                             accion
                                                                         }
@@ -470,13 +471,14 @@ export default function CertificadosIndex({
                                                                             rel="noopener noreferrer"
                                                                         >
                                                                             <Printer className="size-4" />
+                                                                            Imprimir
                                                                         </a>
                                                                     </Button>
                                                                     <Button
                                                                         aria-label={`Descargar Word de ${certificate.numero}`}
                                                                         asChild
                                                                         variant="outline"
-                                                                        size="icon"
+                                                                        size="sm"
                                                                         className={
                                                                             accion
                                                                         }
@@ -492,7 +494,8 @@ export default function CertificadosIndex({
                                                                                 },
                                                                             )}
                                                                         >
-                                                                            <FileText className="size-4 text-[#2b579a]" />
+                                                                            <FileText className="size-4" />
+                                                                            Word
                                                                         </a>
                                                                     </Button>
                                                                 </div>

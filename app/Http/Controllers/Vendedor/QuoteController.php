@@ -113,7 +113,7 @@ class QuoteController extends Controller
             'ordenOrigen' => $ordenOrigen ? [
                 'id' => $ordenOrigen->id, 'codigo' => $ordenOrigen->codigo,
                 'tipo_servicio' => $ordenOrigen->resumenServicios(),
-                'client' => $ordenOrigen->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento', 'telefono']),
+                'client' => $ordenOrigen->client->ficha(),
                 'referencia' => $ordenOrigen->referencia, 'destino' => $ordenOrigen->vehicle_id ? 'vehiculo' : 'local_cliente',
                 'vehicle_id' => $ordenOrigen->vehicle_id, 'observaciones' => $ordenOrigen->observaciones,
                 'items' => $ordenOrigen->lines->isNotEmpty()
@@ -123,14 +123,13 @@ class QuoteController extends Controller
             // Precarga desde el enlace "Nueva cotización" de la ficha del cliente (?client_id=).
             'cliente' => $request->filled('client_id')
                 // El cliente se comparte entre sedes: no hay clients.sede_id que filtrar.
-                ? Client::query()
-                    ->whereKey($request->integer('client_id'))
-                    ->first(['id', 'tipo_documento', 'razon_social', 'numero_documento'])
+                ? Client::query()->find($request->integer('client_id'))?->ficha()
                 : null,
             'renovacion' => $quote ? [
                 'numero' => $quote->numero,
-                'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
+                'client' => $quote->client->ficha(),
                 'referencia' => $quote->referencia,
+                'direccion_del_local' => (bool) $quote->direccion_del_local,
                 'destino' => $quote->destinoResuelto(),
                 'vehicle_id' => $quote->vehicle_id,
                 'condicion_pago_propuesta' => $quote->condicion_pago_propuesta,
@@ -176,7 +175,7 @@ class QuoteController extends Controller
 
         return Inertia::render('vendedor/cotizaciones/nueva', ['noGravados' => AfectacionIgv::noGravados(), 'edicion' => [
             'id' => $quote->id, 'numero' => $quote->numero, 'fecha' => $quote->fecha->toDateString(), 'vigencia_hasta' => $quote->vigencia_hasta->toDateString(),
-            'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'referencia' => $quote->referencia,
+            'client' => $quote->client->ficha(), 'referencia' => $quote->referencia, 'direccion_del_local' => (bool) $quote->direccion_del_local,
             'destino' => $quote->destinoResuelto(), 'vehicle_id' => $quote->vehicle_id,
             'condicion_pago_propuesta' => $quote->condicion_pago_propuesta, 'observaciones' => $quote->observaciones,
             'items' => $quote->items->map(fn ($item): array => ['deficiency_id' => $item->deficiency_id, 'tipo' => $item->product_id ? 'product' : 'service', 'product_id' => $item->product_id, 'service_id' => $item->service_id, 'codigo' => $item->product->codigo ?? $item->service?->codigo, 'nombre' => $item->product->nombre ?? $item->service?->nombre, 'cantidad' => (int) $item->cantidad, 'precio_unitario' => (float) $item->precio_unitario, 'descuento' => (float) $item->descuento])->values(),

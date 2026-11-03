@@ -25,6 +25,9 @@ import ClientPicker, {
     type ClientOption,
 } from '@/components/client-picker';
 import CreditoDialog, { type Cuota } from '@/components/credito-dialog';
+import DireccionComprobanteField, {
+    localDeReferencia,
+} from '@/components/direccion-comprobante-field';
 import ReferenciaField from '@/components/referencia-field';
 import UnidadesDialog from '@/components/unidades-dialog';
 import { PageHeader } from '@/components/page-header';
@@ -110,6 +113,7 @@ type SaleFormData = {
     fecha: string;
     destino: Destination;
     referencia: string;
+    direccion_del_local: boolean;
     condicion_pago: PaymentCondition;
     medio_pago: MedioPago;
     numero_operacion: string;
@@ -139,6 +143,7 @@ type QuoteOption = {
     client: ClientOption;
     items: QuoteLine[];
     referencia: string | null;
+    direccion_del_local?: boolean;
     condicion_pago: PaymentCondition;
     /** Días de crédito propuestos en la cotización («Crédito 15 días» → 15). */
     plazo_dias?: number | null;
@@ -167,6 +172,7 @@ type VentaPrefill = {
     vehicle_id: number | null;
     destino: Destination;
     referencia: string | null;
+    direccion_del_local?: boolean;
     condicion_pago: PaymentCondition;
     medio_pago: MedioPago;
     numero_operacion: string | null;
@@ -275,6 +281,8 @@ export default function NuevaVenta({
         fecha: venta?.fecha ?? today(),
         destino: venta?.destino ?? quote?.destino ?? 'local_cliente',
         referencia: venta?.referencia ?? quote?.referencia ?? '',
+        direccion_del_local:
+            venta?.direccion_del_local ?? quote?.direccion_del_local ?? false,
         condicion_pago:
             venta?.condicion_pago ?? quote?.condicion_pago ?? 'contado',
         medio_pago: venta?.medio_pago ?? 'efectivo',
@@ -1222,11 +1230,28 @@ export default function NuevaVenta({
                                             ...data,
                                             referencia: valor,
                                             vehicle_id: vehicleId ?? '',
+                                            direccion_del_local: Boolean(
+                                                localDeReferencia(
+                                                    cliente,
+                                                    valor,
+                                                )?.para_facturar,
+                                            ),
                                         }))
                                     }
                                     error={
                                         form.errors.referencia ??
                                         form.errors.vehicle_id
+                                    }
+                                />
+                                <DireccionComprobanteField
+                                    cliente={cliente}
+                                    referencia={form.data.referencia}
+                                    value={form.data.direccion_del_local}
+                                    onChange={(valor) =>
+                                        form.setData(
+                                            'direccion_del_local',
+                                            valor,
+                                        )
                                     }
                                 />
                                 {sedeFija ? (

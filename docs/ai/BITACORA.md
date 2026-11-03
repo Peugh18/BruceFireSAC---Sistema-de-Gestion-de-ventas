@@ -560,3 +560,24 @@
 - Error 500 que ya existía: la ficha caía si una orden no tenía servicio principal; ahora usa `resumenServicios()`.
 - Pruebas: suite completa 1,505 de 1,508 (1 falla de orden en la propia prueba, corregida; 2 omitidas). TypeScript, lint, Pint y PHPStan en verde.
 - Pendiente: contador valida notas de crédito; ingeniero aprueba presiones para la PH automática; órdenes de campo sin cambios.
+
+## 2026-11-03 — Claude: dirección del local, caja de otro día y ajustes
+
+- Dirección del comprobante (como Odoo: dirección de factura y local atendido): la venta y la cotización marcan "sale con la dirección de este local" (`direccion_del_local`); el local puede quedar "para facturar" y la marca viene sola. PDF y XML usan `direccionComprobante()`; la guía llega al local de la referencia.
+- Error previo: al editar o al venir de una cotización, el cliente llegaba sin locales ni placas; ahora se usa `Client::ficha()` en todos los formularios.
+- Cotización: sin "Forma de pago" en el PDF (la condición propuesta sigue sirviendo para precargar la venta).
+- Deficiencia: el formulario tomaba un extintor vacío si la orden no tenía extintores al abrir la pantalla; salía el dibujo genérico en vez del CO2. Dibujo más grande y centrado.
+- Próxima PH visible ya calculada (intervalo de la empresa).
+- Fecha y hora del servidor arriba (vendedor, gerente, almacén). Caja abierta de otro día: aviso y no recibe ventas hasta cerrarla con arqueo; no se cierra sola.
+- Pruebas: `DireccionDelLocalYCajaTest`.
+
+## 2026-11-03 — Claude: rediseño de Caja y cobranzas y de Envío SUNAT
+
+- Diseños aprobados en Claude Design: Caja (https://claude.ai/artifact/ArSDi5kZtDx8ddHQky22kZ) y Envío SUNAT (https://claude.ai/artifact/2jSUAy6Yxzegyo1TJ37Uy5).
+- Caja en dos vistas con pestañas: Mi caja (/caja: turno, movimientos de hoy, turnos anteriores) y Cobranzas (/cobranzas: vencido, 7 días, total, cobrado del mes; filtros por vencimiento).
+- Arqueo ciego (E-011) respetado: el efectivo sale sin monto en los movimientos; los turnos anteriores no muestran esperado ni diferencia.
+- Nuevo: `CarteraDeCobranzas::resumenDelVendedor`, filtro en `cuotasPendientes`, `cobrado(..., vendedorId)` y `DatosDeCaja::movimientos`.
+- Envío SUNAT: pestañas subrayadas, filtros por estado con su cuenta (rechazados y por enviar agrupados), aviso de rechazados, motivo debajo del estado, barra de descarga siempre visible y sin botones apagados.
+- Guías: botón "Emitir guía desde una venta", filtros por estado, avance en 3 pasos y el siguiente paso en una línea.
+- Otros: botones con texto en Certificados, tema oscuro con fondos más separados, vencimiento en gris si falta más de 7 días.
+- Pruebas: `CajaYCobranzasVistasTest`. Sin commit.

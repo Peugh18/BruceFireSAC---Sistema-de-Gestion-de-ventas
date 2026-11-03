@@ -34,10 +34,15 @@ class DispatchGuideController extends Controller
 {
     public function index(Team $current_team, Request $request): Response
     {
+        $estado = $request->string('estado')->toString();
+        $estado = in_array($estado, ['borrador', 'enviada', 'aceptada', 'rechazada'], true) ? $estado : '';
+
         $guias = $this->visibles($request->user())
             ->with(['sede:id,nombre', 'sale:id,numero_interno', 'serviceOrder:id,codigo'])
+            ->when($estado, fn ($query, $valor) => $query->where('estado_sunat', $valor))
             ->latest('id')
             ->paginate(20)
+            ->withQueryString()
             ->through(fn (DispatchGuide $guia) => [
                 'id' => $guia->id,
                 'detalle_url' => route('guias.show', ['current_team' => $current_team, 'guide' => $guia]),
@@ -59,7 +64,14 @@ class DispatchGuideController extends Controller
                 'sunat_mensaje' => $guia->sunat_mensaje,
             ]);
 
-        return Inertia::render('guias/index', ['guias' => $guias]);
+        // Cuántas hay en cada estado, para los filtros de la pantalla.
+        $conteos = $this->visibles($request->user())
+            ->selectRaw('estado_sunat, COUNT(*) as total')
+            ->groupBy('estado_sunat')
+            ->pluck('total', 'estado_sunat')
+            ->map(fn ($total) => (int) $total);
+
+        return Inertia::render('guias/index', ['guias' => $guias, 'estado' => $estado, 'conteos' => $conteos]);
     }
 
     public function show(Team $current_team, Request $request, DispatchGuide $guide): Response

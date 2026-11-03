@@ -41,6 +41,7 @@ class StoreSaleRequest extends FormRequest
             'cuotas.*.fecha_vencimiento' => ['exclude_unless:condicion_pago,credito', 'required', 'date', 'after:fecha'],
             'cuotas.*.monto' => ['exclude_unless:condicion_pago,credito', 'required', 'numeric', 'min:0.01', 'decimal:0,2', 'max:9999999.99'],
             'referencia' => ['nullable', 'string', 'max:150'],
+            'direccion_del_local' => ['sometimes', 'boolean'],
             'comprobante_tipo' => ['required', Rule::in(['factura', 'boleta', 'nota_venta'])],
             'observaciones' => ['nullable', 'string'],
             'iniciado_at' => ['nullable', 'date'],

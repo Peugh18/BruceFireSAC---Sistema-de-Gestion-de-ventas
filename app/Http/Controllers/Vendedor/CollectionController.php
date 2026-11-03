@@ -31,7 +31,9 @@ class CollectionController extends Controller
         // Cobranzas y Caja son la misma pantalla: las dos llevan el turno y las cuotas.
         return Inertia::render('vendedor/cobranzas/pendientes', [
             ...DatosDeCaja::para($request->user()),
-            'installments' => CarteraDeCobranzas::cuotasPendientes($request->user()),
+            'installments' => CarteraDeCobranzas::cuotasPendientes($request->user(), $this->filtro($request)),
+            'resumen' => CarteraDeCobranzas::resumenDelVendedor($request->user()),
+            'filtro' => $this->filtro($request),
         ]);
     }
 
@@ -157,5 +159,13 @@ class CollectionController extends Controller
         if ($sedeId = $request->user()->sedeRestringidaId()) {
             abort_unless((int) $installment->sale->sede_id === $sedeId, 404);
         }
+    }
+
+    /** Filtro de Cobranzas por vencimiento: todas, vencidas, semana o luego. */
+    protected function filtro(Request $request): string
+    {
+        $filtro = $request->string('filtro')->toString();
+
+        return in_array($filtro, ['vencidas', 'semana', 'luego'], true) ? $filtro : 'todas';
     }
 }

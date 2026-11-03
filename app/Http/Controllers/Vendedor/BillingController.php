@@ -28,6 +28,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BillingController extends Controller
 {
+    /** Estados que el vendedor ve juntos en un solo filtro. */
+    private const GRUPOS_DE_ESTADO = [
+        'rechazados' => ['rechazado', 'excepcion'],
+        'por_enviar' => ['por_enviar', 'pendiente'],
+    ];
+
     use AcotaPorSede;
     use FiltraPorFechas;
 
@@ -92,8 +98,10 @@ class BillingController extends Controller
             'hoy' => today()->toDateString(),
             'totalFiltrados' => $this->consulta($request)->count(),
             'kpis' => [
-                'emitidos_hoy' => $baseKpiQuery()->whereDate('created_at', today())->count(),
-                'aceptados_hoy' => $baseKpiQuery()->whereDate('created_at', today())->where('sunat_estado', 'aceptado')->count(),
+                // Los cuatro contadores siguen el periodo que se ve en la lista.
+                'emitidos' => $delPeriodo()->count(),
+                'aceptados' => $delPeriodo()->where('sunat_estado', 'aceptado')->count(),
+                'por_enviar' => $delPeriodo()->whereIn('sunat_estado', self::GRUPOS_DE_ESTADO['por_enviar'])->count(),
                 'observados' => $delPeriodo()->where('sunat_estado', 'observado')->count(),
                 'rechazados' => $delPeriodo()->whereIn('sunat_estado', ['rechazado', 'excepcion'])->count(),
             ],
@@ -222,7 +230,8 @@ class BillingController extends Controller
             ->whereHas('sale', fn ($query) => $query->where('vendedor_id', $request->user()->id))
             ->when($tipo === 'nota', fn ($query) => $query->whereIn('tipo', ['nota_credito', 'nota_debito']))
             ->when(in_array($tipo, ['factura', 'boleta', 'nota_credito', 'nota_debito'], true), fn ($query) => $query->where('tipo', $tipo))
-            ->when($estado !== '' && $estado !== 'todos', fn ($query) => $query->where('sunat_estado', $estado))
+            // Los filtros de la pantalla agrupan estados que significan lo mismo para el vendedor.
+            ->when($estado !== '' && $estado !== 'todos', fn ($query) => $query->whereIn('sunat_estado', self::GRUPOS_DE_ESTADO[$estado] ?? [$estado]))
             // Aviso de plazo SUNAT (S8): muestra todos los que vencen, sin el rango de fechas.
             ->when($plazo === 'por_vencer', fn ($query) => $query->porVencerSunat())
             ->when($plazo === 'vencidos', fn ($query) => $query->vencidosSunat())

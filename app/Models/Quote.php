@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property string|null $destino
  * @property string|null $referencia
+ * @property bool $direccion_del_local
  * @property int $id
  * @property string $numero
  * @property int $vendedor_id
@@ -42,7 +43,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, QuoteItem> $items
  */
 #[Fillable([
-    'numero', 'vendedor_id', 'client_id', 'sede_id', 'vehicle_id', 'destino', 'referencia', 'fecha', 'vigencia_hasta',
+    'numero', 'vendedor_id', 'client_id', 'sede_id', 'vehicle_id', 'destino', 'referencia', 'direccion_del_local', 'fecha', 'vigencia_hasta',
     'condicion_pago_propuesta', 'subtotal', 'igv', 'total', 'observaciones', 'estado',
     'emitida_at', 'origen_alerta_equipment_id',
     'aceptada_por', 'aceptada_canal', 'aceptada_at', 'orden_compra', 'orden_compra_path',
@@ -70,9 +71,21 @@ class Quote extends Model
         'anulada' => [],
     ];
 
+    /**
+     * La dirección que va en el comprobante: la del local de la referencia si
+     * el cliente lo pidió; si no, la fiscal.
+     */
+    public function direccionComprobante(): ?string
+    {
+        $local = $this->direccion_del_local ? ClientSite::deReferencia($this->client, $this->referencia) : null;
+
+        return $local !== null && trim((string) $local->direccion) !== '' ? $local->direccion : $this->client->direccionImprimible();
+    }
+
     protected function casts(): array
     {
         return [
+            'direccion_del_local' => 'boolean',
             'fecha' => 'date',
             'vigencia_hasta' => 'date',
             'emitida_at' => 'datetime',

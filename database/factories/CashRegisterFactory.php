@@ -16,7 +16,8 @@ class CashRegisterFactory extends Factory
         return [
             'vendedor_id' => User::factory(),
             'sede_id' => null,
-            'fecha_apertura' => now()->subHours(2),
+            // Hoy: un turno de otro día ya no recibe cobros.
+            'fecha_apertura' => now()->subHours(2)->max(today()),
             'monto_apertura' => 100.00,
             'fecha_cierre' => null,
             'monto_contado_cierre' => null,

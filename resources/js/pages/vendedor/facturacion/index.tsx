@@ -2,13 +2,11 @@ import { Link, router, usePage } from '@inertiajs/react';
 import PestanasSunat from '@/components/pestanas-sunat';
 import {
     AlertTriangle,
-    CheckCircle2,
     Download,
     FileDown,
     FileSpreadsheet,
     RefreshCcw,
     Search,
-    Send,
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -78,8 +76,9 @@ type Props = {
     hoy: string;
     totalFiltrados: number;
     kpis: {
-        emitidos_hoy: number;
-        aceptados_hoy: number;
+        emitidos: number;
+        aceptados: number;
+        por_enviar: number;
         observados: number;
         rechazados: number;
     };
@@ -108,12 +107,7 @@ function sunatBadge(estado: string) {
 function sunatEstadoLabel(document: DocumentRow) {
     const estado = document.sunat_estado?.toLowerCase();
     if (estado === 'excepcion' || estado === 'rechazado') {
-        const mensaje = (
-            document.sunat_mensaje_simple ?? document.sunat_mensaje
-        )?.trim();
-        if (mensaje) {
-            return `Rechazado: ${mensaje}`;
-        }
+        // El motivo va debajo de la etiqueta, entero; aquí solo el estado.
         if (document.sunat_codigo_respuesta === '500') {
             return 'Rechazado: Error de comunicación SUNAT';
         }
@@ -150,6 +144,7 @@ export default function FacturacionIndex({
     const [marcados, setMarcados] = useState<number[]>([]);
     const [todoLoFiltrado, setTodoLoFiltrado] = useState(false);
     const [incluir, setIncluir] = useState<string[]>(['xml', 'cdr', 'pdf']);
+    const [avisoDescarga, setAvisoDescarga] = useState(false);
 
     const filtrar = (cambios: Partial<Props['filters']>) => {
         const siguiente = { ...filters, ...cambios };
@@ -274,43 +269,12 @@ export default function FacturacionIndex({
         );
     };
 
-    const kpiItems = [
-        {
-            label: 'Emitidos hoy',
-            value: kpis.emitidos_hoy,
-            icon: Send,
-            bg: 'bg-muted',
-            text: 'text-foreground ',
-        },
-        {
-            label: 'Aceptados hoy',
-            value: kpis.aceptados_hoy,
-            icon: CheckCircle2,
-            bg: 'bg-emerald-500/10',
-            text: 'text-success-strong',
-        },
-        {
-            label: 'Observados',
-            value: kpis.observados,
-            icon: AlertTriangle,
-            bg: 'bg-amber-500/10',
-            text: 'text-warning-strong',
-        },
-        {
-            label: 'Rechazados',
-            value: kpis.rechazados,
-            icon: XCircle,
-            bg: 'bg-destructive/10',
-            text: 'text-destructive-strong',
-        },
-    ];
-
     return (
         <VendedorLayout title="Envío SUNAT">
             <div className="flex flex-col gap-4">
                 <PageHeader
                     title="Envío SUNAT"
-                    description="Facturas, boletas y notas de crédito o débito con su respuesta de SUNAT. Se envían solas cada 5 minutos; marca varias para descargarlas juntas."
+                    description="Lo que enviaste a SUNAT y su respuesta. Se envía solo; aquí ves lo que necesita tu atención."
                 />
                 <PestanasSunat actual="comprobantes" />
                 {(plazoSunat.por_vencer > 0 ||
@@ -355,36 +319,68 @@ export default function FacturacionIndex({
                         </div>
                     </div>
                 )}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {kpiItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                            <Card
-                                key={item.label}
-                                className="border-border bg-card flex-row items-center gap-3.5 rounded-2xl px-[18px] py-4 shadow-none"
-                            >
-                                <div
-                                    className={`flex size-[42px] shrink-0 items-center justify-center rounded-lg ${item.bg}`}
-                                >
-                                    <Icon
-                                        className={`size-5 ${item.text}`}
-                                        strokeWidth={2}
-                                    />
-                                </div>
-                                <div>
-                                    <div className="text-muted-foreground text-xs font-bold tracking-[0.03em] uppercase">
-                                        {item.label}
-                                    </div>
-                                    <div className="text-foreground font-['Oswald',sans-serif] text-[22px] font-semibold">
-                                        {item.value}
-                                    </div>
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
+                {kpis.rechazados > 0 && filters.estado !== 'rechazados' ? (
+                    <div
+                        role="alert"
+                        className="border-destructive/30 bg-destructive/10 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border px-4 py-3 text-sm"
+                    >
+                        <XCircle className="text-destructive-strong size-5 shrink-0" />
+                        <p className="text-foreground min-w-[14rem] flex-1">
+                            <strong>
+                                {kpis.rechazados}{' '}
+                                {kpis.rechazados === 1
+                                    ? 'comprobante rechazado'
+                                    : 'comprobantes rechazados'}
+                            </strong>{' '}
+                            por SUNAT: hay que corregirlos y volver a enviarlos.
+                        </p>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => filtrar({ estado: 'rechazados' })}
+                            className="h-9 rounded-lg font-semibold"
+                        >
+                            Ver rechazados
+                        </Button>
+                    </div>
+                ) : null}
 
                 <Card className="border-border bg-card gap-0 rounded-2xl p-5 shadow-none">
+                    <nav
+                        aria-label="Filtrar por estado en SUNAT"
+                        className="mb-4 flex flex-wrap gap-2"
+                    >
+                        {(
+                            [
+                                ['', 'Todos', kpis.emitidos],
+                                ['rechazados', 'Rechazados', kpis.rechazados],
+                                ['por_enviar', 'Por enviar', kpis.por_enviar],
+                                [
+                                    'observado',
+                                    'Con observación',
+                                    kpis.observados,
+                                ],
+                                ['aceptado', 'Aceptados', kpis.aceptados],
+                            ] as const
+                        ).map(([valor, nombre, cuenta]) => {
+                            const activo = (filters.estado ?? '') === valor;
+
+                            return (
+                                <button
+                                    key={nombre}
+                                    type="button"
+                                    aria-pressed={activo}
+                                    onClick={() => filtrar({ estado: valor })}
+                                    className={`flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold ${activo ? 'bg-foreground text-background border-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    {nombre}
+                                    <span className="tabular-nums">
+                                        {cuenta}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </nav>
                     <div className="mb-2 flex flex-wrap items-end gap-2.5">
                         <FiltroSelect
                             etiqueta="Tipo"
@@ -431,11 +427,19 @@ export default function FacturacionIndex({
                         .
                     </p>
 
-                    <div className="border-border bg-muted/30 mb-3 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2">
-                        <span className="text-foreground text-[12px] font-semibold">
-                            {cantidadSeleccionada > 0
-                                ? `${cantidadSeleccionada} comprobante(s) seleccionado(s)`
-                                : 'Marca comprobantes para descargarlos'}
+                    {/* La barra está siempre y sus botones nunca se apagan: sin
+                    nada marcado, al tocarlos dice qué falta. */}
+                    <div
+                        role="region"
+                        aria-label="Descargar comprobantes"
+                        className="bg-muted border-border mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-3 py-2"
+                    >
+                        <span className="text-foreground text-[13px] font-semibold">
+                            {cantidadSeleccionada === 0
+                                ? 'Marca comprobantes para descargarlos juntos'
+                                : cantidadSeleccionada === 1
+                                  ? '1 comprobante marcado'
+                                  : `${cantidadSeleccionada} comprobantes marcados`}
                         </span>
                         {paginaMarcada &&
                         !todoLoFiltrado &&
@@ -443,54 +447,60 @@ export default function FacturacionIndex({
                             <button
                                 type="button"
                                 onClick={() => setTodoLoFiltrado(true)}
-                                className="text-primary-strong text-[12px] font-semibold hover:underline"
+                                className="text-primary-strong text-[12.5px] font-semibold hover:underline"
                             >
-                                Seleccionar los {totalFiltrados} del filtro
+                                Marcar los {totalFiltrados} del filtro
                             </button>
                         ) : null}
+                        <fieldset className="flex items-center gap-3">
+                            <legend className="text-muted-foreground float-left mr-1 text-[12.5px]">
+                                Incluir:
+                            </legend>
+                            {(['xml', 'cdr', 'pdf'] as const).map((tipo) => (
+                                <label
+                                    key={tipo}
+                                    className="text-foreground flex min-h-8 items-center gap-1.5 text-[12.5px] font-semibold uppercase"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        className="accent-foreground size-4"
+                                        checked={incluir.includes(tipo)}
+                                        onChange={() =>
+                                            setIncluir(
+                                                incluir.includes(tipo)
+                                                    ? incluir.filter(
+                                                          (t) => t !== tipo,
+                                                      )
+                                                    : [...incluir, tipo],
+                                            )
+                                        }
+                                    />
+                                    {tipo}
+                                </label>
+                            ))}
+                        </fieldset>
                         <div className="flex-1" />
-                        {(['xml', 'cdr', 'pdf'] as const).map((tipo) => (
-                            <label
-                                key={tipo}
-                                className="flex items-center gap-1 text-[12px] font-semibold uppercase"
-                            >
-                                <input
-                                    type="checkbox"
-                                    className="accent-primary size-3.5"
-                                    checked={incluir.includes(tipo)}
-                                    onChange={() =>
-                                        setIncluir(
-                                            incluir.includes(tipo)
-                                                ? incluir.filter(
-                                                      (t) => t !== tipo,
-                                                  )
-                                                : [...incluir, tipo],
-                                        )
-                                    }
-                                />
-                                {tipo}
-                            </label>
-                        ))}
                         <Button
                             type="button"
-                            disabled={
-                                cantidadSeleccionada === 0 ||
-                                incluir.length === 0 ||
-                                descargando !== null
-                            }
+                            disabled={descargando !== null}
                             onClick={() =>
-                                descargar(
-                                    'zip',
-                                    urlDescarga(facturacion.descargaMasiva),
-                                )
+                                cantidadSeleccionada === 0 ||
+                                incluir.length === 0
+                                    ? setAvisoDescarga(true)
+                                    : descargar(
+                                          'zip',
+                                          urlDescarga(
+                                              facturacion.descargaMasiva,
+                                          ),
+                                      )
                             }
                             size="sm"
-                            className="bg-primary hover:bg-primary/90 h-8 rounded-lg text-white shadow-none"
+                            className="bg-foreground text-background hover:bg-foreground/90 h-9 rounded-lg font-semibold shadow-none"
                         >
                             {descargando === 'zip' ? (
                                 <Spinner />
                             ) : (
-                                <Download className="size-3.5" />
+                                <Download className="size-4" />
                             )}
                             {descargando === 'zip'
                                 ? 'Preparando ZIP…'
@@ -498,29 +508,53 @@ export default function FacturacionIndex({
                         </Button>
                         <Button
                             type="button"
-                            disabled={
-                                cantidadSeleccionada === 0 ||
-                                descargando !== null
-                            }
+                            disabled={descargando !== null}
                             onClick={() =>
-                                descargar(
-                                    'excel',
-                                    urlDescarga(facturacion.excel),
-                                )
+                                cantidadSeleccionada === 0
+                                    ? setAvisoDescarga(true)
+                                    : descargar(
+                                          'excel',
+                                          urlDescarga(facturacion.excel),
+                                      )
                             }
                             variant="outline"
                             size="sm"
-                            className="h-8 rounded-lg shadow-none"
+                            className="border-border bg-card h-9 rounded-lg font-semibold shadow-none"
                         >
                             {descargando === 'excel' ? (
                                 <Spinner />
                             ) : (
-                                <FileSpreadsheet className="size-3.5" />
+                                <FileSpreadsheet className="size-4" />
                             )}
                             {descargando === 'excel'
                                 ? 'Preparando…'
                                 : 'CSV para Excel'}
                         </Button>
+                        {cantidadSeleccionada > 0 ? (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setMarcados([]);
+                                    setTodoLoFiltrado(false);
+                                }}
+                                className="h-9 rounded-lg font-semibold"
+                            >
+                                Quitar selección
+                            </Button>
+                        ) : null}
+                        {avisoDescarga &&
+                        (cantidadSeleccionada === 0 || incluir.length === 0) ? (
+                            <p
+                                role="status"
+                                className="text-warning-strong basis-full text-[12.5px]"
+                            >
+                                {cantidadSeleccionada === 0
+                                    ? 'Marca al menos un comprobante en la lista para descargarlo.'
+                                    : 'Elige qué incluir: XML, CDR o PDF.'}
+                            </p>
+                        ) : null}
                     </div>
 
                     <div className="overflow-x-auto">
@@ -542,7 +576,6 @@ export default function FacturacionIndex({
                                         'Fecha',
                                         'Total',
                                         'Estado SUNAT',
-                                        'Código',
                                         'Acciones',
                                     ].map((h) => (
                                         <TableHead
@@ -646,10 +679,15 @@ export default function FacturacionIndex({
                                                             )}
                                                         </span>
                                                     </Badge>
-                                                </TableCell>
-                                                <TableCell className="border-border text-muted-foreground border-b px-2.5 py-[13px] font-['IBM_Plex_Mono',monospace] text-xs whitespace-nowrap tabular-nums">
-                                                    {document.sunat_codigo_respuesta ??
-                                                        '-'}
+                                                    {document.sunat_mensaje_simple &&
+                                                    document.sunat_estado !==
+                                                        'aceptado' ? (
+                                                        <span className="text-muted-foreground mt-1 block max-w-[260px] text-xs">
+                                                            {
+                                                                document.sunat_mensaje_simple
+                                                            }
+                                                        </span>
+                                                    ) : null}
                                                 </TableCell>
                                                 <TableCell className="border-border border-b px-2.5 py-[13px]">
                                                     <div className="flex items-center gap-1.5">

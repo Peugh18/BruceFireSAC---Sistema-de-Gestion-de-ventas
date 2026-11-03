@@ -4,6 +4,7 @@ import { Bell, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { AlmacenSidebar } from '@/components/almacen-sidebar';
+import { HoraDelServidor } from '@/components/hora-del-servidor';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 type AlmacenLayoutProps = {
@@ -67,6 +68,7 @@ export default function AlmacenLayout({ children, title }: AlmacenLayoutProps) {
                             <b className="text-foreground font-bold">{title}</b>
                         </div>
 
+                        <HoraDelServidor />
                         <ThemeToggle />
 
                         <button

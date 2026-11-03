@@ -14,8 +14,10 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 
+import { HoraDelServidor } from '@/components/hora-del-servidor';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { VendedorSidebar } from '@/components/vendedor-sidebar';
+import caja from '@/routes/vendedor/caja';
 import ordenesServicio from '@/routes/vendedor/ordenes-servicio';
 import type { Auth } from '@/types';
 
@@ -37,6 +39,7 @@ type VendedorPageProps = {
     currentTeam?: { slug: string } | null;
     currentSede?: { id: number; nombre: string } | null;
     caja_hoy?: { estado: string; fecha_apertura: string | null } | null;
+    cajaDeOtroDia?: string | null;
     [key: string]: unknown;
 };
 
@@ -54,6 +57,7 @@ export default function VendedorLayout({
         currentTeam,
         currentSede,
         caja_hoy,
+        cajaDeOtroDia,
     } = usePage<VendedorPageProps>().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notifsOpen, setNotifsOpen] = useState(false);
@@ -144,6 +148,7 @@ export default function VendedorLayout({
                             )}
                         </div>
 
+                        <HoraDelServidor />
                         <ThemeToggle />
 
                         {/* Campana de avisos con popover interactivo */}
@@ -280,6 +285,26 @@ export default function VendedorLayout({
                             )}
                         </div>
                     </header>
+
+                    {cajaDeOtroDia ? (
+                        <div
+                            role="alert"
+                            className="text-warning-strong flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-amber-300 bg-amber-50 px-4 py-2 text-xs font-semibold lg:px-[30px] dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200"
+                        >
+                            <span>
+                                Tu caja sigue abierta desde el{' '}
+                                {cajaDeOtroDia.split('-').reverse().join('/')}.
+                                Ciérrala con su arqueo y abre la de hoy para
+                                volver a cobrar.
+                            </span>
+                            <Link
+                                href={caja.index.url(teamSlug)}
+                                className="underline underline-offset-2"
+                            >
+                                Ir a Caja
+                            </Link>
+                        </div>
+                    ) : null}
 
                     {/* Único contenedor de scroll vertical: sidebar y header quedan estáticos */}
                     <main

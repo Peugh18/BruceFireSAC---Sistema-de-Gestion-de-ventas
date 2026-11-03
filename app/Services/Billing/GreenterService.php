@@ -200,7 +200,7 @@ class GreenterService
             ->setTipoDoc($this->tipoDocCatalogo06($sale->client->tipo_documento))
             ->setNumDoc($sale->client->numero_documento)
             ->setRznSocial($sale->client->razon_social)
-            ->setAddress((new Address)->setDireccion($sale->client->direccion_fiscal ?? '-'));
+            ->setAddress((new Address)->setDireccion($sale->direccionComprobante() ?? '-'));
     }
 
     /**

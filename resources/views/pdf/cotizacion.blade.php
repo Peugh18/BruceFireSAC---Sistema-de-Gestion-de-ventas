@@ -7,7 +7,7 @@
         'dni' => 'D.N.I.',
         default => 'Documento',
     };
-    $direccionCliente = $client->direccionImprimible();
+    $direccionCliente = $quote->direccionComprobante();
     $mostrarDescuento = $quote->items->contains(fn ($item) => (float) $item->descuento > 0);
     $cantidad = fn ($valor) => fmod((float) $valor, 1.0) === 0.0 ? number_format((float) $valor, 0) : number_format((float) $valor, 2);
 @endphp
@@ -49,7 +49,6 @@
                     <tr><td class="k2">Fecha</td><td class="sep">:</td><td class="v">{{ $quote->fecha->format('d/m/Y') }}</td></tr>
                     <tr><td class="k2">Válida hasta</td><td class="sep">:</td><td class="v"><b>{{ $quote->vigencia_hasta->format('d/m/Y') }}</b></td></tr>
                     <tr><td class="k2">Moneda</td><td class="sep">:</td><td class="v">Soles (PEN)</td></tr>
-                    <tr><td class="k2">Forma de pago</td><td class="sep">:</td><td class="v">{{ $quote->condicion_pago_propuesta ?: 'Contado' }}</td></tr>
                     @if($quote->vendedor)
                         <tr><td class="k2">Atendido por</td><td class="sep">:</td><td class="v">{{ $quote->vendedor->name }}</td></tr>
                     @endif

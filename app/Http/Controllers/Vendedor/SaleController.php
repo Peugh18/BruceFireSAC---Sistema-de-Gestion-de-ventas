@@ -279,11 +279,12 @@ class SaleController extends Controller
             'comprobante' => $emitida ? $sale->numeroComprobante() : null,
             'rechazado' => $emitida && (bool) $sale->comprobanteElectronico()?->fueRechazado(),
             'fecha' => $emitida ? $sale->fecha->toDateString() : null,
-            'client' => $sale->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
+            'client' => $sale->client->ficha(),
             'sede_id' => $sale->sede_id,
             'destino' => $sale->destino,
             'vehicle_id' => $sale->vehicle_id,
             'referencia' => $sale->referencia,
+            'direccion_del_local' => (bool) $sale->direccion_del_local,
             'condicion_pago' => $sale->esCredito() ? 'credito' : 'contado',
             'medio_pago' => $medioPago,
             'numero_operacion' => $sale->numero_operacion
@@ -374,7 +375,7 @@ class SaleController extends Controller
         return [
             'id' => $quote->id,
             'numero' => $quote->numero,
-            'client' => $quote->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']),
+            'client' => $quote->client->ficha(),
             'items' => array_values($quote->items->map(fn (QuoteItem $item) => [
                 'deficiency_id' => $item->deficiency_id,
                 'tipo' => $item->esServicio() ? 'service' : 'product',
@@ -388,6 +389,7 @@ class SaleController extends Controller
                 'descuento' => (float) $item->descuento,
             ])->all()),
             'referencia' => $quote->referencia,
+            'direccion_del_local' => (bool) $quote->direccion_del_local,
             // La condición propuesta es texto libre ("Contado", "Crédito 30 días").
             'condicion_pago' => str_starts_with(mb_strtolower(trim((string) $quote->condicion_pago_propuesta)), 'cr') ? 'credito' : 'contado',
             // "Crédito 15 días" → 15: el calendario de cuotas arranca con ese plazo.
@@ -552,7 +554,7 @@ class SaleController extends Controller
         $destino = $order->quote?->destinoResuelto() ?? ($vehicleId ? 'vehiculo' : 'local_cliente');
         $referencia = $order->quote ? $order->quote->referencia : $order->referencia;
 
-        return ['id' => null, 'quote_id' => $order->quote_id, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 'sede_id' => $order->sede_id, 'destino' => $destino, 'vehicle_id' => $destino === 'vehiculo' ? $vehicleId : null, 'referencia' => $referencia, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items, 'adicionales_sin_cotizacion' => $adicionalesSinCotizacion];
+        return ['id' => null, 'quote_id' => $order->quote_id, 'numero_interno' => $order->codigo, 'service_order_id' => $order->id, 'client' => $order->client->ficha(), 'sede_id' => $order->sede_id, 'destino' => $destino, 'vehicle_id' => $destino === 'vehiculo' ? $vehicleId : null, 'referencia' => $referencia, 'direccion_del_local' => (bool) $order->quote?->direccion_del_local, 'condicion_pago' => 'contado', 'medio_pago' => 'efectivo', 'numero_operacion' => null, 'comprobante_tipo' => $order->client->tipo_documento === 'ruc' ? 'factura' : 'boleta', 'observaciones' => "Cobro de {$order->codigo}", 'cuotas' => [], 'items' => $items, 'adicionales_sin_cotizacion' => $adicionalesSinCotizacion];
     }
 
     public function show(Team $current_team, Sale $sale, Request $request): Response

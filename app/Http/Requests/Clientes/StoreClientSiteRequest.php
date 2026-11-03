@@ -32,6 +32,7 @@ class StoreClientSiteRequest extends FormRequest
             'direccion' => ['required', 'string', 'max:255'],
             'ubigeo' => ['nullable', 'string', 'size:6', 'exists:ubigeos,codigo'],
             'referencia' => ['nullable', 'string', 'max:255'],
+            'para_facturar' => ['sometimes', 'boolean'],
             'contacto' => ['nullable', 'string', 'max:255'],
             'telefono' => ['nullable', new TelefonoPeru],
             'email' => ['nullable', 'email', 'max:255'],

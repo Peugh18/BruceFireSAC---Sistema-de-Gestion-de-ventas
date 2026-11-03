@@ -14,7 +14,7 @@
     $fechaEmision = $document->fecha_emision ?? $sale->fecha;
     $esVenta = in_array($document->tipo, ['factura', 'boleta', 'nota_venta'], true);
     $vencimiento = $esVenta && $sale->esCredito() && $sale->installments->isNotEmpty() ? $sale->installments->last()->fecha_vencimiento : null;
-    $direccionCliente = $sale->client->direccionImprimible();
+    $direccionCliente = $sale->direccionComprobante();
     $etiquetaDocumento = match ($sale->client->tipo_documento) {
         'ruc' => 'R.U.C.',
         'dni' => 'D.N.I.',
