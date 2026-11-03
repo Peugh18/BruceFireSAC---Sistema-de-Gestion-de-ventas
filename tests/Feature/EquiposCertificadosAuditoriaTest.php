@@ -171,7 +171,7 @@ test('nine scanned extinguishers keep their identities in a certificate and publ
     }
     $sale = app(CreateSale::class)->handle(['client_id' => $client->id, 'sede_id' => $warehouse->id, 'fecha' => today()->toDateString(), 'destino' => $destination, 'referencia' => $destination === 'vehiculo' ? 'PLACA: ABC-123' : 'LOCAL: Central', 'condicion_pago' => 'credito', 'comprobante_tipo' => 'nota_venta'], $lines, $user->id);
     app(ConfirmSale::class)->handle($sale);
-    $certificate = Certificate::with('certificateUnits')->where('sale_id', $sale->id)->sole();
+    $certificate = Certificate::with('certificateUnits')->where('sale_id', $sale->id)->whereHas('certificateType', fn ($q) => $q->where('codigo', 'operatividad_garantia'))->sole();
     expect($certificate->certificateUnits->sortBy('orden')->pluck('codigo_interno')->all())->toBe($internals)
         ->and($certificate->certificateUnits->sortBy('orden')->pluck('numero_serie_snapshot')->all())->toBe($manufacturers)
         ->and($certificate->certificateType->codigo)->toBe('operatividad_garantia')
