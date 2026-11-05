@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Vendedor;
 
 use App\Actions\Clientes\CreateClient;
 use App\Actions\Clientes\UpdateClient;
-use App\Console\Commands\ScoreClients;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Clientes\StoreClientRequest;
 use App\Http\Requests\Clientes\UpdateClientRequest;
@@ -19,16 +18,16 @@ use App\Models\SaleItem;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\AuditLogger;
-use App\Services\Ml\RetentionModel;
 use App\Services\Sunat\DocumentoNoEncontrado;
 use App\Services\Sunat\RucLookupService;
 use App\Support\ExcelSimple;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -294,68 +293,37 @@ class ClientController extends Controller
             'historial' => AuditLog::query()->with('user:id,name')->where(function ($query) use ($client, $sales, $quotes) {
                 $query->where(fn ($query) => $query->where('auditable_type', Client::class)->where('auditable_id', $client->id))->orWhere(fn ($query) => $query->where('auditable_type', Sale::class)->whereIn('auditable_id', $sales->pluck('id')))->orWhere(fn ($query) => $query->where('auditable_type', Quote::class)->whereIn('auditable_id', $quotes->pluck('id')));
             })->latest('created_at')->limit(50)->get()->map(fn ($log) => ['fecha' => $log->created_at?->toIso8601String(), 'texto' => $log->texto(), 'usuario' => $log->user?->name]),
-            'recompra' => $this->recompra($client),
             'sunat' => ['verificado' => $client->consultado_at !== null, 'estado' => $client->estado_contribuyente, 'condicion' => $client->condicion_domicilio, 'consultado_at' => $client->consultado_at?->toIso8601String()],
         ]);
     }
 
     /**
-     * Clientes del sistema anterior aún no registrados, de mayor a menor
-     * probabilidad de volver (la lista se calcula cada noche en
-     * ml:score-clients). Se filtra por nivel y búsqueda y se pagina aquí.
+     * Clientes del sistema anterior aún no registrados, de la compra más
+     * reciente a la más antigua: a quién llamar para recuperarlo.
      *
-     * @return array{conteo: array{todas: int, alta: int, media: int, baja: int}, filtros: array{nivel: string, buscar: string}, clientes: LengthAwarePaginator<int, array<mixed>>}
+     * @return array{total: int, filtros: array{buscar: string}, clientes: LengthAwarePaginator<int, object>}
      */
     protected function porRegistrar(Request $request): array
     {
-        $registrados = Client::query()->pluck('numero_documento')->flip();
-        $todos = collect(ScoreClients::clientesParaRecuperarGuardados())
-            ->reject(fn (array $cliente) => $registrados->has($cliente['documento']))
-            ->values();
-
-        $nivel = in_array($request->string('nivel')->toString(), ['alta', 'media', 'baja'], true) ? $request->string('nivel')->toString() : '';
         $buscar = trim($request->string('buscar')->toString());
-        $filtrados = $todos
-            ->when($nivel !== '', fn ($clientes) => $clientes->where('categoria', $nivel))
-            ->when($buscar !== '', fn ($clientes) => $clientes->filter(fn (array $cliente) => str_contains(mb_strtoupper((string) $cliente['nombre']), mb_strtoupper($buscar))
-                || str_contains((string) $cliente['documento'], $buscar)))
-            ->values();
+        $pendientes = fn () => DB::table('ml_clientes_historicos as c')
+            ->whereNotIn('c.documento', Client::query()->select('numero_documento'));
 
-        $pagina = max(1, $request->integer('pagina_registrar', 1));
+        $clientes = $pendientes()
+            ->join('ml_comprobantes_historicos as k', 'k.documento_cliente', '=', 'c.documento')
+            ->leftJoin('ml_lineas_historicas as l', 'l.comprobante', '=', 'k.comprobante')
+            ->when($buscar !== '', fn ($query) => $query->where(fn ($q) => $q->where('c.nombre', 'like', "%{$buscar}%")->orWhere('c.documento', 'like', "%{$buscar}%")))
+            ->groupBy('c.documento', 'c.nombre')
+            ->orderByDesc('ultima_compra')
+            ->selectRaw('c.documento, c.nombre, MAX(k.fecha) as ultima_compra, COUNT(DISTINCT k.comprobante) as compras, COALESCE(SUM(l.total), 0) as monto_total')
+            ->paginate(20, ['*'], 'pagina_registrar')
+            ->withQueryString();
 
         return [
-            'conteo' => [
-                'todas' => $todos->count(),
-                'alta' => $todos->where('categoria', 'alta')->count(),
-                'media' => $todos->where('categoria', 'media')->count(),
-                'baja' => $todos->where('categoria', 'baja')->count(),
-            ],
-            'filtros' => ['nivel' => $nivel, 'buscar' => $buscar],
-            'clientes' => new LengthAwarePaginator($filtrados->forPage($pagina, 20)->values(), $filtrados->count(), 20, $pagina, [
-                'path' => $request->url(),
-                'pageName' => 'pagina_registrar',
-                'query' => $request->query(),
-            ]),
+            'total' => $pendientes()->count(),
+            'filtros' => ['buscar' => $buscar],
+            'clientes' => $clientes,
         ];
-    }
-
-    /**
-     * Probabilidad de que el cliente vuelva a comprar en 6 meses, calculada
-     * al momento con su historial (sistema anterior + ventas nuevas).
-     *
-     * @return array{porcentaje: int, categoria: string, resumen: string, razones: list<array{texto: string, a_favor: bool}>}|null
-     */
-    protected function recompra(Client $client): ?array
-    {
-        $modelo = app(RetentionModel::class);
-
-        if (! $modelo->isAvailable()) {
-            return null;
-        }
-
-        $resultado = $modelo->predictForClient($client);
-
-        return $resultado ? RetentionModel::paraPantalla($resultado) : null;
     }
 
     public function verifySunat(Team $current_team, Client $client, RucLookupService $lookupService): RedirectResponse

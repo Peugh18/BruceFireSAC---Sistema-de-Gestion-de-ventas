@@ -4,11 +4,9 @@ namespace App\Services\Avisos;
 
 use App\Models\AlertContact;
 use App\Models\Client;
-use App\Models\ClientRetentionScore;
 use App\Models\Equipment;
 use App\Models\ProductCategory;
 use App\Models\User;
-use App\Services\Ml\RetentionModel;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -16,8 +14,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Extintores de los clientes que vencen o ya vencieron, con la probabilidad
- * de recompra de cada cliente. Lo usan la pantalla "Por vencer" y el Inicio
+ * Extintores de los clientes que vencen o ya vencieron, con el último
+ * contacto de cada cliente. Lo usan la pantalla "Por vencer" y el Inicio
  * del Vendedor, así las dos muestran exactamente lo mismo.
  */
 class ExtintoresPorVencer
@@ -67,26 +65,21 @@ class ExtintoresPorVencer
             ->take($porSegmento)
             ->values();
 
-        $scores = ClientRetentionScore::query()->whereIn('client_id', $rows->pluck('client_id')->unique())->get()->keyBy('client_id');
         $contactos = AlertContact::ultimosPorCliente($rows->pluck('client_id'));
 
         /**
          * @param  Collection<int, mixed>  $lista
          * @return Collection<int, array<string, mixed>>
          */
-        $conRecompra = function (Collection $lista) use ($scores, $contactos): Collection {
+        $conContacto = function (Collection $lista) use ($contactos): Collection {
             /** @var Collection<int, array<string, mixed>> $result */
-            $result = $lista->map(function ($row) use ($scores, $contactos): array {
+            $result = $lista->map(function ($row) use ($contactos): array {
                 /** @var array<string, mixed> $rowArray */
                 $rowArray = (array) $row;
-                $score = $scores->get($rowArray['client_id'] ?? null);
 
                 return [
                     ...$rowArray,
                     'contactado' => $contactos->get($rowArray['client_id'] ?? null),
-                    'recompra' => $score
-                        ? RetentionModel::paraPantalla(['probabilidad' => $score->probabilidad, 'categoria' => $score->categoria, 'factores' => $score->factores_json])
-                        : null,
                 ];
             })->values();
 
@@ -94,9 +87,9 @@ class ExtintoresPorVencer
         };
 
         return [
-            'vencidas' => $conRecompra($porSegmentoOrdenado('vencidas')),
-            'esta_semana' => $conRecompra($porSegmentoOrdenado('esta_semana')),
-            'este_mes' => $conRecompra($porSegmentoOrdenado('este_mes')),
+            'vencidas' => $conContacto($porSegmentoOrdenado('vencidas')),
+            'esta_semana' => $conContacto($porSegmentoOrdenado('esta_semana')),
+            'este_mes' => $conContacto($porSegmentoOrdenado('este_mes')),
         ];
     }
 

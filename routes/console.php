@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('quotes:expire')->daily()->withoutOverlapping();
 Schedule::command('alerts:recompute')->daily();
-Schedule::command('ml:score-clients')->daily();
 Schedule::command('billing:enviar-programados')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('ventas:descartar-borradores')->dailyAt('03:00');
 Schedule::command('ventas:cerrar-correcciones')->dailyAt('03:10');
@@ -20,4 +19,3 @@ Schedule::call(fn () => Cache::forever(SaludDelSistema::CACHE_LATIDO, now()->toI
     ->description('Latido del programador de tareas');
 Schedule::command('sistema:verificar')->dailyAt('02:30')->withoutOverlapping();
 // Reentrena el modelo de recompra el día 1 de cada mes (necesita Python).
-Schedule::command('ml:reentrenar')->monthlyOn(1, '04:00')->withoutOverlapping();

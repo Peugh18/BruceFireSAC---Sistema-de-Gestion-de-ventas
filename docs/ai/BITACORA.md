@@ -591,3 +591,12 @@
 - La orden del vendedor avisa "Certificado en espera" mientras falte vender el extintor nuevo.
 - Factories de equipos y de unidades de stock con datos completos. Pruebas: `CertificadoEsperaLaVentaTest`; ajustadas las que fijaban la regla vieja.
 - Suite: 1,512 de 1,517 y las 5 restantes corregidas (37 de 37). Sin commit.
+
+## 2026-11-05 — Claude: se retira Recompra e IA
+
+- Fuera: pantalla del gerente y su menú, comandos `ml:score-clients`, `ml:reentrenar` y la exportación de entrenamiento, sus tareas programadas, el modelo (`RetentionModel`), el script de Python de XGBoost y las tablas `client_retention_scores` y `ml_entrenamientos` (migración `drop_ia_de_recompra`).
+- Fuera también la etiqueta de probabilidad en la ficha del cliente, en "Por vencer" y la sección de IA del reporte comercial en PDF.
+- Se conserva el historial del sistema anterior (`ml_*_historicos`) y su importación: la lista "Clientes del sistema anterior por registrar" sale ahora directo de la base, por compra más reciente (sin IA ni caché).
+- Se mantiene la "recompra" del panel del gerente: extintores que vencen en 30, 60 y 90 días (sale de los certificados, no es IA).
+- Siguiente: Chispa con consultas y acciones con confirmación; definir al final qué puede hacer cada rol.
+- Pruebas: `ClientesAntiguosPorRegistrarTest`. Sin commit, rama `feat/quitar-recompra`.

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Gerente;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\CertificateUnit;
-use App\Models\ClientRetentionScore;
 use App\Models\ElectronicDocument;
 use App\Models\Installment;
 use App\Models\Product;
@@ -26,7 +25,6 @@ use App\Services\Tecnico\PasoDelTaller;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -38,7 +36,7 @@ class DashboardController extends Controller
     {
         // La recompra por IA vive en su módulo (Recompra e IA); aquí solo va al reporte PDF.
         return Inertia::render('gerente/dashboard', [
-            ...Arr::except($this->datosMensuales($request), ['iaRecompra']),
+            ...$this->datosMensuales($request),
             'mesActual' => now()->format('Y-m'),
             'sistema' => $saludDelSistema->resumen(),
         ]);
@@ -146,7 +144,6 @@ class DashboardController extends Controller
             'serviciosDelMes' => $actual['serviciosDelMes'],
             'serviciosMasVendidos' => $actual['serviciosMasVendidos'],
             'reporteInventario' => ReportController::inventarioResumen($sedeSeleccionada?->id),
-            'iaRecompra' => $this->iaRecompra(),
             'kpisProyecto' => self::kpisDelProyecto($inicio, $fin),
             'graficos' => $this->graficos($inicio, $fin, $sedeIds, $comparacionSedes, $actual['recompra']),
         ];
@@ -369,39 +366,6 @@ class DashboardController extends Controller
     private function metrica(string $clave, string $etiqueta, float|int|null $actual, float|int|null $anterior, string $formato, string $detalle = ''): array
     {
         return ['clave' => $clave, 'etiqueta' => $etiqueta, 'valor' => $actual, 'anterior' => $anterior, 'variacion' => $this->variacion($actual, $anterior), 'formato' => $formato, 'detalle' => $detalle, 'disponible' => $actual !== null];
-    }
-
-    /**
-     * Lo que dice la IA de recompra (ml:score-clients, cada noche): cuántos
-     * clientes tienen probabilidad alta, media o baja de volver a comprar y
-     * los que conviene llamar primero.
-     *
-     * @return array{alta: int, media: int, baja: int, calculado: string|null, clientes: array<int, array{cliente_id: int, cliente: string, porcentaje: int, categoria: string, resumen: string}>}
-     */
-    private function iaRecompra(): array
-    {
-        $porCategoria = ClientRetentionScore::query()->selectRaw('categoria, COUNT(*) as total')->groupBy('categoria')->pluck('total', 'categoria');
-        $clientes = ClientRetentionScore::query()
-            ->whereIn('categoria', ['alta', 'media'])
-            ->with('client:id,razon_social,nombre_comercial')
-            ->orderByDesc('probabilidad')
-            ->limit(5)
-            ->get()
-            ->map(fn (ClientRetentionScore $score) => [
-                'cliente_id' => $score->client_id,
-                'cliente' => $score->client->nombre_comercial ?: $score->client->razon_social,
-                'porcentaje' => (int) round($score->probabilidad * 100),
-                'categoria' => $score->categoria,
-                'resumen' => (string) ($score->factores_json['resumen'] ?? ''),
-            ])->values()->all();
-
-        return [
-            'alta' => (int) ($porCategoria['alta'] ?? 0),
-            'media' => (int) ($porCategoria['media'] ?? 0),
-            'baja' => (int) ($porCategoria['baja'] ?? 0),
-            'calculado' => ClientRetentionScore::query()->latest('scored_at')->first()?->scored_at->toDateString(),
-            'clientes' => $clientes,
-        ];
     }
 
     /**
