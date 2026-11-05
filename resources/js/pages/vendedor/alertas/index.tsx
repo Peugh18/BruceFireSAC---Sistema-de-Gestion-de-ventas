@@ -15,7 +15,6 @@ import PorVencerEmpresas, {
     type Empresa,
     type PlazoEmpresa,
 } from '@/components/por-vencer-empresas';
-import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import { Badge } from '@/components/ui/badge';
 import FiltroSelect from '@/components/filtro-select';
 import { PageHeader } from '@/components/page-header';
@@ -40,7 +39,6 @@ export type AlertItem = {
     telefono?: string;
     whatsapp?: string;
     origen: 'equipo_registrado' | 'estimado_historico';
-    recompra: Recompra | null;
     /** X8: último contacto registrado (30 días), para no ofrecer dos veces. */
     contactado?: {
         fecha: string;
@@ -346,13 +344,6 @@ export default function AlertasIndex({ alerts, empresas, hoy }: Props) {
                                                                 Recarga
                                                                 obligatoria
                                                             </Badge>
-                                                        )}
-                                                        {item.recompra && (
-                                                            <RecompraBadge
-                                                                recompra={
-                                                                    item.recompra
-                                                                }
-                                                            />
                                                         )}
                                                         {item.origen ===
                                                             'estimado_historico' && (

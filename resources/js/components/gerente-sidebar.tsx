@@ -1,7 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import {
     Wrench,
-    BrainCircuit,
     Boxes,
     Building2,
     CircleDollarSign,
@@ -66,13 +65,6 @@ function buildNavGroups(
                         current_team: teamSlug,
                     }),
                     icon: LayoutDashboard,
-                },
-                {
-                    title: 'Recompra e IA',
-                    href: GerenteRoutes.inteligencia.url({
-                        current_team: teamSlug,
-                    }),
-                    icon: BrainCircuit,
                 },
             ],
         },

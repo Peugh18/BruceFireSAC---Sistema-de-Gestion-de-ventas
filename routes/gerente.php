@@ -9,7 +9,6 @@ use App\Http\Controllers\Gerente\CompanyBankAccountController;
 use App\Http\Controllers\Gerente\CompanySettingController;
 use App\Http\Controllers\Gerente\ConsultaController;
 use App\Http\Controllers\Gerente\DashboardController;
-use App\Http\Controllers\Gerente\InteligenciaController;
 use App\Http\Controllers\Gerente\ProductCategoryController;
 use App\Http\Controllers\Gerente\ProductController;
 use App\Http\Controllers\Gerente\ReportController;
@@ -30,7 +29,6 @@ Route::prefix('gerente')
     ->middleware('role:Gerente')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
-        Route::get('inteligencia', InteligenciaController::class)->name('inteligencia');
         Route::get('dashboard/detalle', [DashboardController::class, 'detalle'])->name('dashboard.detalle');
         Route::get('consulta/ventas/{sale}', [ConsultaController::class, 'venta'])->middleware('can:sales.view')->name('consulta.venta');
         Route::get('consulta/ordenes/{service_order}', [ConsultaController::class, 'orden'])->middleware('can:service_orders.view')->name('consulta.orden');

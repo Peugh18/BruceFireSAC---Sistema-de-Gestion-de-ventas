@@ -178,17 +178,6 @@
         @endforeach
     </table>
 
-    <h3>IA de recompra: clientes a llamar primero</h3>
-    <p style="font-size: 9px; color: #6B6965; margin: 0 0 6px;">Situación actual de toda la empresa (no del período){{ $iaRecompra['calculado'] ? ', calculada el '.\Illuminate\Support\Carbon::parse($iaRecompra['calculado'])->format('d/m/Y') : '' }}.</p>
-    <table class="data-table">
-        <tr><th>Cliente</th><th>Por qué</th><th class="text-right">Probabilidad</th></tr>
-        @forelse ($iaRecompra['clientes'] as $fila)
-            <tr><td>{{ $fila['cliente'] }}</td><td>{{ $fila['resumen'] }}</td><td class="text-right">{{ $fila['porcentaje'] }} %</td></tr>
-        @empty
-            <tr><td colspan="3">La IA todavía no tiene clientes con probabilidad alta o media.</td></tr>
-        @endforelse
-    </table>
-
     <div style="page-break-inside: avoid;">
     <h3>Inventario valorizado</h3>
     <table class="data-table">

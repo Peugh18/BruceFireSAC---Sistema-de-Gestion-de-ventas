@@ -109,7 +109,7 @@ function formatear(metrica: Metrica | undefined): string {
 
 /**
  * BI del gerente: lo que requiere atención, 4 indicadores con su tendencia y
- * los gráficos del mes. La recompra y la IA viven en su propio módulo.
+ * los gráficos del mes.
  */
 export default function GerenteDashboard({
     graficos,

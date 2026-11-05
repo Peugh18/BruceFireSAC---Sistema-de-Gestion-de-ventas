@@ -308,9 +308,7 @@ export default function ClientesIndex({
                                     <>
                                         Por registrar{' '}
                                         <span className="text-muted-foreground font-normal">
-                                            {formatNumber(
-                                                porRegistrar.conteo.todas,
-                                            )}
+                                            {formatNumber(porRegistrar.total)}
                                         </span>
                                     </>
                                 ),

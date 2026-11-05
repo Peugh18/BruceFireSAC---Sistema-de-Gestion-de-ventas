@@ -1,10 +1,8 @@
 <?php
 
-use App\Http\Controllers\Gerente\DashboardController;
 use App\Models\Certificate;
 use App\Models\CertificateUnit;
 use App\Models\Client;
-use App\Models\ClientRetentionScore;
 use App\Models\ElectronicDocument;
 use App\Models\Installment;
 use App\Models\Sale;
@@ -14,7 +12,6 @@ use App\Models\ServiceOrder;
 use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Http\Request;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -240,25 +237,6 @@ test('el almacén mixto que surte a una tienda no cuenta como otra sede de venta
         ->assertInertia(fn (Assert $page) => $page
             ->where('mostrarComparacionSedes', false)
             ->where('sedes', []));
-});
-
-test('la IA de recompra va al reporte comercial y no al dashboard, que es solo BI', function () {
-    $gerente = createGerenteUserForDashboardTest();
-    $cliente = Client::factory()->create(['nombre_comercial' => 'Grifo El Sol']);
-    ClientRetentionScore::query()->create([
-        'client_id' => $cliente->id, 'probabilidad' => 0.91, 'categoria' => 'alta',
-        'recencia_dias' => 3, 'frecuencia_compras' => 8, 'monto_total' => 225, 'ticket_promedio' => 28,
-        'antiguedad_dias' => 31, 'diversidad_productos' => 1, 'compro_recarga' => false,
-        'factores_json' => ['resumen' => 'Compra seguido.'], 'scored_at' => now(),
-    ]);
-
-    $this->actingAs($gerente)->get(route('gerente.dashboard', ['current_team' => $gerente->currentTeam]))
-        ->assertInertia(fn (Assert $page) => $page->missing('iaRecompra'));
-
-    $ia = app(DashboardController::class)->datosMensuales(Request::create('/'))['iaRecompra'];
-    expect($ia['alta'])->toBe(1)
-        ->and($ia['clientes'][0]['cliente'])->toBe('Grifo El Sol')
-        ->and($ia['clientes'][0]['porcentaje'])->toBe(91);
 });
 
 test('cada enlace del resumen abre solo lo que cuenta: paso, tramo o comprobantes vencidos', function () {

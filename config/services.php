@@ -54,9 +54,4 @@ return [
         ],
     ],
 
-    // Python con xgboost y shap para reentrenar el modelo de recompra (ml:reentrenar).
-    'ml' => [
-        'python' => env('ML_PYTHON', 'python'),
-    ],
-
 ];

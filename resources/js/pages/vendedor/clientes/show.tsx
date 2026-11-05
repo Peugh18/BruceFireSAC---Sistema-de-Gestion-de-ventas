@@ -8,7 +8,6 @@ import {
     CheckCircle2,
     CreditCard,
     Edit3,
-    Lightbulb,
     Mail,
     MapPin,
     MessageSquare,
@@ -45,7 +44,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { RecompraBadge, type Recompra } from '@/components/recompra-badge';
 import UbigeoPicker, { type UbigeoOption } from '@/components/ubigeo-picker';
 import {
     HistorialActividad,
@@ -232,7 +230,6 @@ export type Props = {
     cobranzas?: CobranzasData;
     historial?: HistorialItem[];
     sunat?: SunatData;
-    recompra?: Recompra | null;
 };
 
 export type TabKey =
@@ -348,7 +345,6 @@ export default function ClienteShow({
     cobranzas = { cuotas: [], pagos: [] },
     historial = [],
     sunat,
-    recompra = null,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const { pedirConfirmacion, dialogoConfirmacion } = useConfirmarAccion();
@@ -899,21 +895,6 @@ export default function ClienteShow({
                         </div>
                     </div>
                 </Card>
-
-                {recompra && (
-                    <Card className="border-border bg-card rounded-2xl p-4 shadow-none">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-foreground text-sm font-medium">
-                                Probabilidad de volver a comprar (6 meses)
-                            </span>
-                            <RecompraBadge recompra={recompra} />
-                        </div>
-                        <p className="text-muted-foreground mt-1.5 flex items-start gap-2 text-[12.5px]">
-                            <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
-                            <span>{recompra.resumen}</span>
-                        </p>
-                    </Card>
-                )}
 
                 {/* ================= BARRA DE PESTAÑAS (6 PESTAÑAS) ================= */}
                 <TabsBf<TabKey>
