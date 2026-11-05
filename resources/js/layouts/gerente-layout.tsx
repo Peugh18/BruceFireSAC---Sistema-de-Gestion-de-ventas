@@ -4,6 +4,7 @@ import { Bell, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { GerenteSidebar } from '@/components/gerente-sidebar';
+import { HoraDelServidor } from '@/components/hora-del-servidor';
 import { ThemeToggle } from '@/components/theme-toggle';
 import cajasRoutes from '@/routes/gerente/cajas';
 import type { Team } from '@/types';
@@ -73,6 +74,7 @@ export default function GerenteLayout({ children, title }: GerenteLayoutProps) {
                             <b className="text-foreground font-bold">{title}</b>
                         </div>
 
+                        <HoraDelServidor />
                         <ThemeToggle />
 
                         <Link

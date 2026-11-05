@@ -20,7 +20,12 @@ export type ClientFicha = ClientOption & {
     estado_contribuyente?: string | null;
     condicion_domicilio?: string | null;
     vehiculos: { id: number; placa: string; descripcion?: string | null }[];
-    sedes: { id: number; nombre: string; direccion?: string | null }[];
+    sedes: {
+        id: number;
+        nombre: string;
+        direccion?: string | null;
+        para_facturar?: boolean;
+    }[];
 };
 
 /**

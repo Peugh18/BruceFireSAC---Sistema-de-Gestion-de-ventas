@@ -73,7 +73,7 @@ class EditarVentaEmitida
             $documento = $sale->esNotaVenta() ? null : $sale->comprobanteElectronico();
 
             $antes = [
-                ...$sale->only(['client_id', 'comprobante_tipo', 'condicion_pago', 'total', 'destino', 'referencia']),
+                ...$sale->only(['client_id', 'comprobante_tipo', 'condicion_pago', 'total', 'destino', 'referencia', 'direccion_del_local']),
                 'comprobante' => $sale->numeroComprobante(),
                 'equipos' => $sale->items->pluck('equipment_id')->filter()->sort()->values()->all(),
             ];
@@ -143,7 +143,7 @@ class EditarVentaEmitida
                 entity: $sale,
                 oldValues: $antes,
                 newValues: [
-                    ...$sale->only(['client_id', 'comprobante_tipo', 'condicion_pago', 'total', 'destino', 'referencia']),
+                    ...$sale->only(['client_id', 'comprobante_tipo', 'condicion_pago', 'total', 'destino', 'referencia', 'direccion_del_local']),
                     'comprobante' => $sale->numeroComprobante(),
                 ],
                 userId: $userId,

@@ -37,10 +37,46 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import VendedorLayout from '@/layouts/vendedor-layout';
+import caja from '@/routes/vendedor/caja';
+import cobranzas from '@/routes/vendedor/cobranzas';
 import pagos from '@/routes/vendedor/cobranzas/pagos';
 import type { Team } from '@/types';
-import { fechaCorta, soles } from '@/lib/utils';
+import { fechaCorta, fechaLocal, soles } from '@/lib/utils';
 import { NativeSelect } from '@/components/ui/native-select';
+
+/** Días de hoy a la fecha "YYYY-MM-DD" (0 = hoy). */
+function diasHasta(fecha: string): number {
+    return Math.round(
+        (new Date(`${fecha.slice(0, 10)}T00:00:00`).getTime() -
+            new Date(`${fechaLocal()}T00:00:00`).getTime()) /
+            86_400_000,
+    );
+}
+
+/** "Hoy · 08:12" o "Jue 29/10 · 10:38": un turno de otro día se nota. */
+function aperturaDelTurno(fecha?: string): string {
+    if (!fecha) {
+        return 'Hoy';
+    }
+
+    const apertura = new Date(fecha);
+    const hora = apertura.toLocaleTimeString('es-PE', {
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
+    if (fechaLocal(apertura) === fechaLocal()) {
+        return `Hoy · ${hora}`;
+    }
+
+    const dia = apertura.toLocaleDateString('es-PE', {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit',
+    });
+
+    return `Desde ${dia} · ${hora}`;
+}
 
 /**
  * Billetes y monedas que se cuentan al cerrar, en céntimos (mismas claves que
@@ -83,7 +119,30 @@ export type TurnoActual = {
         motivo: string;
         hora: string | null;
     }[];
+    movimientos?: Movimiento[];
 } | null;
+
+/** Un movimiento del turno; el efectivo llega sin monto (arqueo ciego). */
+export type Movimiento = {
+    id: string;
+    hora: string | null;
+    tipo: 'cobro' | 'venta' | 'salida' | 'apertura';
+    titulo: string;
+    detalle: string | null;
+    comprobante: string | null;
+    efectivo: boolean;
+    monto: number | null;
+};
+
+type Tramo = { monto: number; cuotas: number };
+
+export type ResumenCobranzas = {
+    vencido: Tramo;
+    semana: Tramo;
+    total: Tramo;
+    clientes: number;
+    cobrado_mes: number;
+};
 
 export type CierreItem = {
     id: number;
@@ -149,6 +208,8 @@ export type Props = {
     cierres?: PaginatedList<CierreItem>;
     sedes?: Sede[];
     installments?: PaginatedList<InstallmentItem>;
+    resumen?: ResumenCobranzas;
+    filtro?: 'todas' | 'vencidas' | 'semana' | 'luego';
 };
 
 export default function CobranzasIndex({
@@ -156,8 +217,12 @@ export default function CobranzasIndex({
     cierres,
     sedes = [],
     installments,
+    resumen,
+    filtro = 'todas',
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    // Dos vistas de la misma pantalla: Caja (/caja) y Cobranzas (/cobranzas).
+    const vista = usePage().url.includes('/cobranzas') ? 'cobranzas' : 'caja';
     const teamSlug =
         currentTeam?.slug ||
         (typeof window !== 'undefined'
@@ -367,547 +432,863 @@ export default function CobranzasIndex({
             <div className="flex flex-col gap-4">
                 <PageHeader
                     title="Caja y cobranzas"
-                    description="El arqueo de tu turno y las cuotas que tus clientes tienen por pagar."
+                    description={
+                        vista === 'caja'
+                            ? 'El dinero de tu turno de hoy y cómo cerraron los anteriores.'
+                            : 'Las cuotas que tus clientes tienen por pagar, empezando por las vencidas.'
+                    }
                 />
-                {/* 2-Column Main Layout */}
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                    {/* Columna Izquierda: Panel de Arqueo de Caja (5 cols) */}
-                    <div className="flex flex-col gap-4 xl:col-span-5">
-                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Wallet className="text-muted-foreground size-4" />
-                                    <span className="text-foreground text-[13.5px] font-bold">
-                                        Arqueo de caja
-                                    </span>
-                                </div>
-                                {turno_actual?.sede && (
-                                    <span className="text-muted-foreground text-xs font-semibold">
-                                        {turno_actual.sede}
-                                    </span>
-                                )}
-                            </div>
-
-                            {turno_actual &&
-                            turno_actual.estado === 'abierto' ? (
-                                <div className="mt-4 flex flex-col">
-                                    {/* Estado: Turno Abierto */}
-                                    <div className="text-success-strong flex items-center gap-2.5 rounded-2xl bg-emerald-500/10 p-3.5">
-                                        <span className="relative flex size-2.5">
-                                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-600 opacity-75" />
-                                            <span className="relative inline-flex size-2.5 rounded-full bg-emerald-600" />
-                                        </span>
-                                        <span className="text-[12.5px] font-bold">
-                                            Turno abierto
-                                        </span>
-                                        <span className="text-muted-foreground ml-auto font-mono text-xs">
-                                            {turno_actual.fecha_apertura
-                                                ? new Date(
-                                                      turno_actual.fecha_apertura,
-                                                  ).toLocaleTimeString(
-                                                      'es-PE',
-                                                      {
-                                                          hour: '2-digit',
-                                                          minute: '2-digit',
-                                                      },
-                                                  )
-                                                : 'Hoy'}
-                                        </span>
+                <nav
+                    aria-label="Secciones de Caja y cobranzas"
+                    className="border-border flex gap-1 border-b"
+                >
+                    {[
+                        {
+                            clave: 'caja',
+                            nombre: 'Mi caja',
+                            href: caja.index.url(teamSlug),
+                        },
+                        {
+                            clave: 'cobranzas',
+                            nombre: 'Cobranzas',
+                            href: cobranzas.index.url(teamSlug),
+                        },
+                    ].map((pestana) => (
+                        <Link
+                            key={pestana.clave}
+                            href={pestana.href}
+                            aria-current={
+                                vista === pestana.clave ? 'page' : undefined
+                            }
+                            className={`-mb-px flex min-h-11 items-center gap-2 border-b-2 px-4 text-sm font-semibold ${vista === pestana.clave ? 'border-primary text-foreground' : 'text-muted-foreground hover:text-foreground border-transparent'}`}
+                        >
+                            {pestana.nombre}
+                            {pestana.clave === 'cobranzas' &&
+                            (resumen?.vencido.cuotas ?? 0) > 0 ? (
+                                <span className="bg-destructive/10 text-destructive-strong rounded-full px-2 py-0.5 text-xs font-bold">
+                                    {resumen?.vencido.cuotas}{' '}
+                                    {resumen?.vencido.cuotas === 1
+                                        ? 'vencida'
+                                        : 'vencidas'}
+                                </span>
+                            ) : null}
+                        </Link>
+                    ))}
+                </nav>
+                <div className="flex flex-col gap-4">
+                    {vista === 'caja' ? (
+                        <>
+                            <div className="grid items-start gap-4 lg:grid-cols-2">
+                                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Wallet className="text-muted-foreground size-4" />
+                                            <span className="text-foreground text-[13.5px] font-bold">
+                                                Arqueo de caja
+                                            </span>
+                                        </div>
+                                        {turno_actual?.sede && (
+                                            <span className="text-muted-foreground text-xs font-semibold">
+                                                {turno_actual.sede}
+                                            </span>
+                                        )}
                                     </div>
-                                    {turno_actual.abierto_mas_de_24_horas && (
-                                        <p
-                                            role="status"
-                                            className="text-warning-strong mt-3 text-xs"
-                                        >
-                                            Tu caja lleva más de 24 horas
-                                            abierta. Revisa el turno y realiza
-                                            el cierre cuando corresponda.
-                                        </p>
-                                    )}
 
-                                    {/* Desglose Monetario */}
-                                    <div className="divide-border mt-4 divide-y text-[12.5px]">
-                                        <div className="flex items-center justify-between py-2">
-                                            <span className="text-muted-foreground">
-                                                Fondo inicial (apertura)
-                                            </span>
-                                            <span className="text-foreground font-semibold">
-                                                {soles(montoApertura)}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between py-2">
-                                            <span className="text-muted-foreground">
-                                                Transferencia / Depósito
-                                            </span>
-                                            <span className="text-foreground font-semibold">
-                                                {soles(ventasTransferencia)}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between py-2">
-                                            <span className="text-muted-foreground">
-                                                Tarjeta / Yape / Plin
-                                            </span>
-                                            <span className="text-foreground font-semibold">
-                                                {soles(ventasTarjetaYape)}
-                                            </span>
-                                        </div>
-                                        {ventasOtros !== 0 && (
-                                            <div className="flex items-center justify-between py-2">
-                                                <span className="text-muted-foreground">
-                                                    Otros medios
+                                    {turno_actual &&
+                                    turno_actual.estado === 'abierto' ? (
+                                        <div className="mt-4 flex flex-col">
+                                            {/* Estado: Turno Abierto */}
+                                            <div className="text-success-strong flex items-center gap-2.5 rounded-2xl bg-emerald-500/10 p-3.5">
+                                                <span className="relative flex size-2.5">
+                                                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-600 opacity-75" />
+                                                    <span className="relative inline-flex size-2.5 rounded-full bg-emerald-600" />
                                                 </span>
-                                                <span className="text-foreground font-semibold">
-                                                    {soles(ventasOtros)}
+                                                <span className="text-[12.5px] font-bold">
+                                                    Turno abierto
+                                                </span>
+                                                <span className="text-muted-foreground ml-auto text-xs tabular-nums">
+                                                    {aperturaDelTurno(
+                                                        turno_actual.fecha_apertura,
+                                                    )}
                                                 </span>
                                             </div>
-                                        )}
-                                        <div className="flex items-center justify-between py-2">
-                                            <span className="text-muted-foreground">
-                                                Salidas de dinero
-                                            </span>
-                                            <span className="text-foreground font-semibold">
-                                                − {soles(totalSalidas)}
-                                            </span>
-                                        </div>
-                                        {(turno_actual.salidas ?? []).length >
-                                            0 && (
-                                            <ul className="text-muted-foreground space-y-1 py-2 text-xs">
-                                                {(
-                                                    turno_actual.salidas ?? []
-                                                ).map((salida) => (
-                                                    <li
-                                                        key={salida.id}
-                                                        className="flex justify-between gap-3"
-                                                    >
-                                                        <span className="min-w-0 truncate">
-                                                            {salida.hora} ·{' '}
-                                                            {salida.motivo}
-                                                        </span>
-                                                        <span className="shrink-0">
-                                                            {soles(
-                                                                salida.monto,
-                                                            )}
-                                                        </span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                        {/* Arqueo ciego (E-011): el vendedor
-                                        no ve el efectivo esperado; la
-                                        diferencia la revisa el Gerente. */}
-                                        <p className="text-muted-foreground pt-2.5 text-xs">
-                                            Al cerrar cuentas el cajón por
-                                            billetes y monedas. La diferencia,
-                                            si la hay, la revisa el Gerente.
-                                        </p>
-                                    </div>
 
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() =>
-                                            setSalidaDialogOpen(true)
-                                        }
-                                        className="border-border mt-5 h-10 w-full rounded-lg text-[13px] font-semibold"
-                                    >
-                                        Registrar salida de dinero
-                                    </Button>
-
-                                    {/* Botón Cerrar Turno */}
-                                    <Button
-                                        type="button"
-                                        onClick={() =>
-                                            setCloseTurnoDialogOpen(true)
-                                        }
-                                        className="bg-primary hover:bg-primary/90 mt-2 h-10 w-full rounded-lg text-[13px] font-bold text-white shadow-none transition-colors"
-                                    >
-                                        <Lock className="mr-1.5 size-4" />
-                                        <span>Cerrar turno (arqueo ciego)</span>
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="border-border bg-muted/40 mt-4 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-6 text-center">
-                                    <div className="bg-muted text-muted-foreground flex size-11 items-center justify-center rounded-full">
-                                        <Unlock className="size-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-foreground text-[13px] font-bold">
-                                            No hay un turno de caja abierto
-                                        </p>
-                                        <p className="text-muted-foreground mt-1 text-xs">
-                                            Debes abrir un turno para registrar
-                                            cobros en efectivo y ventas del día.
-                                        </p>
-                                    </div>
-                                    <Button
-                                        aria-label="Abrir turno de caja"
-                                        type="button"
-                                        onClick={() => abrirDialogoApertura()}
-                                        className="mt-1 rounded-lg bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-none hover:bg-emerald-700"
-                                    >
-                                        <Unlock className="mr-1.5 size-3.5" />
-                                        <span>Abrir turno de caja</span>
-                                    </Button>
-                                </div>
-                            )}
-                        </Card>
-
-                        {/* Historial de Cierres Recientes (si hay data) */}
-                        {cierres && cierres.data.length > 0 && (
-                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-foreground text-[13px] font-bold">
-                                        Cierres recientes
-                                    </span>
-                                    <span className="text-muted-foreground text-xs">
-                                        {cierres.total ?? cierres.data.length}{' '}
-                                        {(cierres.total ??
-                                            cierres.data.length) === 1
-                                            ? 'cierre'
-                                            : 'cierres'}
-                                    </span>
-                                </div>
-                                <div className="divide-border mt-3 divide-y text-[12px]">
-                                    {cierres.data.slice(0, 4).map((cierre) => {
-                                        return (
-                                            <div
-                                                key={cierre.id}
-                                                className="py-2.5 first:pt-1"
-                                            >
-                                                <div className="text-foreground flex items-center justify-between font-semibold">
-                                                    <span>
-                                                        {cierre.sede ||
-                                                            'Sede principal'}
+                                            {/* Desglose Monetario */}
+                                            <div className="divide-border mt-4 divide-y text-[12.5px]">
+                                                <div className="flex items-center justify-between py-2">
+                                                    <span className="text-muted-foreground">
+                                                        Fondo inicial (apertura)
                                                     </span>
-                                                    <span>
+                                                    <span className="text-foreground font-semibold">
+                                                        {soles(montoApertura)}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between py-2">
+                                                    <span className="text-muted-foreground">
+                                                        Transferencia / Depósito
+                                                    </span>
+                                                    <span className="text-foreground font-semibold">
                                                         {soles(
-                                                            cierre.monto_contado_cierre,
+                                                            ventasTransferencia,
                                                         )}
                                                     </span>
                                                 </div>
-                                                <div className="text-muted-foreground mt-0.5 flex items-center justify-between text-xs">
-                                                    <span>
-                                                        {cierre.fecha_cierre
-                                                            ? new Date(
-                                                                  cierre.fecha_cierre,
-                                                              ).toLocaleDateString(
-                                                                  'es-PE',
-                                                              )
-                                                            : '-'}
+                                                <div className="flex items-center justify-between py-2">
+                                                    <span className="text-muted-foreground">
+                                                        Tarjeta / Yape / Plin
+                                                    </span>
+                                                    <span className="text-foreground font-semibold">
+                                                        {soles(
+                                                            ventasTarjetaYape,
+                                                        )}
                                                     </span>
                                                 </div>
+                                                {ventasOtros !== 0 && (
+                                                    <div className="flex items-center justify-between py-2">
+                                                        <span className="text-muted-foreground">
+                                                            Otros medios
+                                                        </span>
+                                                        <span className="text-foreground font-semibold">
+                                                            {soles(ventasOtros)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-between py-2">
+                                                    <span className="text-muted-foreground">
+                                                        Salidas de dinero
+                                                    </span>
+                                                    <span className="text-foreground font-semibold">
+                                                        − {soles(totalSalidas)}
+                                                    </span>
+                                                </div>
+                                                {(turno_actual.salidas ?? [])
+                                                    .length > 0 && (
+                                                    <ul className="text-muted-foreground space-y-1 py-2 text-xs">
+                                                        {(
+                                                            turno_actual.salidas ??
+                                                            []
+                                                        ).map((salida) => (
+                                                            <li
+                                                                key={salida.id}
+                                                                className="flex justify-between gap-3"
+                                                            >
+                                                                <span className="min-w-0 truncate">
+                                                                    {
+                                                                        salida.hora
+                                                                    }{' '}
+                                                                    ·{' '}
+                                                                    {
+                                                                        salida.motivo
+                                                                    }
+                                                                </span>
+                                                                <span className="shrink-0">
+                                                                    {soles(
+                                                                        salida.monto,
+                                                                    )}
+                                                                </span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                                {/* Arqueo ciego (E-011): el vendedor
+                                        no ve el efectivo esperado; la
+                                        diferencia la revisa el Gerente. */}
+                                                <p className="text-muted-foreground pt-2.5 text-xs">
+                                                    Al cerrar cuentas el cajón
+                                                    por billetes y monedas. La
+                                                    diferencia, si la hay, la
+                                                    revisa el Gerente.
+                                                </p>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            </Card>
-                        )}
-                    </div>
+
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    setSalidaDialogOpen(true)
+                                                }
+                                                className="border-border mt-5 h-10 w-full rounded-lg text-[13px] font-semibold"
+                                            >
+                                                Registrar salida de dinero
+                                            </Button>
+
+                                            {/* Botón Cerrar Turno */}
+                                            <Button
+                                                type="button"
+                                                onClick={() =>
+                                                    setCloseTurnoDialogOpen(
+                                                        true,
+                                                    )
+                                                }
+                                                className="bg-primary hover:bg-primary/90 mt-2 h-10 w-full rounded-lg text-[13px] font-bold text-white shadow-none transition-colors"
+                                            >
+                                                <Lock className="mr-1.5 size-4" />
+                                                <span>
+                                                    Cerrar turno y contar
+                                                    efectivo
+                                                </span>
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="border-border bg-muted/40 mt-4 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed p-6 text-center">
+                                            <div className="bg-muted text-muted-foreground flex size-11 items-center justify-center rounded-full">
+                                                <Unlock className="size-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-foreground text-[13px] font-bold">
+                                                    No hay un turno de caja
+                                                    abierto
+                                                </p>
+                                                <p className="text-muted-foreground mt-1 text-xs">
+                                                    Debes abrir un turno para
+                                                    registrar cobros en efectivo
+                                                    y ventas del día.
+                                                </p>
+                                            </div>
+                                            <Button
+                                                aria-label="Abrir turno de caja"
+                                                type="button"
+                                                onClick={() =>
+                                                    abrirDialogoApertura()
+                                                }
+                                                className="mt-1 rounded-lg bg-emerald-600 px-4 text-[13px] font-bold text-white shadow-none hover:bg-emerald-700"
+                                            >
+                                                <Unlock className="mr-1.5 size-3.5" />
+                                                <span>Abrir turno de caja</span>
+                                            </Button>
+                                        </div>
+                                    )}
+                                </Card>
+
+                                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                                    <div className="flex items-baseline justify-between">
+                                        <h2 className="text-foreground text-[13.5px] font-bold">
+                                            Movimientos de hoy
+                                        </h2>
+                                        <span className="text-muted-foreground text-xs">
+                                            {
+                                                (
+                                                    turno_actual?.movimientos ??
+                                                    []
+                                                ).length
+                                            }{' '}
+                                            {(turno_actual?.movimientos ?? [])
+                                                .length === 1
+                                                ? 'movimiento'
+                                                : 'movimientos'}
+                                        </span>
+                                    </div>
+                                    {(turno_actual?.movimientos ?? [])
+                                        .length === 0 ? (
+                                        <p className="text-muted-foreground mt-4 text-[12.5px]">
+                                            Cuando abras tu turno, aquí verás
+                                            cada cobro, venta y salida con su
+                                            hora.
+                                        </p>
+                                    ) : (
+                                        <ol className="divide-border mt-3 divide-y">
+                                            {(
+                                                turno_actual?.movimientos ?? []
+                                            ).map((mov) => (
+                                                <li
+                                                    key={mov.id}
+                                                    className="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
+                                                >
+                                                    <span className="text-muted-foreground text-xs tabular-nums">
+                                                        {mov.hora}
+                                                    </span>
+                                                    <span className="min-w-0">
+                                                        <span className="text-foreground block truncate text-[12.5px] font-semibold">
+                                                            {mov.titulo}
+                                                        </span>
+                                                        <span className="text-muted-foreground block truncate text-xs">
+                                                            {[
+                                                                mov.detalle,
+                                                                mov.comprobante,
+                                                            ]
+                                                                .filter(Boolean)
+                                                                .join(' · ')}
+                                                        </span>
+                                                    </span>
+                                                    <span
+                                                        className={`text-[12.5px] font-semibold tabular-nums ${mov.tipo === 'salida' ? 'text-destructive-strong' : mov.efectivo && mov.tipo !== 'apertura' ? 'text-success-strong' : 'text-muted-foreground'}`}
+                                                    >
+                                                        {mov.monto === null
+                                                            ? 'Efectivo'
+                                                            : mov.tipo ===
+                                                                'salida'
+                                                              ? `− ${soles(mov.monto)}`
+                                                              : soles(
+                                                                    mov.monto,
+                                                                )}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    )}
+                                    <p className="text-muted-foreground border-border mt-3 border-t pt-3 text-xs">
+                                        El efectivo sale sin monto: lo cuentas
+                                        al cerrar y la diferencia la revisa el
+                                        gerente.
+                                    </p>
+                                </Card>
+                            </div>
+
+                            {cierres && cierres.data.length > 0 && (
+                                <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                                    <div className="flex items-baseline justify-between">
+                                        <h2 className="text-foreground text-[13.5px] font-bold">
+                                            Turnos anteriores
+                                        </h2>
+                                        <span className="text-muted-foreground text-xs">
+                                            {cierres.total ??
+                                                cierres.data.length}{' '}
+                                            {(cierres.total ??
+                                                cierres.data.length) === 1
+                                                ? 'turno'
+                                                : 'turnos'}
+                                        </span>
+                                    </div>
+                                    <div className="mt-3 overflow-x-auto">
+                                        <Table className="w-full text-[12.5px]">
+                                            <TableHeader>
+                                                <TableRow className="border-border border-b">
+                                                    <TableHead className="text-left">
+                                                        Día
+                                                    </TableHead>
+                                                    <TableHead className="text-left">
+                                                        Sede
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        Fondo inicial
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        Contaste al cerrar
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {cierres.data
+                                                    .slice(0, 6)
+                                                    .map((cierre) => (
+                                                        <TableRow
+                                                            key={cierre.id}
+                                                            className="border-border border-b last:border-0"
+                                                        >
+                                                            <TableCell className="py-2.5">
+                                                                <span className="text-foreground block font-semibold capitalize">
+                                                                    {cierre.fecha_cierre
+                                                                        ? new Date(
+                                                                              cierre.fecha_cierre,
+                                                                          ).toLocaleDateString(
+                                                                              'es-PE',
+                                                                              {
+                                                                                  weekday:
+                                                                                      'long',
+                                                                                  day: 'numeric',
+                                                                                  month: 'short',
+                                                                              },
+                                                                          )
+                                                                        : '—'}
+                                                                </span>
+                                                                <span className="text-muted-foreground block text-xs tabular-nums">
+                                                                    {cierre.fecha_apertura
+                                                                        ? new Date(
+                                                                              cierre.fecha_apertura,
+                                                                          ).toLocaleTimeString(
+                                                                              'es-PE',
+                                                                              {
+                                                                                  hour: '2-digit',
+                                                                                  minute: '2-digit',
+                                                                              },
+                                                                          )
+                                                                        : ''}
+                                                                    {cierre.fecha_cierre
+                                                                        ? ` a ${new Date(cierre.fecha_cierre).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`
+                                                                        : ''}
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground py-2.5">
+                                                                {cierre.sede ||
+                                                                    'Sede principal'}
+                                                            </TableCell>
+                                                            <TableCell className="py-2.5 text-right tabular-nums">
+                                                                {soles(
+                                                                    cierre.monto_apertura,
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="text-foreground py-2.5 text-right font-semibold tabular-nums">
+                                                                {soles(
+                                                                    cierre.monto_contado_cierre,
+                                                                )}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                    <p className="text-muted-foreground mt-3 text-xs">
+                                        Si hubo diferencia en algún cierre, la
+                                        revisa el gerente.
+                                    </p>
+                                </Card>
+                            )}
+                        </>
+                    ) : null}
 
                     {/* Columna Derecha: Mis Cuentas por Cobrar (7 cols) */}
-                    <div className="flex flex-col xl:col-span-7">
-                        <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <span className="text-foreground text-[13.5px] font-bold">
-                                        Mis cuentas por cobrar
-                                    </span>
-                                    <p className="text-muted-foreground mt-0.5 text-xs">
-                                        Cuotas por cobrar y pagos registrados
-                                        hoy
-                                    </p>
+                    {vista === 'cobranzas' ? (
+                        <div className="flex flex-col gap-4">
+                            {resumen ? (
+                                <section
+                                    aria-label="Resumen de cobranzas"
+                                    className="grid grid-cols-2 gap-3 xl:grid-cols-4"
+                                >
+                                    {[
+                                        {
+                                            nombre: 'Vencido',
+                                            monto: resumen.vencido.monto,
+                                            nota: `${resumen.vencido.cuotas} ${resumen.vencido.cuotas === 1 ? 'cuota' : 'cuotas'}`,
+                                            tono: 'peligro',
+                                        },
+                                        {
+                                            nombre: 'Vence en 7 días',
+                                            monto: resumen.semana.monto,
+                                            nota: `${resumen.semana.cuotas} ${resumen.semana.cuotas === 1 ? 'cuota' : 'cuotas'}`,
+                                            tono: 'aviso',
+                                        },
+                                        {
+                                            nombre: 'Por cobrar en total',
+                                            monto: resumen.total.monto,
+                                            nota: `${resumen.total.cuotas} ${resumen.total.cuotas === 1 ? 'cuota' : 'cuotas'} de ${resumen.clientes} ${resumen.clientes === 1 ? 'cliente' : 'clientes'}`,
+                                            tono: 'neutro',
+                                        },
+                                        {
+                                            nombre: 'Cobrado este mes',
+                                            monto: resumen.cobrado_mes,
+                                            nota: 'Descontando devoluciones',
+                                            tono: 'neutro',
+                                        },
+                                    ].map((dato) => (
+                                        <div
+                                            key={dato.nombre}
+                                            className={`rounded-2xl border p-4 ${dato.tono === 'peligro' && dato.monto > 0 ? 'border-destructive/30 bg-destructive/10' : dato.tono === 'aviso' && dato.monto > 0 ? 'border-amber-500/30 bg-amber-500/10' : 'border-border bg-card'}`}
+                                        >
+                                            <p
+                                                className={`text-[12.5px] font-semibold ${dato.tono === 'peligro' && dato.monto > 0 ? 'text-destructive-strong' : dato.tono === 'aviso' && dato.monto > 0 ? 'text-warning-strong' : 'text-muted-foreground'}`}
+                                            >
+                                                {dato.nombre}
+                                            </p>
+                                            <p className="text-foreground mt-1 text-lg font-bold tabular-nums sm:text-2xl">
+                                                {soles(dato.monto)}
+                                            </p>
+                                            <p className="text-muted-foreground text-xs">
+                                                {dato.nota}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </section>
+                            ) : null}
+                            <Card className="border-border bg-card rounded-2xl p-5 shadow-none">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <span className="text-foreground text-[13.5px] font-bold">
+                                            Mis cuentas por cobrar
+                                        </span>
+                                        <p className="text-muted-foreground mt-0.5 text-xs">
+                                            Cuotas por cobrar y pagos
+                                            registrados hoy
+                                        </p>
+                                    </div>
+                                    <Badge className="text-warning-strong border border-none border-amber-500/20 bg-amber-500/10">
+                                        {installmentRows.length}{' '}
+                                        {installmentRows.length === 1
+                                            ? 'cuota'
+                                            : 'cuotas'}
+                                    </Badge>
                                 </div>
-                                <Badge className="text-warning-strong border border-none border-amber-500/20 bg-amber-500/10">
-                                    {installmentRows.length}{' '}
-                                    {installmentRows.length === 1
-                                        ? 'cuota'
-                                        : 'cuotas'}
-                                </Badge>
-                            </div>
 
-                            <div className="mt-4 overflow-x-auto">
-                                <Table className="w-full border-collapse text-[12.5px]">
-                                    <TableHeader>
-                                        <TableRow className="border-border border-b">
-                                            <TableHead className="text-left">
-                                                Cliente
-                                            </TableHead>
-                                            <TableHead className="text-left">
-                                                Cuota
-                                            </TableHead>
-                                            <TableHead className="text-left">
-                                                Saldo por cobrar
-                                            </TableHead>
-                                            <TableHead className="text-left">
-                                                Vencimiento
-                                            </TableHead>
-                                            <TableHead className="text-right">
-                                                Acción
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {installmentRows.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell
-                                                    colSpan={5}
-                                                    className="text-muted-foreground px-4 py-12 text-center"
-                                                >
-                                                    <div className="flex flex-col items-center justify-center gap-2">
-                                                        <CheckCircle2 className="text-success-strong size-8" />
-                                                        <p className="text-foreground text-xs font-semibold">
-                                                            No tienes cuotas
-                                                            pendientes de cobro
-                                                        </p>
-                                                        <p className="text-muted-foreground text-xs">
-                                                            Todos los clientes
-                                                            de tus ventas están
-                                                            al día con sus
-                                                            pagos.
-                                                        </p>
-                                                    </div>
-                                                </TableCell>
+                                <nav
+                                    aria-label="Filtrar cuotas por vencimiento"
+                                    className="mt-4 flex flex-wrap gap-2"
+                                >
+                                    {(
+                                        [
+                                            [
+                                                'todas',
+                                                'Todas',
+                                                resumen?.total.cuotas,
+                                            ],
+                                            [
+                                                'vencidas',
+                                                'Vencidas',
+                                                resumen?.vencido.cuotas,
+                                            ],
+                                            [
+                                                'semana',
+                                                'Vencen en 7 días',
+                                                resumen?.semana.cuotas,
+                                            ],
+                                            [
+                                                'luego',
+                                                'Más adelante',
+                                                undefined,
+                                            ],
+                                        ] as const
+                                    ).map(([clave, nombre, cuenta]) => (
+                                        <Link
+                                            key={clave}
+                                            href={cobranzas.index.url(
+                                                teamSlug,
+                                                {
+                                                    query:
+                                                        clave === 'todas'
+                                                            ? {}
+                                                            : { filtro: clave },
+                                                },
+                                            )}
+                                            preserveScroll
+                                            aria-current={
+                                                filtro === clave
+                                                    ? 'page'
+                                                    : undefined
+                                            }
+                                            className={`flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold ${filtro === clave ? 'bg-foreground text-background border-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            {nombre}
+                                            {cuenta !== undefined ? (
+                                                <span className="tabular-nums">
+                                                    {cuenta}
+                                                </span>
+                                            ) : null}
+                                        </Link>
+                                    ))}
+                                </nav>
+
+                                <div className="mt-4 overflow-x-auto">
+                                    <Table className="w-full border-collapse text-[12.5px]">
+                                        <TableHeader>
+                                            <TableRow className="border-border border-b">
+                                                <TableHead className="text-left">
+                                                    Cliente
+                                                </TableHead>
+                                                <TableHead className="text-left">
+                                                    Cuota
+                                                </TableHead>
+                                                <TableHead className="text-left">
+                                                    Saldo por cobrar
+                                                </TableHead>
+                                                <TableHead className="text-left">
+                                                    Vencimiento
+                                                </TableHead>
+                                                <TableHead className="text-right">
+                                                    Acción
+                                                </TableHead>
                                             </TableRow>
-                                        ) : (
-                                            installmentRows.map((inst) => {
-                                                const pagada =
-                                                    Number(inst.saldo) <= 0;
-                                                // Una cuota ya pagada no es deuda vencida.
-                                                const isVencido =
-                                                    !pagada &&
-                                                    inst.dias_vencido > 0;
-
-                                                return (
-                                                    <TableRow
-                                                        key={inst.id}
-                                                        className="border-border hover:bg-muted/40 border-b transition-colors"
+                                        </TableHeader>
+                                        <TableBody>
+                                            {installmentRows.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell
+                                                        colSpan={5}
+                                                        className="text-muted-foreground px-4 py-12 text-center"
                                                     >
-                                                        <TableCell className="px-2.5 py-3.5">
-                                                            <div className="text-foreground font-bold">
-                                                                {inst.cliente ||
-                                                                    'Cliente'}
-                                                            </div>
-                                                            <div className="text-muted-foreground font-mono text-xs">
-                                                                Venta:{' '}
-                                                                {inst.sale_numero ||
-                                                                    `#${inst.sale_id}`}
-                                                            </div>
-                                                        </TableCell>
+                                                        <div className="flex flex-col items-center justify-center gap-2">
+                                                            <CheckCircle2 className="text-success-strong size-8" />
+                                                            <p className="text-foreground text-xs font-semibold">
+                                                                No tienes cuotas
+                                                                pendientes de
+                                                                cobro
+                                                            </p>
+                                                            <p className="text-muted-foreground text-xs">
+                                                                Todos los
+                                                                clientes de tus
+                                                                ventas están al
+                                                                día con sus
+                                                                pagos.
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                installmentRows.map((inst) => {
+                                                    const pagada =
+                                                        Number(inst.saldo) <= 0;
+                                                    // Una cuota ya pagada no es deuda vencida.
+                                                    const isVencido =
+                                                        !pagada &&
+                                                        inst.dias_vencido > 0;
+                                                    const faltan = diasHasta(
+                                                        inst.fecha_vencimiento,
+                                                    );
+                                                    const pronto =
+                                                        !pagada &&
+                                                        !isVencido &&
+                                                        faltan <= 7;
 
-                                                        <TableCell className="text-foreground/80 px-2.5 py-3.5 font-mono text-xs">
-                                                            {inst.numero_cuota}
-                                                        </TableCell>
+                                                    return (
+                                                        <TableRow
+                                                            key={inst.id}
+                                                            className="border-border hover:bg-muted/40 border-b transition-colors"
+                                                        >
+                                                            <TableCell className="px-2.5 py-3.5">
+                                                                <div className="text-foreground font-bold">
+                                                                    {inst.cliente ||
+                                                                        'Cliente'}
+                                                                </div>
+                                                                <div className="text-muted-foreground font-mono text-xs">
+                                                                    Venta:{' '}
+                                                                    {inst.sale_numero ||
+                                                                        `#${inst.sale_id}`}
+                                                                </div>
+                                                            </TableCell>
 
-                                                        <TableCell className="text-foreground px-2.5 py-3.5 font-bold">
-                                                            <div>
-                                                                {soles(
-                                                                    inst.saldo,
-                                                                )}
-                                                            </div>
-                                                            <div className="text-muted-foreground text-xs font-normal">
-                                                                Importe
-                                                                original:{' '}
-                                                                {soles(
-                                                                    inst.monto,
-                                                                )}
-                                                            </div>
-                                                            <div className="mt-2 min-w-36 space-y-1">
-                                                                <p className="text-muted-foreground text-xs">
-                                                                    Abonado:{' '}
+                                                            <TableCell className="text-foreground/80 px-2.5 py-3.5 font-mono text-xs">
+                                                                {
+                                                                    inst.numero_cuota
+                                                                }
+                                                            </TableCell>
+
+                                                            <TableCell className="text-foreground px-2.5 py-3.5 font-bold">
+                                                                <div>
                                                                     {soles(
-                                                                        Math.max(
-                                                                            0,
-                                                                            Number(
-                                                                                inst.monto,
-                                                                            ) -
-                                                                                Number(
-                                                                                    inst.saldo,
-                                                                                ),
-                                                                        ),
+                                                                        inst.saldo,
                                                                     )}
-                                                                </p>
-                                                                <Progreso
-                                                                    label={`Pago de cuota ${inst.numero_cuota} de ${inst.sale_numero}`}
-                                                                    value={Math.max(
-                                                                        0,
-                                                                        Number(
-                                                                            inst.monto,
-                                                                        ) -
-                                                                            Number(
-                                                                                inst.saldo,
-                                                                            ),
-                                                                    )}
-                                                                    max={Number(
+                                                                </div>
+                                                                <div className="text-muted-foreground text-xs font-normal">
+                                                                    Importe
+                                                                    original:{' '}
+                                                                    {soles(
                                                                         inst.monto,
                                                                     )}
-                                                                    aria-valuetext={`${soles(Math.max(0, Number(inst.monto) - Number(inst.saldo)))} de ${soles(inst.monto)}`}
-                                                                    tone="success"
-                                                                />
-                                                            </div>
-                                                            {inst.anulados.map(
-                                                                (anulado) => (
-                                                                    <div
-                                                                        key={
-                                                                            anulado.id
-                                                                        }
-                                                                        className="text-destructive-strong text-xs font-normal"
-                                                                        title={
-                                                                            anulado.motivo ??
-                                                                            undefined
-                                                                        }
-                                                                    >
-                                                                        <span className="line-through">
+                                                                </div>
+                                                                {Number(
+                                                                    inst.monto,
+                                                                ) >
+                                                                Number(
+                                                                    inst.saldo,
+                                                                ) ? (
+                                                                    <div className="mt-2 min-w-36 space-y-1">
+                                                                        <p className="text-muted-foreground text-xs">
+                                                                            Abonado:{' '}
                                                                             {soles(
-                                                                                anulado.monto,
+                                                                                Math.max(
+                                                                                    0,
+                                                                                    Number(
+                                                                                        inst.monto,
+                                                                                    ) -
+                                                                                        Number(
+                                                                                            inst.saldo,
+                                                                                        ),
+                                                                                ),
                                                                             )}
-                                                                        </span>{' '}
-                                                                        cobro
-                                                                        anulado
-                                                                        {anulado.por
-                                                                            ? ` por ${anulado.por}`
-                                                                            : ''}
-                                                                        {anulado.motivo
-                                                                            ? `: ${anulado.motivo}`
-                                                                            : ''}
+                                                                        </p>
+                                                                        <Progreso
+                                                                            label={`Pago de cuota ${inst.numero_cuota} de ${inst.sale_numero}`}
+                                                                            value={Math.max(
+                                                                                0,
+                                                                                Number(
+                                                                                    inst.monto,
+                                                                                ) -
+                                                                                    Number(
+                                                                                        inst.saldo,
+                                                                                    ),
+                                                                            )}
+                                                                            max={Number(
+                                                                                inst.monto,
+                                                                            )}
+                                                                            aria-valuetext={`${soles(Math.max(0, Number(inst.monto) - Number(inst.saldo)))} de ${soles(inst.monto)}`}
+                                                                            tone="success"
+                                                                        />
                                                                     </div>
-                                                                ),
-                                                            )}
-                                                        </TableCell>
+                                                                ) : null}
+                                                                {inst.anulados.map(
+                                                                    (
+                                                                        anulado,
+                                                                    ) => (
+                                                                        <div
+                                                                            key={
+                                                                                anulado.id
+                                                                            }
+                                                                            className="text-destructive-strong text-xs font-normal"
+                                                                            title={
+                                                                                anulado.motivo ??
+                                                                                undefined
+                                                                            }
+                                                                        >
+                                                                            <span className="line-through">
+                                                                                {soles(
+                                                                                    anulado.monto,
+                                                                                )}
+                                                                            </span>{' '}
+                                                                            cobro
+                                                                            anulado
+                                                                            {anulado.por
+                                                                                ? ` por ${anulado.por}`
+                                                                                : ''}
+                                                                            {anulado.motivo
+                                                                                ? `: ${anulado.motivo}`
+                                                                                : ''}
+                                                                        </div>
+                                                                    ),
+                                                                )}
+                                                            </TableCell>
 
-                                                        <TableCell className="px-2.5 py-3.5">
-                                                            <Badge
-                                                                className={`rounded-full border-none px-2 py-0.5 text-xs font-bold ${
-                                                                    pagada
-                                                                        ? 'text-success-strong border border-emerald-500/20 bg-emerald-500/10'
+                                                            <TableCell className="px-2.5 py-3.5">
+                                                                <Badge
+                                                                    className={`rounded-full border-none px-2 py-0.5 text-xs font-bold ${
+                                                                        pagada
+                                                                            ? 'text-success-strong border border-emerald-500/20 bg-emerald-500/10'
+                                                                            : isVencido
+                                                                              ? 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
+                                                                              : pronto
+                                                                                ? 'text-warning-strong border border-amber-500/20 bg-amber-500/10'
+                                                                                : 'bg-muted text-muted-foreground border-border border'
+                                                                    }`}
+                                                                >
+                                                                    {pagada
+                                                                        ? `Pagada · vencía ${fechaCorta(inst.fecha_vencimiento)}`
                                                                         : isVencido
-                                                                          ? 'bg-destructive/10 text-destructive-strong border-destructive/20 border'
-                                                                          : 'text-warning-strong border border-amber-500/20 bg-amber-500/10'
-                                                                }`}
-                                                            >
-                                                                {pagada
-                                                                    ? `Pagada · vencía ${fechaCorta(inst.fecha_vencimiento)}`
-                                                                    : isVencido
-                                                                      ? `Vencido hace ${inst.dias_vencido}d`
-                                                                      : `Vence ${fechaCorta(inst.fecha_vencimiento)}`}
-                                                            </Badge>
-                                                        </TableCell>
+                                                                          ? `Venció hace ${inst.dias_vencido} ${inst.dias_vencido === 1 ? 'día' : 'días'}`
+                                                                          : faltan ===
+                                                                              0
+                                                                            ? 'Vence hoy'
+                                                                            : pronto
+                                                                              ? `Vence en ${faltan} ${faltan === 1 ? 'día' : 'días'}`
+                                                                              : `Vence ${fechaCorta(inst.fecha_vencimiento)}`}
+                                                                </Badge>
+                                                            </TableCell>
 
-                                                        <TableCell className="px-2.5 py-3.5 text-right">
-                                                            {inst.pagos
-                                                                .filter(
-                                                                    (pago) =>
-                                                                        pago.evidencia_url,
-                                                                )
-                                                                .map((pago) => (
-                                                                    <a
-                                                                        key={`evidencia-${pago.id}`}
-                                                                        href={
-                                                                            pago.evidencia_url ??
-                                                                            undefined
-                                                                        }
-                                                                        className="text-primary mb-1 block text-xs underline"
-                                                                    >
-                                                                        Constancia{' '}
-                                                                        {
-                                                                            pago.numero_operacion
-                                                                        }
-                                                                    </a>
-                                                                ))}
-                                                            {inst.pagos
-                                                                .filter(
-                                                                    (pago) =>
-                                                                        pago.puede_anular,
-                                                                )
-                                                                .map((pago) => (
-                                                                    <Button
-                                                                        key={
-                                                                            pago.id
-                                                                        }
-                                                                        type="button"
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        onClick={() =>
-                                                                            setSelectedPayment(
-                                                                                pago,
-                                                                            )
-                                                                        }
-                                                                        className="text-destructive-strong mr-1 h-7 rounded-md px-2 text-xs"
-                                                                    >
-                                                                        Anular
-                                                                        cobro
-                                                                    </Button>
-                                                                ))}
-                                                            <Button
-                                                                type="button"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    handleOpenPaymentDialog(
-                                                                        inst,
+                                                            <TableCell className="px-2.5 py-3.5 text-right">
+                                                                {inst.pagos
+                                                                    .filter(
+                                                                        (
+                                                                            pago,
+                                                                        ) =>
+                                                                            pago.evidencia_url,
                                                                     )
-                                                                }
-                                                                disabled={
-                                                                    Number(
+                                                                    .map(
+                                                                        (
+                                                                            pago,
+                                                                        ) => (
+                                                                            <a
+                                                                                key={`evidencia-${pago.id}`}
+                                                                                href={
+                                                                                    pago.evidencia_url ??
+                                                                                    undefined
+                                                                                }
+                                                                                className="text-primary mb-1 block text-xs underline"
+                                                                            >
+                                                                                Constancia{' '}
+                                                                                {
+                                                                                    pago.numero_operacion
+                                                                                }
+                                                                            </a>
+                                                                        ),
+                                                                    )}
+                                                                {inst.pagos
+                                                                    .filter(
+                                                                        (
+                                                                            pago,
+                                                                        ) =>
+                                                                            pago.puede_anular,
+                                                                    )
+                                                                    .map(
+                                                                        (
+                                                                            pago,
+                                                                        ) => (
+                                                                            <Button
+                                                                                key={
+                                                                                    pago.id
+                                                                                }
+                                                                                type="button"
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                onClick={() =>
+                                                                                    setSelectedPayment(
+                                                                                        pago,
+                                                                                    )
+                                                                                }
+                                                                                className="text-destructive-strong mr-1 h-7 rounded-md px-2 text-xs"
+                                                                            >
+                                                                                Anular
+                                                                                cobro
+                                                                            </Button>
+                                                                        ),
+                                                                    )}
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        handleOpenPaymentDialog(
+                                                                            inst,
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        Number(
+                                                                            inst.saldo,
+                                                                        ) <= 0
+                                                                    }
+                                                                    className="bg-foreground text-background hover:bg-foreground/90 h-7 rounded-md px-3 text-xs font-bold shadow-xs transition-colors"
+                                                                >
+                                                                    {Number(
                                                                         inst.saldo,
                                                                     ) <= 0
-                                                                }
-                                                                className="bg-foreground text-background hover:bg-foreground/90 h-7 rounded-md px-3 text-xs font-bold shadow-xs transition-colors"
-                                                            >
-                                                                {Number(
-                                                                    inst.saldo,
-                                                                ) <= 0
-                                                                    ? 'Pagada'
-                                                                    : 'Registrar pago'}
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-
-                            {/* Paginación si existe */}
-                            {installments?.links &&
-                                installments.links.length > 3 && (
-                                    <div className="border-border text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs">
-                                        <span>
-                                            Mostrando {installments.from ?? 0}-
-                                            {installments.to ?? 0} de{' '}
-                                            {installments.total ?? 0} cuotas
-                                        </span>
-                                        <div className="flex gap-1">
-                                            {installments.links.map(
-                                                (link, idx) =>
-                                                    link.url ? (
-                                                        <Link
-                                                            key={idx}
-                                                            href={link.url}
-                                                            preserveScroll
-                                                            className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-md px-2 font-mono text-xs ${
-                                                                link.active
-                                                                    ? 'bg-foreground text-background font-bold shadow-xs'
-                                                                    : 'border-border bg-card text-foreground/80 hover:bg-background border'
-                                                            }`}
-                                                            dangerouslySetInnerHTML={{
-                                                                __html: link.label,
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <span
-                                                            key={idx}
-                                                            className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-md border border-transparent px-2 font-mono text-xs opacity-60"
-                                                            dangerouslySetInnerHTML={{
-                                                                __html: link.label,
-                                                            }}
-                                                        />
-                                                    ),
+                                                                        ? 'Pagada'
+                                                                        : 'Registrar pago'}
+                                                                </Button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })
                                             )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+
+                                {/* Paginación si existe */}
+                                {installments?.links &&
+                                    installments.links.length > 3 && (
+                                        <div className="border-border text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs">
+                                            <span>
+                                                Mostrando{' '}
+                                                {installments.from ?? 0}-
+                                                {installments.to ?? 0} de{' '}
+                                                {installments.total ?? 0} cuotas
+                                            </span>
+                                            <div className="flex gap-1">
+                                                {installments.links.map(
+                                                    (link, idx) =>
+                                                        link.url ? (
+                                                            <Link
+                                                                key={idx}
+                                                                href={link.url}
+                                                                preserveScroll
+                                                                className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-md px-2 font-mono text-xs ${
+                                                                    link.active
+                                                                        ? 'bg-foreground text-background font-bold shadow-xs'
+                                                                        : 'border-border bg-card text-foreground/80 hover:bg-background border'
+                                                                }`}
+                                                                dangerouslySetInnerHTML={{
+                                                                    __html: link.label,
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <span
+                                                                key={idx}
+                                                                className="text-muted-foreground inline-flex h-7 min-w-[28px] items-center justify-center rounded-md border border-transparent px-2 font-mono text-xs opacity-60"
+                                                                dangerouslySetInnerHTML={{
+                                                                    __html: link.label,
+                                                                }}
+                                                            />
+                                                        ),
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                        </Card>
-                    </div>
+                                    )}
+                            </Card>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 

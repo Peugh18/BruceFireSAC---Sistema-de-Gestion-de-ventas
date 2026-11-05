@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property string $tipo
  * @property string $nombre
  * @property string $direccion
+ * @property bool $para_facturar
  * @property string|null $ubigeo
  * @property string|null $referencia
  * @property string|null $contacto
@@ -26,9 +27,15 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Client $client
  */
-#[Fillable(['client_id', 'tipo', 'nombre', 'direccion', 'ubigeo', 'referencia', 'contacto', 'telefono', 'email', 'estado'])]
+#[Fillable(['client_id', 'tipo', 'nombre', 'direccion', 'para_facturar', 'ubigeo', 'referencia', 'contacto', 'telefono', 'email', 'estado'])]
 class ClientSite extends Model
 {
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['para_facturar' => 'boolean'];
+    }
+
     /**
      * El local que nombra una referencia como "SEDE: Tienda Centro".
      */

@@ -39,17 +39,17 @@ export default function PestanasSunat({
     return (
         <nav
             aria-label="Envío SUNAT"
-            className="border-border flex flex-wrap gap-2 border-b pb-3"
+            className="border-border flex flex-wrap gap-1 border-b"
         >
             {pestanas.map((p) => (
                 <Link
                     key={p.clave}
                     href={p.href}
                     aria-current={actual === p.clave ? 'page' : undefined}
-                    className={`inline-flex min-h-10 items-center rounded-full px-4 text-sm font-bold ${
+                    className={`-mb-px inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-semibold ${
                         actual === p.clave
-                            ? 'bg-primary text-primary-foreground'
-                            : 'border-border text-foreground hover:bg-muted border'
+                            ? 'border-primary text-foreground'
+                            : 'text-muted-foreground hover:text-foreground border-transparent'
                     }`}
                 >
                     {p.texto}

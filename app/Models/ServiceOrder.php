@@ -208,6 +208,23 @@ class ServiceOrder extends Model
     }
 
     /**
+     * Extintores nuevos de la cotización que todavía no se venden: el
+     * certificado de la orden los espera para salir con todos los del local.
+     */
+    public function extintoresNuevosPorVender(): int
+    {
+        if ($this->sale && $this->sale->estado === 'confirmada') {
+            return 0;
+        }
+
+        $this->loadMissing('quote.items.product');
+
+        return (int) ($this->quote?->items
+            ->filter(fn (QuoteItem $item): bool => (bool) $item->product?->serializado)
+            ->sum('cantidad') ?? 0);
+    }
+
+    /**
      * Los extintores que se certifican y a los que se les renuevan las
      * fechas: los que llegaron al taller y cuya reparación el cliente no
      * rechazó (un extintor sin reparar no sale como operativo).

@@ -97,6 +97,7 @@ export type ClientSite = {
     tipo: SiteType;
     nombre: string;
     direccion: string;
+    para_facturar?: boolean;
     ubigeo: string | null;
     ubicacion: UbigeoOption | null;
     referencia: string | null;
@@ -255,6 +256,7 @@ type SiteFormData = {
     tipo: SiteType;
     nombre: string;
     direccion: string;
+    para_facturar: boolean;
     ubigeo: string;
     referencia: string;
     contacto: string;
@@ -315,6 +317,7 @@ const emptySiteForm: SiteFormData = {
     tipo: 'oficina',
     nombre: '',
     direccion: '',
+    para_facturar: false,
     ubigeo: '',
     referencia: '',
     contacto: '',
@@ -463,6 +466,7 @@ export default function ClienteShow({
             tipo: site.tipo,
             nombre: site.nombre,
             direccion: site.direccion,
+            para_facturar: Boolean(site.para_facturar),
             ubigeo: site.ubigeo ?? '',
             referencia: site.referencia ?? '',
             contacto: site.contacto ?? '',
@@ -2371,6 +2375,13 @@ export default function ClienteShow({
                                                         <h4 className="text-foreground mt-1 text-sm font-bold">
                                                             {s.nombre}
                                                         </h4>
+                                                        {s.para_facturar ? (
+                                                            <p className="text-muted-foreground text-xs">
+                                                                Sus comprobantes
+                                                                salen con esta
+                                                                dirección
+                                                            </p>
+                                                        ) : null}
                                                     </div>
                                                     <div className="flex gap-1">
                                                         <button
@@ -2813,6 +2824,20 @@ export default function ClienteShow({
                                 className="mt-1 h-9 text-xs"
                                 required
                             />
+                            <label className="text-foreground mt-2 flex min-h-9 items-center gap-2 text-xs font-medium">
+                                <input
+                                    type="checkbox"
+                                    checked={siteForm.data.para_facturar}
+                                    onChange={(e) =>
+                                        siteForm.setData(
+                                            'para_facturar',
+                                            e.target.checked,
+                                        )
+                                    }
+                                    className="size-4"
+                                />
+                                Usar esta dirección en sus comprobantes
+                            </label>
                         </div>
 
                         <div>

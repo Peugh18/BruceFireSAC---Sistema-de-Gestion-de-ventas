@@ -28,7 +28,9 @@ class CashRegisterController extends Controller
         // Cobranzas y Caja son la misma pantalla: las dos llevan el turno y las cuotas.
         return Inertia::render('vendedor/cobranzas/index', [
             ...DatosDeCaja::para($request->user()),
-            'installments' => CarteraDeCobranzas::cuotasPendientes($request->user()),
+            'installments' => CarteraDeCobranzas::cuotasPendientes($request->user(), $this->filtro($request)),
+            'resumen' => CarteraDeCobranzas::resumenDelVendedor($request->user()),
+            'filtro' => $this->filtro($request),
         ]);
     }
 
@@ -88,5 +90,13 @@ class CashRegisterController extends Controller
         $action->handle($cash_register, $request->user(), (float) $request->validated('monto'), (string) $request->validated('motivo'));
 
         return back();
+    }
+
+    /** Filtro de Cobranzas por vencimiento: todas, vencidas, semana o luego. */
+    protected function filtro(Request $request): string
+    {
+        $filtro = $request->string('filtro')->toString();
+
+        return in_array($filtro, ['vencidas', 'semana', 'luego'], true) ? $filtro : 'todas';
     }
 }

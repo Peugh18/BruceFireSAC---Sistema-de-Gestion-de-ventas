@@ -3,6 +3,7 @@
 namespace App\Services\Caja;
 
 use App\Models\CashRegister;
+use App\Models\SalePayment;
 use App\Models\Sede;
 use App\Models\User;
 
@@ -75,9 +76,76 @@ class DatosDeCaja
                     'motivo' => $salida->motivo,
                     'hora' => $salida->created_at?->format('H:i'),
                 ])->values(),
+                'movimientos' => self::movimientos($turnoActual),
             ] : null,
             'cierres' => $cierres,
             'sedes' => $sedes,
         ];
     }
+
+    /**
+     * Lo que pasó en el turno, de lo último a lo primero: cobros, ventas y
+     * salidas. El efectivo va sin monto: con arqueo ciego (E-011) el vendedor
+     * no puede sumar lo que debería haber en el cajón.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected static function movimientos(CashRegister $turno): array
+    {
+        $pagos = SalePayment::query()
+            ->with('sale:id,numero_interno,client_id', 'sale.client:id,razon_social')
+            ->where('cash_register_id', $turno->id)
+            ->where('es_detraccion', false)
+            ->get()
+            ->map(fn (SalePayment $pago) => [
+                'id' => 'pago-'.$pago->id,
+                'momento' => $pago->created_at?->toIso8601String(),
+                'hora' => $pago->created_at?->format('H:i'),
+                'tipo' => $pago->installment_id ? 'cobro' : 'venta',
+                'titulo' => ($pago->installment_id ? 'Cobro' : 'Venta').' · '.($pago->sale->client->razon_social ?? 'Cliente'),
+                'detalle' => self::FORMAS[$pago->forma_pago] ?? ucfirst((string) $pago->forma_pago),
+                'comprobante' => $pago->sale->numero_interno,
+                'efectivo' => $pago->forma_pago === 'efectivo',
+                'monto' => $pago->forma_pago === 'efectivo' ? null : (float) $pago->monto,
+            ]);
+
+        $salidas = $turno->salidas()->get()->map(fn ($salida) => [
+            'id' => 'salida-'.$salida->id,
+            'momento' => $salida->created_at?->toIso8601String(),
+            'hora' => $salida->created_at?->format('H:i'),
+            'tipo' => 'salida',
+            'titulo' => 'Salida de dinero',
+            'detalle' => $salida->motivo,
+            'comprobante' => null,
+            'efectivo' => true,
+            'monto' => (float) $salida->monto,
+        ]);
+
+        return $pagos->concat($salidas)
+            ->push([
+                'id' => 'apertura',
+                'momento' => $turno->fecha_apertura->toIso8601String(),
+                'hora' => $turno->fecha_apertura->format('H:i'),
+                'tipo' => 'apertura',
+                'titulo' => 'Apertura del turno',
+                'detalle' => 'Fondo inicial contado',
+                'comprobante' => null,
+                'efectivo' => true,
+                'monto' => (float) $turno->monto_apertura,
+            ])
+            ->sortByDesc('momento')
+            ->values()
+            ->all();
+    }
+
+    private const FORMAS = [
+        'efectivo' => 'Efectivo',
+        'transferencia' => 'Transferencia',
+        'deposito' => 'Depósito',
+        'tarjeta_yape' => 'Tarjeta o Yape',
+        'yape' => 'Yape',
+        'plin' => 'Plin',
+        'pos' => 'Tarjeta (POS)',
+        'otro' => 'Otro medio',
+    ];
 }

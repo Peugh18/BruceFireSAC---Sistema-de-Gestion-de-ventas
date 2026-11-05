@@ -106,12 +106,20 @@ class EmitirCertificadosDeVenta
             ->pluck('equipment')
             ->filter()
             ->values();
+        // La orden terminada que se cobra con esta venta: sus extintores van
+        // primero, en el mismo certificado del local que los nuevos. Si la
+        // orden ya tenía su certificado, se corrige ese (mismo número).
+        $enEspera = $equipos->isNotEmpty() ? CertificadosDeVenta::ordenesTerminadas($sale)->first() : null;
+        if ($enEspera) {
+            $equipos = $enEspera->equiposAptos()->concat($equipos)->unique('id')->values();
+        }
         $tipos = array_values(array_filter(
             array_diff(self::tiposPorDestino((string) $sale->destino), self::REQUIEREN_DATOS_TECNICOS, self::tieneCapacitacion($sale) ? ['capacitacion'] : []),
             fn (string $codigo) => CertificateType::query()->where('codigo', $codigo)->exists(),
         ));
 
-        if ($equipos->isEmpty() || $tipos === [] || $equipos->contains(fn (Equipment $equipo) => ! EquipmentType::esConocido($equipo->tipo_agente))) {
+        // Con un dato pendiente no sale: la venta lo avisa en "Armar certificados".
+        if ($equipos->isEmpty() || $tipos === [] || Equipment::faltantesParaCertificar($equipos) !== null) {
             return $reutilizados;
         }
 
@@ -119,6 +127,7 @@ class EmitirCertificadosDeVenta
             'referencia' => $sale->referencia,
             'destino' => $sale->destino,
             'automatico' => true,
+            'service_order_id' => $enEspera?->id,
             'tipos' => $tipos,
             'unidades' => array_values($equipos->map(fn (Equipment $equipo) => [
                 'equipment_id' => $equipo->id,
@@ -184,6 +193,11 @@ class EmitirCertificadosDeVenta
                         "grupos.{$index}.unidades" => 'Asigna al menos un extintor a este grupo.',
                     ]);
                 }
+
+                $faltantes = $conUnidades !== [] ? Equipment::faltantesParaCertificar(Equipment::query()->whereIn('id', array_column($grupo['unidades'], 'equipment_id'))->get()) : null;
+                if ($faltantes !== null) {
+                    throw ValidationException::withMessages(["grupos.{$index}.unidades" => $faltantes]);
+                }
             }
 
             $tipos = CertificateType::query()->get()->keyBy('codigo');
@@ -191,10 +205,17 @@ class EmitirCertificadosDeVenta
             $pruebas = PruebasHidrostaticas::vigentes($sale->client_id, $equiposDeLaVenta);
             $grupos = $this->conDatosDePrueba($grupos, $pruebas);
             $anteriores = CertificadosDeVenta::propios($sale)
-                ->whereHas('certificateType', fn ($query) => $query->whereIn('codigo', ['operatividad_garantia', 'capacitacion']))
+                // Lo automático solo rehace los tipos que emite: la capacitación
+                // que ya dejó la orden no se anula al sumar los nuevos.
+                ->whereHas('certificateType', fn ($query) => $query->whereIn('codigo', collect($grupos)->contains(fn (array $grupo) => ! empty($grupo['automatico']))
+                    ? array_values(array_intersect(['operatividad_garantia', 'capacitacion'], array_merge(...array_column($grupos, 'tipos'))))
+                    : ['operatividad_garantia', 'capacitacion']))
                 ->with('certificateType')
                 ->whereIn('estado', ['vigente', 'vencido'])
-                ->when(collect($grupos)->contains(fn (array $grupo) => ! empty($grupo['automatico'])), fn ($query) => $query->whereNull('service_order_id'))
+                ->when(collect($grupos)->contains(fn (array $grupo) => ! empty($grupo['automatico'])), fn ($query) => $query->where(
+                    fn ($propios) => $propios->whereNull('service_order_id')
+                        ->when(collect($grupos)->pluck('service_order_id')->filter()->first(), fn ($q, $orden) => $q->orWhere('service_order_id', $orden))
+                ))
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->get()
@@ -250,7 +271,7 @@ class EmitirCertificadosDeVenta
 
                     $certificate = $anterior
                         ? $this->issueCertificate->corregir($anterior, $unidades, $extra, $motivo, $userId)
-                        : $this->issueCertificate->handle($tipos[$codigo], $sale->client, $unidades, saleId: $sale->id, extra: $extra);
+                        : $this->issueCertificate->handle($tipos[$codigo], $sale->client, $unidades, saleId: $sale->id, serviceOrderId: $grupo['service_order_id'] ?? null, extra: $extra);
 
                     if ($codigo === 'capacitacion') {
                         $this->syncTraining->handle($certificate, $grupo['capacitacion'] ?? []);

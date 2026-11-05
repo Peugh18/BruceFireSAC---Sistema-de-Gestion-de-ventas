@@ -124,6 +124,23 @@ class Client extends Model
      * Dirección que se imprime en el comprobante, o null si no hay una de
      * verdad ("-" es el relleno de CLIENTES VARIOS).
      */
+    /**
+     * Lo que necesita el formulario de venta o cotización: datos fiscales,
+     * placas y locales (la referencia y la dirección del comprobante).
+     *
+     * @return array<string, mixed>
+     */
+    public function ficha(): array
+    {
+        $this->loadMissing(['vehicles:id,client_id,placa,descripcion', 'sites:id,client_id,nombre,direccion,para_facturar']);
+
+        return [
+            ...$this->only(['id', 'tipo_documento', 'numero_documento', 'razon_social', 'nombre_comercial', 'direccion_fiscal', 'estado_contribuyente', 'condicion_domicilio', 'telefono']),
+            'vehiculos' => $this->vehicles->map->only(['id', 'placa', 'descripcion'])->values(),
+            'sedes' => $this->sites->map->only(['id', 'nombre', 'direccion', 'para_facturar'])->values(),
+        ];
+    }
+
     public function direccionImprimible(): ?string
     {
         $direccion = trim((string) $this->direccion_fiscal);

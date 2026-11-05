@@ -109,13 +109,52 @@ class CarteraDeCobranzas
      * clientes. El panel del Gerente y Cobranzas usan este mismo cálculo para
      * que muestren la misma cifra.
      */
-    public static function cobrado(CarbonInterface $desde, CarbonInterface $hasta): float
+    public static function cobrado(CarbonInterface $desde, CarbonInterface $hasta, ?int $vendedorId = null): float
     {
+        $delVendedor = fn (Builder $query) => $query->when($vendedorId, fn ($q, $id) => $q->whereHas('sale', fn ($sale) => $sale->where('vendedor_id', $id)));
+
         return round(
-            (float) SalePayment::query()->whereBetween('fecha', [$desde, $hasta])->sum('monto')
-            - (float) SaleRefund::query()->whereBetween('fecha', [$desde, $hasta])->sum('monto'),
+            (float) $delVendedor(SalePayment::query()->whereBetween('fecha', [$desde, $hasta]))->sum('monto')
+            - (float) $delVendedor(SaleRefund::query()->whereBetween('fecha', [$desde, $hasta]))->sum('monto'),
             2
         );
+    }
+
+    /**
+     * Cuotas que el vendedor todavía cobra: de sus ventas emitidas y de su sede.
+     *
+     * @return Builder<Installment>
+     */
+    protected static function deudaDe(User $user): Builder
+    {
+        return Installment::query()
+            ->whereIn('installments.estado', self::DEBEN)
+            ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id)
+                ->where('estado', 'confirmada')
+                ->when($user->sedeRestringidaId(), fn ($sq, $sedeId) => $sq->where('sede_id', $sedeId)));
+    }
+
+    /**
+     * Los números de arriba de Cobranzas: vencido, lo que vence en 7 días, el
+     * total por cobrar y lo cobrado en el mes. Mismo saldo que el Gerente.
+     *
+     * @return array<string, array{monto: float, cuotas: int}|float|int>
+     */
+    public static function resumenDelVendedor(User $user): array
+    {
+        $hoy = today();
+        $tramo = fn (?callable $filtro = null) => [
+            'monto' => self::saldo($filtro ? $filtro(self::deudaDe($user)) : self::deudaDe($user)),
+            'cuotas' => ($filtro ? $filtro(self::deudaDe($user)) : self::deudaDe($user))->count(),
+        ];
+
+        return [
+            'vencido' => $tramo(fn (Builder $q) => $q->whereDate('fecha_vencimiento', '<', $hoy)),
+            'semana' => $tramo(fn (Builder $q) => $q->whereBetween('fecha_vencimiento', [$hoy->toDateString(), $hoy->copy()->addDays(7)->toDateString()])),
+            'total' => $tramo(),
+            'clientes' => self::deudaDe($user)->join('sales', 'sales.id', '=', 'installments.sale_id')->distinct()->count('sales.client_id'),
+            'cobrado_mes' => self::cobrado(now()->startOfMonth(), now()->endOfMonth(), $user->id),
+        ];
     }
 
     /**
@@ -124,13 +163,20 @@ class CarteraDeCobranzas
      *
      * @return array<string, mixed>
      */
-    public static function cuotasPendientes(User $user): array
+    public static function cuotasPendientes(User $user, string $filtro = 'todas'): array
     {
+        $hoy = today()->toDateString();
+        $enSieteDias = today()->addDays(7)->toDateString();
+
         return Installment::query()
             ->where(function ($query) {
                 $query->whereIn('estado', ['pendiente', 'parcial', 'vencido'])
                     ->orWhereHas('payments', fn ($payments) => $payments->whereDate('fecha', today()));
             })
+            // Filtros de la pantalla: por cuándo vence lo que todavía se debe.
+            ->when($filtro === 'vencidas', fn ($q) => $q->whereIn('estado', self::DEBEN)->whereDate('fecha_vencimiento', '<', $hoy))
+            ->when($filtro === 'semana', fn ($q) => $q->whereIn('estado', self::DEBEN)->whereBetween('fecha_vencimiento', [$hoy, $enSieteDias]))
+            ->when($filtro === 'luego', fn ($q) => $q->whereIn('estado', self::DEBEN)->whereDate('fecha_vencimiento', '>', $enSieteDias))
             // Solo ventas emitidas: un borrador o una venta anulada no se cobra.
             ->whereHas('sale', fn ($q) => $q->where('vendedor_id', $user->id)
                 ->where('estado', 'confirmada')

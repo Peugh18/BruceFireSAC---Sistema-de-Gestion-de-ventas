@@ -209,8 +209,15 @@ class CashRegister extends Model
             throw ValidationException::withMessages([$campo => $siEstaCerrando]);
         }
 
-        if (! self::abiertaDe($vendedorId)) {
+        $turno = self::abiertaDe($vendedorId);
+        if (! $turno) {
             throw ValidationException::withMessages([$campo => $siNoHayTurno]);
+        }
+
+        // Un turno por día, como en un punto de venta: el de ayer se cierra con
+        // su arqueo (contar el dinero) antes de cobrar hoy; no se cierra solo.
+        if ($turno->fecha_apertura->lt(today())) {
+            throw ValidationException::withMessages([$campo => 'Tu caja sigue abierta desde el '.$turno->fecha_apertura->format('d/m/Y').': ciérrala con su arqueo y abre la de hoy.']);
         }
     }
 

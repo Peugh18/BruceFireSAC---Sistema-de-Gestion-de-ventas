@@ -123,20 +123,7 @@ class CatalogoController extends Controller
      */
     public function ficha(Team $current_team, Client $client): JsonResponse
     {
-        $client->load(['vehicles:id,client_id,placa,descripcion', 'sites:id,client_id,nombre,direccion']);
-
-        return response()->json([
-            'id' => $client->id,
-            'tipo_documento' => $client->tipo_documento,
-            'numero_documento' => $client->numero_documento,
-            'razon_social' => $client->razon_social,
-            'nombre_comercial' => $client->nombre_comercial,
-            'direccion_fiscal' => $client->direccion_fiscal,
-            'estado_contribuyente' => $client->estado_contribuyente,
-            'condicion_domicilio' => $client->condicion_domicilio,
-            'vehiculos' => $client->vehicles->map->only(['id', 'placa', 'descripcion'])->values(),
-            'sedes' => $client->sites->map->only(['id', 'nombre', 'direccion'])->values(),
-        ]);
+        return response()->json($client->ficha());
     }
 
     protected function coincide(Builder $query, string $search): void

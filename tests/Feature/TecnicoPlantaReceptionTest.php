@@ -113,7 +113,9 @@ test('alta tecnica rapida caso B creates new equipment with sequence generator a
         ]), [
             'tipo_agente' => 'PQS ABC',
             'capacidad' => '6 kg',
-            // Marca, serie y año no enviados -> deben ser "No legible / Pendiente de verificar"
+            // El año es obligatorio; marca y serie no enviadas quedan pendientes
+            // y el certificado las pide antes de emitirse.
+            'anio_fabricacion' => '2024',
         ])
         ->assertRedirect();
 
@@ -122,7 +124,7 @@ test('alta tecnica rapida caso B creates new equipment with sequence generator a
         ->and($newEquipment->numero_serie)->toMatch('/^BF-EQ-\d{6}$/')
         ->and($newEquipment->marca)->toBe('No legible / Pendiente de verificar')
         ->and($newEquipment->serie_fabricante)->toBe('No legible / Pendiente de verificar')
-        ->and($newEquipment->anio_fabricacion)->toBe('No legible / Pendiente de verificar');
+        ->and($newEquipment->anio_fabricacion)->toBe('2024');
 
     expect(ServiceOrderEvent::where('service_order_id', $order->id)->where('tipo', 'otro')->exists())->toBeTrue();
 });

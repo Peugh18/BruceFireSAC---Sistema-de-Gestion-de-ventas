@@ -17,7 +17,8 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
+import { fechaCorta, fechaLocal } from '@/lib/utils';
 import {
     CheckCircle2,
     Circle,
@@ -262,6 +263,17 @@ export default function EquiposDeLaOrden({
         number | 'extra' | { equipo: number } | null
     >(null);
     const [formulario, setFormulario] = useState<Formulario>(vacio);
+    const { servidor } = usePage<{
+        servidor?: { intervalo_ph: number } | null;
+    }>().props;
+    // La próxima PH que el sistema pondrá si el campo queda vacío.
+    const [anio, mes, dia] = formulario.fecha_ultima_ph.split('-').map(Number);
+    const phCalculada = formulario.fecha_ultima_ph
+        ? fechaLocal(
+              new Date(anio + (servidor?.intervalo_ph ?? 5), mes - 1, dia),
+          )
+        : '';
+    const phQueQueda = formulario.proxima_prueba_hidrostatica || phCalculada;
     const [servicioExtra, setServicioExtra] = useState(servicios[0]?.id ?? 0);
     const sinServicioDefinido = lineas.length === 0;
     const caja = useRef<HTMLInputElement>(null);
@@ -476,8 +488,9 @@ export default function EquiposDeLaOrden({
                 />
             </label>
             <label className="text-muted-foreground flex flex-col gap-1 text-xs">
-                Año de fabricación
+                Año de fabricación *
                 <Input
+                    required
                     value={formulario.anio_fabricacion}
                     inputMode="numeric"
                     maxLength={4}
@@ -512,8 +525,15 @@ export default function EquiposDeLaOrden({
             </label>
             <details className="text-muted-foreground text-xs sm:col-span-full">
                 <summary className="min-h-9 cursor-pointer py-2 font-semibold">
-                    Próxima PH: 5 años después de la última · Próxima recarga: 1
-                    año desde el servicio · Cambiar
+                    Próxima PH:{' '}
+                    {phQueQueda
+                        ? fechaCorta(phQueQueda)
+                        : `${servidor?.intervalo_ph ?? 5} años después de la última`}{' '}
+                    · Próxima recarga:{' '}
+                    {formulario.proxima_fecha_atencion
+                        ? fechaCorta(formulario.proxima_fecha_atencion)
+                        : '1 año desde el servicio'}{' '}
+                    · Cambiar
                 </summary>
                 <div className="mt-2 grid gap-3 sm:grid-cols-2">
                     <label className="text-muted-foreground flex flex-col gap-1 text-xs">
@@ -530,8 +550,9 @@ export default function EquiposDeLaOrden({
                             className="h-11 text-sm sm:h-9"
                         />
                         <span>
-                            Vacía: se calcula desde la última PH con el
-                            intervalo de la empresa.
+                            {phCalculada
+                                ? `Vacía: queda el ${fechaCorta(phCalculada)}, calculada desde la última PH.`
+                                : 'Vacía: se calcula desde la última PH con el intervalo de la empresa.'}
                         </span>
                     </label>
                     <label className="text-muted-foreground flex flex-col gap-1 text-xs">
@@ -574,8 +595,8 @@ export default function EquiposDeLaOrden({
             </div>
             <p className="text-muted-foreground text-xs sm:col-span-3">
                 {typeof abierto === 'object' && abierto !== null
-                    ? 'Lo que dejes vacío queda como «No legible».'
-                    : 'Lo que no se lea queda como «No legible» y se corrige después. Al guardar recibe su código BF-EQ.'}
+                    ? 'Completa todos los datos: sin ellos no sale el certificado.'
+                    : 'El año es obligatorio. Si falta otro dato, el sistema te lo pide antes de emitir el certificado. Al guardar recibe su código BF-EQ.'}
             </p>
         </form>
     );

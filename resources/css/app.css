@@ -160,11 +160,12 @@
 
 .dark {
     /* Modo Oscuro Corporativo Bruce Fire (§3.2) - Jerarquía Apple de Profundidad */
-    --background: #18181b;
+    /* Tres niveles bien distintos: página, tarjeta y relleno (muted). */
+    --background: #111113;
     --foreground: #f4f4f5;
-    --card: #202024;
+    --card: #1d1d21;
     --card-foreground: #f4f4f5;
-    --popover: #202024;
+    --popover: #25252a;
     --popover-foreground: #f4f4f5;
 
     /* Rojo corporativo Bruce Fire (#D20404) */
@@ -173,18 +174,18 @@
     --brand: #d20404;
     --brand-foreground: oklch(1 0 0);
 
-    --secondary: #27272a;
+    --secondary: #2a2a30;
     --secondary-foreground: #f4f4f5;
-    --muted: #27272a;
+    --muted: #2a2a30;
     --muted-foreground: #a1a1aa;
-    --accent: #27272a;
+    --accent: #2a2a30;
     --accent-foreground: #f4f4f5;
 
     --destructive: #d20404;
     --destructive-foreground: oklch(1 0 0);
 
-    --border: #2e2e33;
-    --input: #2e2e33;
+    --border: #34343b;
+    --input: #45454d;
     --ring: #d20404;
 
     /* Estados semánticos */

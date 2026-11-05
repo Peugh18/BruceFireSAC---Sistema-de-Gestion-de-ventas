@@ -228,13 +228,12 @@ class ExecuteAndCloseServiceOrder
                     throw new InvalidArgumentException('No hay extintores recibidos y aptos para certificar.');
                 }
 
-                // El certificado sale completo: cada extintor con su serie de
-                // fábrica y el cliente con su dirección.
-                $sinSerie = $aptos->filter(fn (Equipment $equipo) => blank($equipo->serie_fabricante) || str_starts_with((string) $equipo->serie_fabricante, 'No legible'));
-                if ($sinSerie->isNotEmpty() || blank($serviceOrder->client->direccion_fiscal)) {
+                // El certificado sale completo: cada extintor con todos sus
+                // datos (nada "No legible") y el cliente con su dirección.
+                $faltantes = Equipment::faltantesParaCertificar($aptos);
+                if ($faltantes !== null || blank($serviceOrder->client->direccion_fiscal)) {
                     throw new InvalidArgumentException(trim(
-                        ($sinSerie->isNotEmpty() ? 'Falta la serie de fábrica de '.$sinSerie->pluck('numero_serie')->join(', ').'. ' : '')
-                        .(blank($serviceOrder->client->direccion_fiscal) ? 'Falta la dirección del cliente.' : '')
+                        ($faltantes ?? '').(blank($serviceOrder->client->direccion_fiscal) ? ' Falta la dirección del cliente.' : '')
                     ));
                 }
 
@@ -360,6 +359,10 @@ class ExecuteAndCloseServiceOrder
 
         $serviceOrder->loadMissing(['client', 'service.certificateType']);
 
+        // Con extintores nuevos por vender, la operatividad (y la capacitación
+        // del local) esperan al cobro: sale un solo certificado con todos.
+        $esperaLaVenta = $serviceOrder->extintoresNuevosPorVender() > 0;
+
         $serviceOrder->loadMissing(['lines.service']);
         $unidades = $aptos->map(function (Equipment $eq) use ($conPh, $serviceOrder) {
             $tipoAtencion = TipoAtencionExtintor::deEquipoEnOrden($serviceOrder, $eq);
@@ -397,18 +400,21 @@ class ExecuteAndCloseServiceOrder
             ];
         }
 
-        $this->issueCertificate->handle(
-            $tipoOperatividad,
-            $serviceOrder->client,
-            $unidades,
-            $serviceOrder->sale_id,
-            $serviceOrder->id,
-            $extra,
-        );
+        if (! $esperaLaVenta || $tipoOperatividad->codigo !== 'operatividad_garantia') {
+            $this->issueCertificate->handle(
+                $tipoOperatividad,
+                $serviceOrder->client,
+                $unidades,
+                $serviceOrder->sale_id,
+                $serviceOrder->id,
+                $extra,
+            );
+        }
 
         // 2. En un local va también la capacitación, con los datos de la empresa:
         //    los participantes se agregan después en "Armar certificados".
         if (($destino ?? null) === 'local_cliente'
+            && ! $esperaLaVenta
             && ! ($serviceOrder->sale && EmitirCertificadosDeVenta::tieneCapacitacion($serviceOrder->sale))
             && ($tipoCapacitacion = CertificateType::query()->where('codigo', 'capacitacion')->first())) {
             $this->issueCertificate->handle(

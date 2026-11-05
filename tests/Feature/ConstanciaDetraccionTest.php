@@ -46,12 +46,16 @@ test('detraccion exige constancia y medio deposito', function () {
     expect($cuota->payments()->count())->toBe(0);
 });
 
-test('turno mayor de veinticuatro horas avisa y conserva cobros habilitados', function () {
+test('turno de otro dia avisa, no recibe efectivo y deja cobrar por transferencia', function () {
     $cuota = cuotaConDetraccion();
     $turno = CashRegister::abiertaDe($cuota->sale->vendedor_id);
     $turno->update(['fecha_apertura' => now()->subHours(25)]);
     expect(DatosDeCaja::para(auth()->user())['turno_actual']['abierto_mas_de_24_horas'])->toBeTrue();
-    $this->post(route('vendedor.cobranzas.pagar', ['current_team' => auth()->user()->currentTeam, 'installment' => $cuota]), ['monto' => 10, 'forma_pago' => 'efectivo'])->assertSessionHasNoErrors();
+    $ruta = route('vendedor.cobranzas.pagar', ['current_team' => auth()->user()->currentTeam, 'installment' => $cuota]);
+
+    // El efectivo cae en el cajón: primero se cierra el turno de ayer con su arqueo.
+    $this->post($ruta, ['monto' => 10, 'forma_pago' => 'efectivo'])->assertSessionHasErrors('forma_pago');
+    $this->post($ruta, ['monto' => 10, 'forma_pago' => 'transferencia', 'numero_operacion' => 'OP-123'])->assertSessionHasNoErrors();
 });
 
 test('constancia al contado acredita pendiente una sola vez y bloquea editar el comprobante', function () {

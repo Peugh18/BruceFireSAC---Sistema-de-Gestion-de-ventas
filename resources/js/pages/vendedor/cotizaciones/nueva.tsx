@@ -16,6 +16,9 @@ import { toast } from 'sonner';
 
 import CatalogPicker, { type CatalogItem } from '@/components/catalog-picker';
 import ClientPicker, { type ClientFicha } from '@/components/client-picker';
+import DireccionComprobanteField, {
+    localDeReferencia,
+} from '@/components/direccion-comprobante-field';
 import ReferenciaField from '@/components/referencia-field';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -63,6 +66,7 @@ type QuoteFormData = {
     fecha: string;
     vigencia_hasta: string;
     referencia: string;
+    direccion_del_local: boolean;
     condicion_pago_propuesta: string;
     observaciones: string;
     items: QuoteItemForm[];
@@ -74,6 +78,7 @@ type Renovacion = {
     destino: 'local_cliente' | 'vehiculo';
     vehicle_id: number | null;
     referencia: string | null;
+    direccion_del_local?: boolean;
     condicion_pago_propuesta: string | null;
     observaciones: string | null;
     items: Omit<QuoteItemForm, 'key'>[];
@@ -139,6 +144,7 @@ export default function NuevaCotizacion({
         fecha: edicion?.fecha ?? fechaLocal(),
         vigencia_hasta: edicion?.vigencia_hasta ?? sumarDias(fechaLocal(), 15),
         referencia: renovacion?.referencia ?? '',
+        direccion_del_local: renovacion?.direccion_del_local ?? false,
         condicion_pago_propuesta:
             renovacion?.condicion_pago_propuesta ?? 'Contado',
         observaciones: renovacion?.observaciones ?? '',
@@ -380,11 +386,23 @@ export default function NuevaCotizacion({
                                         ...data,
                                         referencia: valor,
                                         vehicle_id: vehicleId ?? '',
+                                        direccion_del_local: Boolean(
+                                            localDeReferencia(cliente, valor)
+                                                ?.para_facturar,
+                                        ),
                                     }))
                                 }
                                 error={
                                     form.errors.referencia ??
                                     form.errors.vehicle_id
+                                }
+                            />
+                            <DireccionComprobanteField
+                                cliente={cliente}
+                                referencia={form.data.referencia}
+                                value={form.data.direccion_del_local}
+                                onChange={(valor) =>
+                                    form.setData('direccion_del_local', valor)
                                 }
                             />
                         </div>

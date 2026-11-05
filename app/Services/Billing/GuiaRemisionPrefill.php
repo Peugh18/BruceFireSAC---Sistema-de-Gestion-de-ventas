@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\Client;
+use App\Models\ClientSite;
 use App\Models\CompanySetting;
 use App\Models\ElectronicDocument;
 use App\Models\InventoryTransfer;
@@ -66,7 +67,7 @@ class GuiaRemisionPrefill
             'doc_relacionado_numero' => $documento ? "{$documento->serie}-{$documento->correlativo}" : null,
             ...$this->destinatario($sale->client),
             ...$this->partidaDeSede($sale->sede),
-            ...$this->llegadaDeCliente($sale->client),
+            ...$this->llegadaDeCliente($sale->client, $sale->referencia),
             'items' => $items,
         ];
     }
@@ -97,8 +98,8 @@ class GuiaRemisionPrefill
             'doc_relacionado_numero' => null,
             ...$this->destinatario($orden->client),
             ...($esRecojo
-                ? [...$this->partidaDeCliente($orden->client), ...$this->llegadaDeSede($orden->sede)]
-                : [...$this->partidaDeSede($orden->sede), ...$this->llegadaDeCliente($orden->client)]),
+                ? [...$this->partidaDeCliente($orden->client, $orden->referencia), ...$this->llegadaDeSede($orden->sede)]
+                : [...$this->partidaDeSede($orden->sede), ...$this->llegadaDeCliente($orden->client, $orden->referencia)]),
             'items' => $items,
         ];
     }
@@ -194,16 +195,21 @@ class GuiaRemisionPrefill
     /**
      * @return array<string, string|null>
      */
-    protected function partidaDeCliente(Client $cliente): array
+    protected function partidaDeCliente(Client $cliente, ?string $referencia = null): array
     {
-        return ['partida_ubigeo' => $cliente->ubigeo, 'partida_direccion' => $cliente->direccion_fiscal, 'partida_cod_establecimiento' => null];
+        // El local atendido ("SEDE: Tienda Centro") manda sobre la dirección fiscal.
+        $local = ClientSite::deReferencia($cliente, $referencia);
+
+        return ['partida_ubigeo' => $local->ubigeo ?? $cliente->ubigeo, 'partida_direccion' => $local->direccion ?? $cliente->direccion_fiscal, 'partida_cod_establecimiento' => null];
     }
 
     /**
      * @return array<string, string|null>
      */
-    protected function llegadaDeCliente(Client $cliente): array
+    protected function llegadaDeCliente(Client $cliente, ?string $referencia = null): array
     {
-        return ['llegada_ubigeo' => $cliente->ubigeo, 'llegada_direccion' => $cliente->direccion_fiscal, 'llegada_cod_establecimiento' => null];
+        $local = ClientSite::deReferencia($cliente, $referencia);
+
+        return ['llegada_ubigeo' => $local->ubigeo ?? $cliente->ubigeo, 'llegada_direccion' => $local->direccion ?? $cliente->direccion_fiscal, 'llegada_cod_establecimiento' => null];
     }
 }

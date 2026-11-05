@@ -20,6 +20,7 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property Carbon|null $registro_iniciado_at
  * @property Carbon|null $confirmada_at
  * @property string|null $numero_nota_venta
+ * @property bool $direccion_del_local
  * @property int|null $quote_id
  * @property int $client_id
  * @property int|null $sede_id
@@ -53,7 +54,7 @@ use Illuminate\Support\Collection as SupportCollection;
  */
 #[Fillable([
     'numero_interno', 'numero_nota_venta', 'quote_id', 'corrige_sale_id', 'client_id', 'sede_id', 'vehicle_id', 'vendedor_id', 'fecha',
-    'destino', 'referencia', 'condicion_pago', 'medio_pago', 'numero_operacion', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones', 'certificados_en_espera',
+    'destino', 'referencia', 'direccion_del_local', 'condicion_pago', 'medio_pago', 'numero_operacion', 'comprobante_tipo', 'subtotal', 'igv', 'total', 'estado', 'observaciones', 'certificados_en_espera',
     'registro_iniciado_at', 'confirmada_at',
 ])]
 class Sale extends Model
@@ -175,9 +176,21 @@ class Sale extends Model
         return $documento !== null && (($documento->estaPorEnviar() && $documento->intento_envio_at === null) || $documento->fueRechazado());
     }
 
+    /**
+     * La dirección que va en el comprobante: la del local de la referencia si
+     * el cliente lo pidió; si no, la fiscal.
+     */
+    public function direccionComprobante(): ?string
+    {
+        $local = $this->direccion_del_local ? ClientSite::deReferencia($this->client, $this->referencia) : null;
+
+        return $local !== null && trim((string) $local->direccion) !== '' ? $local->direccion : $this->client->direccionImprimible();
+    }
+
     protected function casts(): array
     {
         return [
+            'direccion_del_local' => 'boolean',
             'correccion_desde' => 'datetime',
             'fecha' => 'date',
             'registro_iniciado_at' => 'datetime',
