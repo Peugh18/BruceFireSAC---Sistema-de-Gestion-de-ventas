@@ -43,11 +43,38 @@ services:
                 '--tries=3',
                 '--max-time=3600',
             ]
+        # The inherited FrankenPHP check targets Caddy, which is not running
+        # in this CLI container. Check that Laravel's worker is PID 1 instead.
+        healthcheck:
+            test:
+                [
+                    'CMD',
+                    'php',
+                    '-r',
+                    'exit(str_contains(file_get_contents("/proc/1/cmdline"), "queue:work") ? 0 : 1);',
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
 
     # Programador: envíos diferidos a SUNAT, respaldo diario, vencimientos.
     tareas:
         <<: *app
         command: ['php', 'artisan', 'schedule:work']
+        # This is also a CLI process, so check its own command rather than Caddy.
+        healthcheck:
+            test:
+                [
+                    'CMD',
+                    'php',
+                    '-r',
+                    'exit(str_contains(file_get_contents("/proc/1/cmdline"), "schedule:work") ? 0 : 1);',
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
 
     db:
         image: mysql:8.4
