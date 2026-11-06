@@ -92,6 +92,27 @@ EOF
     chmod 600 "$SECRETOS"/*.env
 fi
 
+# Claves de servicios externos. Se piden si faltan, o todas con:
+#   sudo bash instalar.sh --claves
+guardar_clave() {
+    local clave="$1" valor="$2" archivo="$SECRETOS/app.env"
+    grep -v "^$clave=" "$archivo" > "$archivo.tmp" || true
+    printf '%s=%s\n' "$clave" "$valor" >> "$archivo.tmp"
+    mv "$archivo.tmp" "$archivo" && chmod 600 "$archivo"
+}
+pedir_clave() {
+    local clave="$1" texto="$2" valor
+    if [ "${CAMBIAR_CLAVES:-0}" = 1 ] || ! grep -q "^$clave=..*" "$SECRETOS/app.env"; then
+        read -rsp "$texto (Enter para no cambiarla): " valor; echo
+        [ -n "$valor" ] && guardar_clave "$clave" "$valor"
+    fi
+    return 0
+}
+[ "${1:-}" = "--claves" ] && CAMBIAR_CLAVES=1
+pedir_clave APISPERU_TOKEN "Clave de APIsPeru para buscar clientes por RUC o DNI"
+pedir_clave DEEPSEEK_API_KEY "Clave de DeepSeek para Chispa"
+grep -q '^CHISPA_PROVIDER=' "$SECRETOS/app.env" || guardar_clave CHISPA_PROVIDER deepseek
+
 # Certificado autofirmado exclusivo de las pruebas: no se registra en SUNAT
 # ni sustituye el certificado fiscal al pasar a producción.
 mkdir -p "$SECRETOS/certificados"
