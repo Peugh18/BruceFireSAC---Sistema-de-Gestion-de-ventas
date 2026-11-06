@@ -149,6 +149,16 @@ export default function RecojoShow({
         );
         setPaso('precio');
     };
+    // Lo que falta para confirmar, visible junto al botón (no se bloquea en silencio).
+    const falta =
+        form.data.contacto_nombre.trim() === ''
+            ? 'Escribe quién entrega los extintores.'
+            : !form.data.firma
+              ? 'Falta la firma del cliente.'
+              : !form.data.conformidad_cliente
+                ? 'Marca la conformidad del cliente antes de registrar el recojo.'
+                : null;
+
     const confirmar = () =>
         form.post(
             recojos.store.url({
@@ -497,14 +507,17 @@ export default function RecojoShow({
                                 : ' a Bruce Fire'}
                         </label>
                         <PiePaso>
+                            {falta ? (
+                                <p
+                                    role="alert"
+                                    className="text-destructive-strong text-center text-sm font-semibold"
+                                >
+                                    {falta}
+                                </p>
+                            ) : null}
                             <button
                                 type="button"
-                                disabled={
-                                    form.processing ||
-                                    !form.data.firma ||
-                                    !form.data.conformidad_cliente ||
-                                    form.data.contacto_nombre.trim() === ''
-                                }
+                                disabled={form.processing || falta !== null}
                                 onClick={confirmar}
                                 className={botonPrincipal}
                             >

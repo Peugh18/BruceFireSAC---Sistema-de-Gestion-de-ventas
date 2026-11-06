@@ -92,6 +92,16 @@ export default function EntregaShow({
                 ? [...form.data.entregados, id]
                 : form.data.entregados.filter((otro) => otro !== id),
         );
+    // Lo que falta para confirmar, visible junto al botón (no se bloquea en silencio).
+    const falta =
+        form.data.receptor_nombre.trim().length < 3
+            ? 'Escribe el nombre de quien recibe.'
+            : !form.data.firma
+              ? 'Falta la firma de quien recibe.'
+              : !form.data.conformidad_aceptada
+                ? 'Marca la conformidad del receptor antes de confirmar la entrega.'
+                : null;
+
     const confirmar = () =>
         form.post(
             entregas.confirm.url({
@@ -333,14 +343,17 @@ export default function EntregaShow({
                             {total === 1 ? 'extintor' : 'extintores'} conforme
                         </label>
                         <PiePaso>
+                            {falta ? (
+                                <p
+                                    role="alert"
+                                    className="text-destructive-strong text-center text-sm font-semibold"
+                                >
+                                    {falta}
+                                </p>
+                            ) : null}
                             <button
                                 type="button"
-                                disabled={
-                                    form.processing ||
-                                    !form.data.firma ||
-                                    !form.data.conformidad_aceptada ||
-                                    form.data.receptor_nombre.trim().length < 3
-                                }
+                                disabled={form.processing || falta !== null}
                                 onClick={confirmar}
                                 className={botonPrincipal}
                             >

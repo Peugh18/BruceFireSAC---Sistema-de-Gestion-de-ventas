@@ -671,3 +671,10 @@
 - Widget: micrófono (reconocimiento del navegador, es-PE), tarjetas con "Abrir … llenada" / "Confirmar cambio" y botón "Escuchar".
 - Rutas de Chispa cerradas a técnicos. Migración: `chispa_registros.herramientas`.
 - Pruebas: `ChispaHerramientasTest` (nueva, DeepSeek simulado) 5/5 y `ChispaAssistantTest` 15/15. PHPStan, TypeScript y lint limpios. Sin commit.
+
+## 2026-11-06 — Claude: commit y suite completa
+
+- Commit `ca4b6ae` (campo, certificados al cobrar, Chispa) en `feat/campo-recojo-entrega-instalacion`, sin push.
+- Suite completa: 1.526 pruebas, 1.471 en verde. Arreglado: la entrega revisa quién tiene la orden antes de validar datos; recojo, entrega e instalación muestran qué falta junto al botón (`role="alert"`); nombres de funciones repetidos en pruebas. Los 52 errores eran choques de migración en la base de pruebas por una corrida detenida: al repetir los 11 archivos afectados, 77 de 77 en verde.
+- `vp check` (formato y lint), PHPStan y TypeScript en verde.
+- Pendiente para producción: ruta de envío SUNAT (preguntar a Codeplex si usan OSE), certificado y usuario SOL, series y correlativos, hosting con cola y programador, respaldo, base limpia con datos reales, rotar la clave de DeepSeek.

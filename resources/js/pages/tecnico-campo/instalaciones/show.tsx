@@ -205,6 +205,16 @@ export default function InstalacionShow({
             'equipos',
             puntos.map((p, j) => (j === i ? { ...p, ...cambios } : p)),
         );
+    // Lo que falta para confirmar, visible junto al botón (no se bloquea en silencio).
+    const faltaCierre =
+        form.data.conformidad_nombre.trim().length < 3
+            ? 'Escribe quién da la conformidad.'
+            : !form.data.firma
+              ? 'Falta la firma del cliente.'
+              : !form.data.conformidad_aceptada
+                ? 'Marca la conformidad del cliente antes de finalizar la instalación.'
+                : null;
+
     const confirmar = () => {
         form.transform((data) => ({
             ...data,
@@ -637,15 +647,17 @@ export default function InstalacionShow({
                             Conforme con la instalación
                         </label>
                         <PiePaso>
+                            {faltaCierre ? (
+                                <p
+                                    role="alert"
+                                    className="text-destructive-strong text-center text-sm font-semibold"
+                                >
+                                    {faltaCierre}
+                                </p>
+                            ) : null}
                             <button
                                 type="button"
-                                disabled={
-                                    form.processing ||
-                                    !form.data.firma ||
-                                    !form.data.conformidad_aceptada ||
-                                    form.data.conformidad_nombre.trim().length <
-                                        3
-                                }
+                                disabled={form.processing || faltaCierre !== null}
                                 onClick={confirmar}
                                 className={botonPrincipal}
                             >

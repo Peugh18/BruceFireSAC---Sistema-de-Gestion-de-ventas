@@ -17,7 +17,7 @@ beforeEach(function () {
     config(['services.chispa.provider' => 'deepseek', 'services.chispa.deepseek.key' => 'clave-de-prueba']);
 });
 
-function conRol(string $rol): User
+function chispaConRol(string $rol): User
 {
     $user = User::factory()->create();
     $user->assignRole($rol);
@@ -26,7 +26,7 @@ function conRol(string $rol): User
 }
 
 /** DeepSeek pide una herramienta y luego responde con texto. */
-function deepseekLlama(string $herramienta, array $args, string $final = 'Te dejé todo listo, revísalo.'): void
+function chispaDeepseekLlama(string $herramienta, array $args, string $final = 'Te dejé todo listo, revísalo.'): void
 {
     Http::fake(['api.deepseek.com/*' => Http::sequence()
         ->push(['choices' => [['message' => ['content' => '', 'tool_calls' => [['id' => 'c1', 'type' => 'function', 'function' => ['name' => $herramienta, 'arguments' => json_encode($args)]]]]]]])
@@ -35,11 +35,11 @@ function deepseekLlama(string $herramienta, array $args, string $final = 'Te dej
 }
 
 test('el vendedor dicta una factura y chispa deja la venta llenada para que la emita el', function () {
-    $vendedor = conRol('Vendedor');
+    $vendedor = chispaConRol('Vendedor');
     $cliente = Client::factory()->create(['tipo_documento' => 'ruc', 'numero_documento' => '20481234567']);
     $pqs = Product::factory()->create(['codigo' => 'PRD-0001', 'precio_venta' => 70, 'serializado' => true]);
     InventoryUnit::factory()->count(2)->create(['product_id' => $pqs->id, 'estado' => 'disponible']);
-    deepseekLlama('preparar_venta', ['documento_cliente' => '20481234567', 'comprobante' => 'factura', 'items' => [['codigo' => 'PRD-0001', 'cantidad' => 2]]]);
+    chispaDeepseekLlama('preparar_venta', ['documento_cliente' => '20481234567', 'comprobante' => 'factura', 'items' => [['codigo' => 'PRD-0001', 'cantidad' => 2]]]);
 
     $respuesta = $this->actingAs($vendedor)->postJson(route('asistente'), ['mensajes' => [['role' => 'user', 'content' => 'factura al 20481234567, dos PQS de 6 kilos']]])
         ->assertOk()
@@ -61,7 +61,7 @@ test('el vendedor dicta una factura y chispa deja la venta llenada para que la e
 });
 
 test('con servicios chispa no arma la venta: pide cotizacion', function () {
-    $vendedor = conRol('Vendedor');
+    $vendedor = chispaConRol('Vendedor');
     Client::factory()->create(['tipo_documento' => 'dni', 'numero_documento' => '40405210']);
     Service::factory()->create(['codigo' => 'SRV-0001', 'precio_venta' => 35]);
 
@@ -74,9 +74,9 @@ test('con servicios chispa no arma la venta: pide cotizacion', function () {
 });
 
 test('el almacen dicta lo que llego y chispa abre la recepcion llenada', function () {
-    $almacen = conRol('Almacen');
+    $almacen = chispaConRol('Almacen');
     $guantes = Product::factory()->create(['codigo' => 'PRD-0013', 'serializado' => false]);
-    deepseekLlama('preparar_recepcion', ['proveedor' => 'Extintores del Norte', 'items' => [['codigo' => 'PRD-0013', 'cantidad' => 10]]]);
+    chispaDeepseekLlama('preparar_recepcion', ['proveedor' => 'Extintores del Norte', 'items' => [['codigo' => 'PRD-0013', 'cantidad' => 10]]]);
 
     $url = $this->actingAs($almacen)->postJson(route('asistente'), ['mensajes' => [['role' => 'user', 'content' => 'llegaron 10 guantes']]])
         ->assertOk()->json('acciones.0.url');
@@ -89,10 +89,10 @@ test('el almacen dicta lo que llego y chispa abre la recepcion llenada', functio
 });
 
 test('el gerente confirma un cambio de precio y el vendedor no puede', function () {
-    $gerente = conRol('Gerente');
+    $gerente = chispaConRol('Gerente');
     $recarga = Service::factory()->create(['codigo' => 'SRV-0001', 'precio_venta' => 35]);
 
-    $this->actingAs(conRol('Vendedor'))->postJson(route('asistente.precio'))->assertForbidden();
+    $this->actingAs(chispaConRol('Vendedor'))->postJson(route('asistente.precio'))->assertForbidden();
 
     $preparado = $this->actingAs($gerente);
     app(Herramientas::class)->ejecutar($gerente, 'preparar_cambio_precio', ['codigo' => 'SRV-0001', 'precio' => 40]);
@@ -106,7 +106,7 @@ test('el gerente confirma un cambio de precio y el vendedor no puede', function 
 });
 
 test('una herramienta de otro rol no se ejecuta', function () {
-    $resultado = app(Herramientas::class)->ejecutar(conRol('Almacen'), 'deudores', []);
+    $resultado = app(Herramientas::class)->ejecutar(chispaConRol('Almacen'), 'deudores', []);
 
     expect($resultado['datos'])->toHaveKey('error');
 });

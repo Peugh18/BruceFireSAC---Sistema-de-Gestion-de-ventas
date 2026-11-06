@@ -128,6 +128,9 @@ class DeliveryController extends Controller
         ServiceOrder $serviceOrder,
         RenewEquipmentAttentionDate $renewEquipmentAttentionDate,
     ): RedirectResponse {
+        // Primero quién la tiene hoy (pudo cambiar tras el middleware); luego los datos.
+        abort_unless(ServiceOrder::query()->whereKey($serviceOrder->id)->first()?->atendiblePor($request->user()) === true, 404);
+
         $validated = $request->validate([
             'receptor_nombre' => ['required', 'string', 'min:3', 'max:150', 'regex:/\p{L}{2}/u'],
             'receptor_dni' => ['nullable', 'digits:8'],
