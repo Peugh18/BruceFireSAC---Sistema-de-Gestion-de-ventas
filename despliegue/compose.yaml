@@ -1,0 +1,58 @@
+# Todo el sistema en una sola máquina: web (HTTPS automático), cola, tareas
+# programadas y base de datos. Las claves viven en secretos/app.env (no se suben).
+name: brucefire
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: despliegue/Dockerfile
+  image: brucefire-app
+  env_file: secretos/app.env
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+  volumes:
+    - storage:/app/storage
+
+services:
+  web:
+    <<: *app
+    environment:
+      SERVER_NAME: ${DOMINIO}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - storage:/app/storage
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # Envíos a SUNAT, correos y demás trabajos en segundo plano.
+  cola:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+
+  # Programador: envíos diferidos a SUNAT, respaldo diario, vencimientos.
+  tareas:
+    <<: *app
+    command: ["php", "artisan", "schedule:work"]
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    env_file: secretos/db.env
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  storage:
+  mysql:
+  caddy_data:
+  caddy_config:
