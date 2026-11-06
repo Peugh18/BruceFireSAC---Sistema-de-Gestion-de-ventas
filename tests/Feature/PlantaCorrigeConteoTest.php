@@ -18,7 +18,7 @@ beforeEach(function () {
     $quince = Service::factory()->create(['nombre' => 'Recarga CO2 15 lb', 'agente' => 'CO2', 'capacidad' => '15 lb', 'precio_venta' => 80, 'activo' => true]);
 
     // Campo contó 3 CO2 de 15 lb y dejó S/ 80 c/u.
-    $this->orden = ServiceOrder::factory()->create(['estado' => 'recibido_planta', 'departamento_tecnico' => 'planta', 'tecnico_id' => null]);
+    $this->orden = ServiceOrder::factory()->create(['service_id' => $quince->id, 'estado' => 'recibido_planta', 'departamento_tecnico' => 'planta', 'tecnico_id' => null]);
     $this->linea = $this->orden->lines()->create(['service_id' => $quince->id, 'cantidad' => 3, 'precio_lista' => null, 'precio_unitario' => 80, 'precio_estado' => 'sin_lista']);
     $this->orden->events()->create(['tipo' => 'otro', 'user_id' => $this->planta->id, 'payload' => [
         'eslabon_custodia' => 'recojo_campo',

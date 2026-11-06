@@ -58,3 +58,91 @@ jobs:
 
       - name: Run CI Checks
         run: composer ci:check
+
+  despliegue:
+    name: Docker ARM y capacitación
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Reintentos del instalador
+        run: bash tests/Deployment/instalar.sh
+
+      - name: Configurar entorno desechable de CI
+        working-directory: despliegue
+        run: |
+          mkdir -p secretos/certificados
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -subj '/CN=BRUCE FIRE CI PRUEBA' \
+            -keyout secretos/certificados/ci.key -out secretos/certificados/ci.crt
+          cat secretos/certificados/ci.crt secretos/certificados/ci.key > secretos/certificados/sunat-beta.pem
+          printf 'DOMINIO=:80\n' > .env
+          cat > secretos/db.env <<'ENV'
+          MYSQL_DATABASE=brucefire
+          MYSQL_USER=brucefire
+          MYSQL_PASSWORD=ci-descartable
+          MYSQL_ROOT_PASSWORD=ci-root-descartable
+          ENV
+          cat > secretos/app.env <<ENV
+          APP_NAME="Bruce Fire CI"
+          APP_ENV=production
+          APP_DEBUG=false
+          APP_KEY=base64:$(openssl rand -base64 32)
+          APP_URL=http://localhost
+          LOG_CHANNEL=stderr
+          DB_CONNECTION=mysql
+          DB_HOST=db
+          DB_DATABASE=brucefire
+          DB_USERNAME=brucefire
+          DB_PASSWORD=ci-descartable
+          SESSION_DRIVER=database
+          SESSION_SECURE_COOKIE=false
+          CACHE_STORE=database
+          QUEUE_CONNECTION=database
+          MAIL_MAILER=log
+          INERTIA_SSR_ENABLED=false
+          SUNAT_BETA=true
+          SUNAT_CERT_PATH=/run/secrets/certificados/sunat-beta.pem
+          SUNAT_RUC=20616376528
+          SUNAT_USUARIO_SOL=MODDATOS
+          SUNAT_CLAVE_SOL=MODDATOS
+          BILLING_COMPANY_RUC=20616376528
+          BILLING_COMPANY_RAZON_SOCIAL="BRUCE FIRE CI"
+          BILLING_COMPANY_UBIGEO=130101
+          BILLING_COMPANY_DIRECCION="DIRECCION DE PRUEBA"
+          ENV
+
+      - name: Construir imagen ARM real
+        working-directory: despliegue
+        run: docker compose build
+
+      - name: Inicializar base y verificar capacitación
+        working-directory: despliegue
+        run: |
+          docker compose up -d --wait db
+          docker compose run --rm -T web php artisan migrate --force
+          docker compose run --rm -T web php artisan db:seed --force
+          docker compose run --rm -T web php artisan sistema:capacitacion > /dev/null
+          docker compose run --rm -T web php artisan sistema:capacitacion | grep 'ya existían'
+          docker compose run --rm -T web php artisan tinker --execute='throw_unless(App\Models\User::count() === 5, new RuntimeException("Faltan cuentas")); throw_unless(App\Models\Product::count() > 0, new RuntimeException("Falta catálogo")); $pem = file_get_contents(config("billing.sunat.cert_path")); throw_unless(openssl_x509_read($pem) && openssl_pkey_get_private($pem), new RuntimeException("Certificado beta inválido"));'
+          docker compose run --rm -T web php artisan optimize
+          docker compose up -d
+          curl --fail --retry 20 --retry-delay 3 --retry-all-errors http://localhost/up
+          curl --fail http://localhost/login > /dev/null
+          docker compose exec -T web php artisan backup:bd
+          docker compose exec -T web sh -c 'test -s /app/storage/app/backups/bd_*.sql'
+          test "$(docker compose ps --status running --services | wc -l)" -eq 4
+
+      - name: Diagnóstico si falla
+        if: failure()
+        working-directory: despliegue
+        run: docker compose logs --tail=80
+
+      - name: Retirar entorno desechable
+        if: always()
+        working-directory: despliegue
+        run: docker compose down --volumes --remove-orphans

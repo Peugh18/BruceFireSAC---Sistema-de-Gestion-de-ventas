@@ -16,19 +16,12 @@
 
 ## Última sesión
 
-- **Quién y cuándo:** Claude, 2026-10-28.
-- **Pedido del usuario:** «Prompt maestro V3»: primera tarea, solo auditoría y planificación, sin programar.
-- **Archivos revisados:** composer.json, package.json, components.json, .mcp.json, `.agents/skills`, rutas (`route:list`), controladores con `Inertia::render`, páginas y componentes, DashboardController (KPI), PrecioConIgv, ComprobantePdfService, config/billing.php, docs/ai/*, SUNAT_FACTURACION.md, DESIGN.md.
-- **Archivos creados (solo documentación):**
-    - `docs/ai/` START_HERE, PROJECT_STATE, AI_RULES, OPEN_QUESTIONS, DECISIONS_INDEX, HERRAMIENTAS_Y_SKILLS y este archivo;
-    - `docs/audit/AUDITORIA_2026-10-28.md` y `docs/audit/herramientas/inventario_vistas.py`;
-    - `docs/views/INVENTARIO_VISTAS_ACTUAL.md` (generado);
-    - `docs/architecture/ARQUITECTURA_OBJETIVO.md`;
-    - `docs/design-system/COMPONENTES_Y_FAMILIA_DOCUMENTAL.md`;
-    - `docs/finance-bi/METRICAS_FINANCIERAS.md`;
-    - `adr/0001-evolucionar-el-beta.md`;
-    - `GEMINI.md`.
-- **Pruebas:** no se ejecutaron. No hubo cambios de código.
-- **Lo que no se verificó:** cambios visuales de Codex del 23/10, SUNAT producción, GRE real, rendimiento con volumen real.
-- **Decisiones pendientes:** P-01 a P-12 en [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). La más importante es P-01 (evolucionar o reescribir).
-- **Siguiente paso:** cuando el usuario responda P-01 y P-02, hacer commit del trabajo acumulado y seguir con la fase 1 (E-021, servicio de métricas).
+- **Quién y cuándo:** Codex, 2026-11-06.
+- **Pedido del usuario:** «Necesito subir este proyecto a AWS; revisa en qué se quedó Claude». Confirma que todavía no creó la instancia.
+- **Estado verificado:** rama local `feat/despliegue-aws`, commit `d43c6dd`; `git ls-remote` confirma `main=163d07d` y ausencia de la rama remota de despliegue.
+- **Archivos revisados:** memoria del proyecto, commit de despliegue completo, `despliegue/*`, seeders, comando y prueba de capacitación, configuración SUNAT, firma de comprobantes, respaldo, Docker ignore y CI.
+- **Archivos cambiados:** PLAN.md, BITACORA.md y este relevo; solo documentación. Se conservó `docs/ai/auditoria/` sin seguimiento.
+- **Pruebas:** `PrepararCapacitacionTest`: 1 prueba y 9 aserciones, aprobada (117,7 s); sintaxis Bash y `git diff --check` sin errores.
+- **Hallazgos pendientes:** el instalador no proporciona certificado para firmar en beta; el marcador de primera instalación se crea antes del build y al reintentar puede omitir seed/usuarios; respaldo externo pendiente.
+- **Lo que no se verificó:** build/arranque Docker, EC2, DNS, HTTPS, cola, programador y restauración. Docker y AWS CLI no disponibles; `gh` no autenticado. No se crearon recursos ni se hizo commit/push.
+- **Siguiente paso concreto:** corregir y verificar el instalador, publicarlo mediante el flujo autorizado y después crear EC2, dominio/IP, instalar y verificar. Mantener SUNAT beta para capacitación; producción fiscal requiere configuración y datos reales aparte.

@@ -21,6 +21,12 @@ class CatalogoDemoSeeder extends Seeder
             return;
         }
 
+        $this->sembrar();
+    }
+
+    /** También lo usa `sistema:capacitacion` en el servidor de capacitación. */
+    public function sembrar(): void
+    {
         // [nombre, clave de categoría, agente, capacidad, precio, serializado]
         $productos = [
             ['Extintor PQS ABC 6 kg', 'extintor', 'PQS ABC', '6 kg', 70.00, true],

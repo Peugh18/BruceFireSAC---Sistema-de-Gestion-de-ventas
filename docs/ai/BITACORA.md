@@ -678,3 +678,24 @@
 - Suite completa: 1.526 pruebas, 1.471 en verde. Arreglado: la entrega revisa quién tiene la orden antes de validar datos; recojo, entrega e instalación muestran qué falta junto al botón (`role="alert"`); nombres de funciones repetidos en pruebas. Los 52 errores eran choques de migración en la base de pruebas por una corrida detenida: al repetir los 11 archivos afectados, 77 de 77 en verde.
 - `vp check` (formato y lint), PHPStan y TypeScript en verde.
 - Pendiente para producción: ruta de envío SUNAT (preguntar a Codeplex si usan OSE), certificado y usuario SOL, series y correlativos, hosting con cola y programador, respaldo, base limpia con datos reales, rotar la clave de DeepSeek.
+
+## 2026-11-06 — Codex: relevo del despliegue AWS de Claude
+
+- Pedido: revisar dónde quedó Claude antes de subir Bruce Fire a AWS. Usuario confirma que todavía no creó EC2.
+- Último trabajo real: `d43c6dd` en `feat/despliegue-aws`, posterior al merge #42; incluye `despliegue/` y `sistema:capacitacion`, con SUNAT beta.
+- Remoto consultado: `main=163d07d`; la rama de despliegue no está publicada. La descarga desde `main` de la guía no dispone aún del instalador.
+- Hallazgos: falta preparar certificado de firma para comprobantes beta; un fallo después de crear `app.env` hace que el reintento omita seed y usuarios.
+- Pruebas: `php vendor/bin/pest tests/Feature/PrepararCapacitacionTest.php --compact` pasó: 1 prueba, 9 aserciones (117,7 s). `bash -n` y `git diff --check` sin errores.
+- Sin build Docker ni comprobaciones en AWS: Docker y AWS CLI no disponibles; GitHub CLI no autenticado. No se afirma que el despliegue funcione.
+- Se actualizan PLAN y SESSION_HANDOFF; sin cambios de aplicación, commit, push ni recursos AWS. Se conserva `docs/ai/auditoria/` sin seguimiento.
+- Siguiente: corregir/validar el instalador, publicarlo por el flujo autorizado y después crear EC2, dominio/IP, instalar y comprobar los flujos.
+
+## 2026-11-06 — Codex: ejecución autorizada del despliegue AWS
+
+- Usuario autorizó continuar («hazlo»). GitHub recuperado con la credencial existente de Git; AWS abierto en Chrome con sesión iniciada por el usuario.
+- Instalador: certificado beta autofirmado/MODDATOS, montaje de solo lectura y marcador de inicialización pendiente; no repite capacitación tras una instalación completa ni sobre SUNAT producción.
+- Cuatro escenarios de recuperación pasan en Git Bash y Ubuntu/WSL. YAML de CI válido; se añadió build y smoke nativos ARM con MySQL, web, cola, programador y respaldo.
+- CI previo de `main` tenía 1 fallo entre 1.526 pruebas: fixture aleatorio de PlantaCorrigeConteoTest. Se fijó service_id explícito; 3/3 pruebas y 14 aserciones; PHPStan 0.
+- Revisión independiente encontró riesgo de cuentas sin claves visibles si falla el catálogo; corregido con transacción común. RED comprobado; GREEN 2/2 pruebas, 19 aserciones; Pint/PHPStan correctos.
+- AWS: imagen Ubuntu ARM y rol SSM verificados; dominio brucefire.duckdns.org ya creado. Base mensual estimada US$ 18,31 con 730 h; impuestos/consumo adicional aparte.
+- Sin Docker local: build y comprobación de servicios pendientes de CI ARM. No se han creado recursos AWS; se solicitará confirmación concreta del gasto y acceso público antes de hacerlo.

@@ -56,3 +56,7 @@ database/data/*.xlsm
 # Apuntes personales de tesis: no pertenecen al proyecto
 /docs/ai/PLAN_INSTRUMENTOS_SEMANA8.md
 /docs/ai/PROMPT_AUDITOR.md
+
+# Claves del servidor (despliegue)
+/despliegue/secretos/
+/despliegue/.env
