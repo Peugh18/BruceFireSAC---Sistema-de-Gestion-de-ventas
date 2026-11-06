@@ -3,6 +3,24 @@
 > Última actualización: 2026-10-23. Corto a propósito: el detalle de cada cambio está en el código, en las pruebas y en git.
 > Referencias: [SUNAT_FACTURACION.md](../SUNAT_FACTURACION.md) · [APIS.md](../APIS.md) · [PROMPT_AUDITORIA.md](PROMPT_AUDITORIA.md)
 
+## Relevo AWS — revisión de Codex (2026-11-06)
+
+Responsable: Codex. Revisión inicial completada; el usuario autorizó continuar con correcciones, publicación y despliegue («hazlo»). Confirma que todavía no creó la instancia EC2.
+
+- [x] Localizado el commit `d43c6dd` en `feat/despliegue-aws`: Docker, HTTPS, MySQL, cola, programador y cuentas de capacitación; SUNAT en beta.
+- [x] Consultado el remoto con `git ls-remote`: `main` sigue en `163d07d`; no existe la rama remota de despliegue. La guía descarga desde `main`, donde el instalador aún no está publicado.
+- [x] Verificación focalizada: `PrepararCapacitacionTest` pasa (1 prueba, 9 aserciones); `bash -n despliegue/instalar.sh` y `git diff --check` sin errores.
+- [x] Certificado beta autofirmado generado en el servidor, credenciales públicas MODDATOS y montaje de certificados de solo lectura; los secretos no se publican.
+- [x] Recuperación de instalación mediante marcador pendiente, sin regenerar claves ni volver a sembrar tras instalación completa. Cuatro escenarios de Bash pasan en Windows y Ubuntu/WSL.
+- [x] Corregido el fixture aleatorio de `PlantaCorrigeConteoTest`: 3 pruebas, 14 aserciones; PHPStan 0. Sin cambios de lógica del taller.
+- [x] Fallo al sembrar catálogo revierte cuentas/sedes para que el reintento pueda entregar sus contraseñas. RED comprobado; GREEN: 2 pruebas, 19 aserciones; Pint y PHPStan correctos.
+- [ ] Verificar build y arranque Docker, capacitación de punta a punta y respaldo/restauración; no hay Docker disponible en este entorno. El respaldo externo sigue pendiente.
+- [ ] Publicar los cambios mediante el flujo autorizado de GitHub y CI; crear EC2, dominio/IP y acceso SSM; instalar y verificar HTTPS, cola y programador. No se hizo commit ni push en esta revisión.
+
+**En ejecución AWS:** publicar correcciones por PR/CI y verificar build/arranque nativos ARM; después crear EC2 e instalar. GitHub accesible con la credencial existente de Git y AWS con la sesión iniciada por el usuario en Chrome. Conservar SUNAT beta y los datos locales. No incluir `docs/ai/auditoria/` ajeno en commits.
+
+Infraestructura comprobada: Ohio, Ubuntu 24.04 ARM, t4g.small, 30 GB gp3, administración SSM mediante rol existente y sin SSH; dominio `brucefire.duckdns.org` creado. Costo base consultado: US$ 18,31/mes a 730 horas, antes de impuestos y uso adicional. Usuario inició sesión en AWS; pendiente de creación tras verificar CI y confirmar el gasto y el acceso público.
+
 ## Dónde estamos
 
 ### Relevo de Claude: recarga, avisos y certificados (2026-10-23)

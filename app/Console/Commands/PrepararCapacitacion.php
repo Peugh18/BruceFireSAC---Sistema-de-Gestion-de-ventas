@@ -59,10 +59,10 @@ class PrepararCapacitacion extends Command
                 $claves[] = [$rol, $correo, $clave];
             }
 
+            app(CatalogoDemoSeeder::class)->sembrar();
+
             return $claves;
         });
-
-        app(CatalogoDemoSeeder::class)->sembrar();
 
         $this->info('Capacitación lista: sedes y catálogo de ejemplo cargados.');
         if ($claves === []) {
