@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgenteController;
+use App\Http\Controllers\CapacidadController;
 use App\Http\Controllers\ChispaController;
 use App\Http\Controllers\ConversacionOrdenController;
 use App\Http\Controllers\DashboardController;
@@ -48,11 +49,15 @@ Route::prefix('{current_team}')
 
 Route::middleware(['auth'])->group(function () {
     Route::get('ubigeos', UbigeoController::class)->name('ubigeos.buscar');
-    Route::post('asistente', ChispaController::class)->middleware('throttle:20,1')->name('asistente');
-    Route::patch('asistente/{registro}', [ChispaController::class, 'valorar'])->middleware('throttle:60,1')->name('asistente.valorar');
+    // Chispa: solo vendedor, almacén y gerente (los técnicos no la usan).
+    Route::middleware('role:Gerente|Vendedor|Almacen')->group(function () {
+        Route::post('asistente', ChispaController::class)->middleware('throttle:20,1')->name('asistente');
+        Route::patch('asistente/{registro}', [ChispaController::class, 'valorar'])->middleware('throttle:60,1')->name('asistente.valorar');
+        Route::post('asistente/precio', [ChispaController::class, 'confirmarPrecio'])->middleware(['role:Gerente', 'throttle:20,1'])->name('asistente.precio');
+    });
 
     // Agentes extintores: se agregan, renombran o quitan desde un modal en los formularios.
-    Route::middleware('role:Gerente|Vendedor|TecnicoPlanta|Almacen')->group(function () {
+    Route::middleware('role:Gerente|Vendedor|TecnicoPlanta|TecnicoCampo|Almacen')->group(function () {
         Route::get('agentes', [AgenteController::class, 'index'])->name('agentes.index');
         Route::post('agentes', [AgenteController::class, 'store'])->name('agentes.store');
         Route::patch('agentes/{agente}', [AgenteController::class, 'update'])->name('agentes.update');
@@ -65,6 +70,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('marcas', [MarcaController::class, 'store'])->name('marcas.store');
         Route::patch('marcas/{marca}', [MarcaController::class, 'update'])->name('marcas.update');
         Route::delete('marcas/{marca}', [MarcaController::class, 'destroy'])->name('marcas.destroy');
+
+        // Capacidades (6 kg, 30 lb, 6 L…): igual que marcas y agentes.
+        Route::get('capacidades', [CapacidadController::class, 'index'])->name('capacidades.index');
+        Route::post('capacidades', [CapacidadController::class, 'store'])->name('capacidades.store');
+        Route::patch('capacidades/{capacidad}', [CapacidadController::class, 'update'])->name('capacidades.update');
+        Route::delete('capacidades/{capacidad}', [CapacidadController::class, 'destroy'])->name('capacidades.destroy');
     });
 });
 

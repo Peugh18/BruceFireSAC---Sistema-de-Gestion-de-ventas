@@ -294,9 +294,7 @@ export default function TecnicoCampoDashboard({
                         { value: 'todos', label: 'Todos' },
                         { value: 'recojos', label: 'Recojos' },
                         { value: 'entregas', label: 'Entregas' },
-                        { value: 'inspecciones', label: 'Inspecciones' },
                         { value: 'instalaciones', label: 'Instalaciones' },
-                        { value: 'mantenimientos', label: 'Mantenimientos' },
                     ]}
                     onCambiar={handleTipoFiltro}
                 />

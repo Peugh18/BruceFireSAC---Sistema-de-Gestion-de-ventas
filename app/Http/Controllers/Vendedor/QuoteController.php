@@ -125,6 +125,7 @@ class QuoteController extends Controller
                 // El cliente se comparte entre sedes: no hay clients.sede_id que filtrar.
                 ? Client::query()->find($request->integer('client_id'))?->ficha()
                 : null,
+            'chispa' => $request->boolean('chispa') ? $request->session()->pull('chispa.cotizacion') : null,
             'renovacion' => $quote ? [
                 'numero' => $quote->numero,
                 'client' => $quote->client->ficha(),

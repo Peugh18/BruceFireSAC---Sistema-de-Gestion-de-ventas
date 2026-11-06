@@ -1,3 +1,7 @@
+import EntradaSalida, {
+    type EntradaSalidaProps,
+} from '@/components/entrada-salida';
+import PreciosCampo, { type PrecioCampo } from '@/components/precios-campo';
 import { pageTitleClass } from '@/components/page-header';
 import DeficiencyController from '@/actions/App/Http/Controllers/Vendedor/DeficiencyController';
 import ServiceOrderController from '@/actions/App/Http/Controllers/Vendedor/ServiceOrderController';
@@ -94,10 +98,13 @@ export type Props = {
     casilleros: Casilleros;
     paso: PasoTaller;
     conversacion: ConversacionProps;
+    entradaSalida: EntradaSalidaProps;
+    preciosCampo: PrecioCampo[];
     tecnicos: { id: number; name: string }[];
     tecnicosEntrega: { id: number; name: string }[];
     deficiencias: DeficiencyItem[];
     extintoresPorVender?: number;
+    certificadoAlCobrar?: boolean;
 };
 
 /** Cada estado técnico dicho como lo entiende la vendedora. */
@@ -213,10 +220,13 @@ export default function ServiceOrderShow({
     casilleros,
     paso,
     conversacion,
+    entradaSalida,
+    preciosCampo,
     tecnicos,
     tecnicosEntrega,
     deficiencias,
     extintoresPorVender = 0,
+    certificadoAlCobrar = false,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const teamSlug =
@@ -576,6 +586,11 @@ export default function ServiceOrderShow({
                         )}
                     </div>
                 </header>
+                <EntradaSalida
+                    entrada={entradaSalida.entrada}
+                    salida={entradaSalida.salida}
+                />
+                <PreciosCampo precios={preciosCampo} />
 
                 <section
                     aria-label="Avance de la orden"
@@ -699,6 +714,16 @@ export default function ServiceOrderShow({
                                             Venta: falta cobrar
                                         </span>
                                     )}
+                                    {certificadoAlCobrar &&
+                                    extintoresPorVender === 0 ? (
+                                        <span
+                                            role="status"
+                                            className={`${chip} text-warning-strong bg-amber-500/15`}
+                                        >
+                                            Certificado: sale al emitir la
+                                            factura, boleta o nota de venta
+                                        </span>
+                                    ) : null}
                                     {extintoresPorVender > 0 ? (
                                         <span
                                             role="status"
@@ -735,7 +760,7 @@ export default function ServiceOrderShow({
                                                 </a>
                                             ),
                                         )
-                                    ) : (
+                                    ) : certificadoAlCobrar ? null : (
                                         <span
                                             className={`${chip} text-muted-foreground`}
                                         >

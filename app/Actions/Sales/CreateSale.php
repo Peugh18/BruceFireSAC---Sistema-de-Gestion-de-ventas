@@ -289,7 +289,8 @@ class CreateSale
 
     /**
      * D-10: los servicios y las ventas a empresas con RUC salen de una
-     * cotización aceptada; así cada recarga tiene su orden y su extintor.
+     * cotización aceptada o de su orden de servicio (recojo de campo); así cada
+     * recarga tiene su orden y su extintor.
      * Lo que compra una persona en mostrador se vende directo.
      *
      * @param  array<string, mixed>  $data
@@ -297,7 +298,7 @@ class CreateSale
      */
     protected function exigirCotizacion(array $data, array $lineas): void
     {
-        if (! empty($data['quote_id']) || ! config('billing.exigir_cotizacion')) {
+        if (! empty($data['quote_id']) || ! empty($data['service_order_id']) || ! config('billing.exigir_cotizacion')) {
             return;
         }
 

@@ -167,7 +167,8 @@ class SaleController extends Controller
                 ? $this->ordenParaCobro($request->integer('orden_servicio'), $sedeId)
                 : ($request->filled('rehacer')
                 ? $this->ventaParaFormulario($request->integer('rehacer'), $sedeId, comoCopia: true)
-                : null),
+                // Borrador que dejó Chispa: se usa una vez y el vendedor lo revisa.
+                : ($request->boolean('chispa') ? $request->session()->pull('chispa.venta') : null)),
         ]);
     }
 
@@ -440,7 +441,7 @@ class SaleController extends Controller
             if ($serviceOrder?->quote_id) {
                 $data['quote_id'] = $serviceOrder->quote_id;
             }
-            $sale = $createSale->handle($data, $items, $request->user()->id);
+            $sale = $createSale->handle([...$data, 'service_order_id' => $serviceOrder?->id], $items, $request->user()->id);
             $serviceOrder?->update(['sale_id' => $sale->id]);
 
             if (! $serviceOrder && ! empty($data['quote_id'])) {
@@ -451,7 +452,7 @@ class SaleController extends Controller
                 $serviceItems = $quote->items->whereNotNull('service_id')->values();
                 $serviceItem = $serviceItems->first();
                 if ($serviceItem?->service) {
-                    $serviceOrder = ServiceOrder::create(['codigo' => $numberGenerator->next(), 'client_id' => $quote->client_id, 'sede_id' => $sale->sede_id, 'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'sale_id' => $sale->id, 'service_id' => $serviceItem->service_id, 'fecha' => today(), 'departamento_tecnico' => 'planta', 'prioridad' => 'normal', 'observaciones' => "Creada desde {$quote->numero}", 'estado' => 'pendiente_recepcion']);
+                    $serviceOrder = ServiceOrder::create(['codigo' => $numberGenerator->next(), 'client_id' => $quote->client_id, 'sede_id' => $sale->sede_id, 'vehicle_id' => $quote->vehicle_id, 'quote_id' => $quote->id, 'sale_id' => $sale->id, 'service_id' => $serviceItem->service_id, 'fecha' => today(), 'departamento_tecnico' => $serviceItem->service->loAtiendeCampo() ? 'campo' : 'planta', 'prioridad' => 'normal', 'observaciones' => "Creada desde {$quote->numero}", 'estado' => 'pendiente_recepcion']);
                     foreach ($serviceItems as $item) {
                         $serviceOrder->lines()->create([
                             'service_id' => $item->service_id,
@@ -518,7 +519,7 @@ class SaleController extends Controller
                 'product_id' => null,
                 'nombre' => $line->service?->nombre,
                 'cantidad' => (int) $line->cantidad,
-                'precio_unitario' => (float) ($line->quoteItem->precio_unitario ?? $line->service->precio_venta ?? 0),
+                'precio_unitario' => (float) ($line->precio_unitario ?? $line->quoteItem->precio_unitario ?? $line->service->precio_venta ?? 0),
                 'descuento' => (float) ($line->quoteItem->descuento ?? 0),
             ])
             : collect([[

@@ -103,9 +103,12 @@ export default function NuevaCotizacion({
     edicion = null,
     cliente: clientePrecargado = null,
     ordenOrigen = null,
+    chispa = null,
     noGravados,
 }: {
     noGravados: NoGravados;
+    // Borrador que dejó Chispa: cliente e ítems; el vendedor revisa y guarda.
+    chispa?: Renovacion | null;
     renovacion?: Renovacion | null;
     edicion?:
         | (Renovacion & { id: number; fecha: string; vigencia_hasta: string })
@@ -122,6 +125,7 @@ export default function NuevaCotizacion({
     const renovacion =
         edicion ??
         renovacionOriginal ??
+        chispa ??
         (ordenOrigen
             ? {
                   ...ordenOrigen,
@@ -251,6 +255,12 @@ export default function NuevaCotizacion({
                     description="Elige el cliente y los productos. Al guardarla, queda lista para descargar en PDF o enviar por WhatsApp."
                 />
             </div>
+            {chispa ? (
+                <div className="text-foreground mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+                    <b>Preparado por Chispa.</b> Revisa el cliente, los precios
+                    y las cantidades, y guarda tú la cotización.
+                </div>
+            ) : null}
             {renovacionOriginal && !edicion && (
                 <div className="text-foreground mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
                     Estás renovando la cotización {renovacionOriginal.numero}.

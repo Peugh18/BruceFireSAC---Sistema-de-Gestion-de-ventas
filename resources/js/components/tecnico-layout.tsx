@@ -78,7 +78,11 @@ export default function TecnicoLayout({
         <div className="mx-auto w-full max-w-2xl shrink-0 px-3 pt-6 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <nav
                 aria-label={`Navegación de ${area}`}
-                className="border-border/70 bg-card grid grid-cols-4 gap-1 rounded-3xl border px-2 pt-2 shadow-[0_4px_24px_rgb(0_0_0/0.05)]"
+                className="border-border/70 bg-card grid gap-1 rounded-3xl border px-2 pt-2 shadow-[0_4px_24px_rgb(0_0_0/0.05)]"
+                // Una columna por destino más la de Perfil: planta usa 4, campo 5.
+                style={{
+                    gridTemplateColumns: `repeat(${navItems.length + 1}, minmax(0, 1fr))`,
+                }}
             >
                 {navItems.map((item) => {
                     const Icon = item.icon;

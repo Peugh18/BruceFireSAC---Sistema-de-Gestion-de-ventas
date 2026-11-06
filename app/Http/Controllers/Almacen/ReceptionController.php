@@ -115,6 +115,8 @@ class ReceptionController extends Controller
             'products' => $products,
             'today' => today()->toDateString(),
             'current_year' => (int) date('Y'),
+            // Borrador que dejó Chispa: proveedor y cantidades; el almacén completa series y confirma.
+            'borrador' => $request->boolean('chispa') ? $request->session()->pull('chispa.recepcion') : null,
         ]);
     }
 

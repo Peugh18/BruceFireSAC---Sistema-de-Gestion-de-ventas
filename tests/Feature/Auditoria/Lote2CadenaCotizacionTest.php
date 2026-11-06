@@ -84,7 +84,8 @@ it('una cotización sin aceptar no abre la orden de taller', function () {
 // P-022: «Nueva orden» nace de una cotización aceptada y copia sus datos.
 it('nueva orden de servicio sale de una cotización aceptada', function () {
     $client = Client::factory()->create();
-    $servicio = Service::factory()->create();
+    // Campo no atiende inspecciones ni mantenimientos: el servicio es fijo.
+    $servicio = Service::factory()->create(['nombre' => 'Recarga PQS 6 kg']);
     $quote = Quote::factory()->aceptada()->create(['client_id' => $client->id, 'sede_id' => $this->sede->id, 'aceptada_por' => 'Rosa']);
     QuoteItem::factory()->create(['quote_id' => $quote->id, 'product_id' => null, 'service_id' => $servicio->id, 'cantidad' => 3]);
 

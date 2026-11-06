@@ -4,6 +4,7 @@ use App\Enums\TeamRole;
 use App\Models\CertificateType;
 use App\Models\CertificateUnit;
 use App\Models\Equipment;
+use App\Models\Sale;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\User;
@@ -90,7 +91,9 @@ test('con todo revisado se termina la orden y se emiten los certificados aunque 
 });
 
 test('sin serie de fábrica o sin dirección no se emite; con los datos del aviso sí, con 600 PSI', function () {
+    // Ya cobrada: el certificado sale al terminar planta.
     $order = ServiceOrder::factory()->create(['estado' => 'en_proceso']);
+    $order->update(['sale_id' => Sale::factory()->create(['client_id' => $order->client_id])->id]);
     $order->client->update(['direccion_fiscal' => null]);
     $equipo = Equipment::factory()->create(['client_id' => $order->client_id, 'tipo_agente' => 'PQS ABC', 'serie_fabricante' => 'No legible / Pendiente de verificar']);
     $order->equipments()->attach($equipo->id, ['recibido' => true]);

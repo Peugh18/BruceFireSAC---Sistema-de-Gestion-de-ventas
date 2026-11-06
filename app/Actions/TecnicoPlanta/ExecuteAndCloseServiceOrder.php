@@ -149,6 +149,30 @@ class ExecuteAndCloseServiceOrder
      * Solo se repara lo que el cliente aceptó: una deficiencia que espera su
      * autorización, que rechazó o que ya se resolvió no gasta repuestos.
      */
+    /**
+     * Emite los certificados que planta dejó pendientes al cerrar la orden sin
+     * cobrar. Lo llama la venta al confirmarse; si ya hay certificados, no hace nada.
+     */
+    public function emitirCertificadosPendientes(ServiceOrder $serviceOrder): void
+    {
+        $evento = $serviceOrder->events()
+            ->where('payload->accion', 'cambio_estado_planta')
+            ->where('payload->estado_nuevo', 'listo_certificado')
+            ->latest('id')
+            ->first();
+        $pendiente = $evento?->payload['certificados_pendientes'] ?? null;
+        if (! is_array($pendiente) || Certificate::where('service_order_id', $serviceOrder->id)->exists()) {
+            return;
+        }
+
+        $this->triggerAutomaticCertificates(
+            $serviceOrder->fresh() ?? $serviceOrder,
+            $serviceOrder->equiposAptos(),
+            array_values(array_map('intval', (array) ($pendiente['ph_equipos'] ?? []))),
+            array_filter(['certificate_data' => $pendiente['certificate_data'] ?? null]),
+        );
+    }
+
     public static function asegurarQueSePuedeReparar(Deficiency $deficiency): void
     {
         $motivo = match ($deficiency->estado) {
@@ -211,10 +235,17 @@ class ExecuteAndCloseServiceOrder
             }
 
             $previousState = $serviceOrder->estado;
+            $certificadosPendientes = null;
 
             $serviceOrder->update([
                 'estado' => $targetState,
             ]);
+
+            // Lo que recogió campo lo devuelve campo: lista para entregar, sale de
+            // planta y la ve cualquier técnico de campo de la sede en Entregas.
+            if ($targetState === 'listo_entrega' && $serviceOrder->events()->where('payload->eslabon_custodia', 'recojo_campo')->exists()) {
+                $serviceOrder->update(['departamento_tecnico' => 'campo', 'tecnico_id' => null]);
+            }
 
             // Si llega a listo_certificado, disparo automático del certificado (§85, Fase 5).
             // Solo los extintores que llegaron y no fueron rechazados; la
@@ -242,7 +273,14 @@ class ExecuteAndCloseServiceOrder
                     ? (array) $extraData['ph_equipos']
                     : (! empty($extraData['ph_realizada']) ? $aptos->modelKeys() : []))));
 
-                $this->triggerAutomaticCertificates($serviceOrder, $aptos, $conPh, $extraData);
+                // El certificado sale con el comprobante (factura, boleta o nota
+                // de venta): si la orden aún no se cobra, queda pendiente y lo
+                // emite la venta con estos mismos datos.
+                if ($serviceOrder->sale_id === null) {
+                    $certificadosPendientes = ['ph_equipos' => $conPh, 'certificate_data' => $extraData['certificate_data'] ?? null];
+                } else {
+                    $this->triggerAutomaticCertificates($serviceOrder, $aptos, $conPh, $extraData);
+                }
                 $this->renewEquipmentAttentionDate->execute($aptos->whereIn('id', $conPh)->values(), true);
                 $this->renewEquipmentAttentionDate->execute($aptos->whereNotIn('id', $conPh)->values(), false);
             }
@@ -256,6 +294,7 @@ class ExecuteAndCloseServiceOrder
                     'accion' => 'cambio_estado_planta',
                     'estado_anterior' => $previousState,
                     'estado_nuevo' => $targetState,
+                    'certificados_pendientes' => $certificadosPendientes,
                     'timestamp' => now()->toIso8601String(),
                 ],
             ]);

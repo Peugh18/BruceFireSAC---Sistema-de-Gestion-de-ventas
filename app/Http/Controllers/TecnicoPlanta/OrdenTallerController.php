@@ -49,6 +49,7 @@ class OrdenTallerController extends Controller
             'paso' => PasoDelTaller::de($service_order),
             'order' => [
                 'id' => $service_order->id,
+                'cobrada' => $service_order->sale_id !== null,
                 'codigo' => $service_order->codigo,
                 'cliente' => $service_order->client->nombre_comercial ?: $service_order->client->razon_social,
                 'cliente_doc' => $service_order->client->numero_documento,
@@ -61,6 +62,8 @@ class OrdenTallerController extends Controller
                 'observaciones' => $service_order->observaciones,
             ],
             'casilleros' => $casilleros,
+            // Lo que campo contó al recoger: planta lo compara con lo que registra.
+            'conteoCampo' => $service_order->conteoDeCampo(),
             'evidenciasRecojo' => $service_order->evidencias()->where('etapa', 'recojo')->where('tipo', 'foto')->get(['id', 'etapa', 'tipo', 'equipment_id']),
             // Los extintores en el orden del certificado, con su checklist de esta orden.
             'revision' => collect($casilleros['equipos'])->map(function (array $equipo) use ($ultimoChecklist, $estadoEquipo) {

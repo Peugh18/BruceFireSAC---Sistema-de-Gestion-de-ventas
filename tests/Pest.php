@@ -5,6 +5,7 @@ use App\Actions\Cotizaciones\TransitionQuoteState;
 use App\Actions\Sales\CreateSale;
 use App\Models\Client;
 use App\Models\ElectronicDocument;
+use App\Models\Evidencia;
 use App\Models\InventoryUnit;
 use App\Models\Product;
 use App\Models\Quote;
@@ -12,6 +13,7 @@ use App\Models\QuoteItem;
 use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\Service;
+use App\Models\ServiceOrder;
 use App\Models\User;
 use App\Services\Billing\GreenterService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -170,3 +172,35 @@ if (! function_exists('cotizacionAceptada')) {
         return $quote;
     }
 }
+
+/**
+ * Lo que una entrega de campo necesita además de la firma: al menos una foto
+ * de la entrega y cada extintor de la orden marcado como entregado.
+ *
+ * @return array{entregados: list<int>}
+ */
+function prepararEntrega(ServiceOrder $orden): array
+{
+    Evidencia::factory()->create(['service_order_id' => $orden->id, 'etapa' => 'entrega', 'tipo' => 'foto']);
+    // Campo entrega solo lo cobrado.
+    if ($orden->sale_id === null) {
+        $orden->update(['sale_id' => Sale::factory()->create(['client_id' => $orden->client_id])->id]);
+    }
+
+    return ['entregados' => $orden->equipments()->pluck('equipment.id')->map(fn ($id) => (int) $id)->all()];
+}
+
+/**
+ * Conteo del recojo con el precio que deja campo; crea la recarga del
+ * catálogo (PQS ABC 6 kg a S/ 35) de donde sale el precio de lista.
+ */
+function conteoRecojo(int $cantidad = 1, float|string|null $precio = 35): array
+{
+    Service::query()->where('nombre', 'Recarga PQS ABC 6 kg')->exists()
+        || Service::factory()->create(['nombre' => 'Recarga PQS ABC 6 kg', 'agente' => 'PQS ABC', 'capacidad' => '6 kg', 'precio_venta' => 35, 'activo' => true]);
+
+    return ['conteo' => [['tipo_agente' => 'PQS ABC', 'capacidad' => '6 kg', 'cantidad' => $cantidad, 'precio' => $precio]]];
+}
+
+/** Cómo quedó montado un extintor instalado (NTP 350.043). */
+const MONTAJE_OK = ['altura_m' => 1.2, 'senalizacion' => true, 'acceso_libre' => true];

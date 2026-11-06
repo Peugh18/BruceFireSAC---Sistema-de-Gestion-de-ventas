@@ -28,6 +28,8 @@ interface Props {
     evidencias?: EvidenciaListada[];
     equipos?: { id: number; serie: string }[];
     soloLectura?: boolean;
+    /** Foto de un extintor en particular (instalación): se guarda con él. */
+    equipoId?: number;
 }
 
 /** Sube fotos sueltas de la orden (antes, después…) con la cámara del celular. */
@@ -38,12 +40,17 @@ export default function SubirEvidencia({
     evidencias = [],
     equipos = [],
     soloLectura = false,
+    equipoId,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const equipo = currentTeam?.slug ?? '';
-    const [equipoId, setEquipoId] = useState('');
+    const [equipoElegido, setEquipoElegido] = useState('');
     const [subiendo, setSubiendo] = useState(false);
-    const propias = evidencias.filter((e) => e.etapa === etapa);
+    const propias = evidencias.filter(
+        (e) =>
+            e.etapa === etapa &&
+            (equipoId === undefined || e.equipment_id === equipoId),
+    );
 
     const subir = (archivo: File | null) => {
         if (!archivo) {
@@ -55,7 +62,11 @@ export default function SubirEvidencia({
                 current_team: equipo,
                 service_order: ordenId,
             }),
-            { archivo, etapa, equipment_id: equipoId || null },
+            {
+                archivo,
+                etapa,
+                equipment_id: equipoId ?? (equipoElegido || null),
+            },
             {
                 onError: (errors) =>
                     toast.error(
@@ -64,6 +75,8 @@ export default function SubirEvidencia({
                     ),
                 forceFormData: true,
                 preserveScroll: true,
+                // El paso que se está llenando (conteo, firma…) no se pierde.
+                preserveState: true,
                 onStart: () => setSubiendo(true),
                 onFinish: () => setSubiendo(false),
             },
@@ -79,8 +92,8 @@ export default function SubirEvidencia({
                 {!soloLectura && equipos.length > 0 && (
                     <NativeSelect
                         aria-label="Extintor de la foto"
-                        value={equipoId}
-                        onChange={(e) => setEquipoId(e.target.value)}
+                        value={equipoElegido}
+                        onChange={(e) => setEquipoElegido(e.target.value)}
                         className="min-h-[44px] rounded-xl border border-neutral-300 bg-white px-2 text-xs dark:border-neutral-600 dark:bg-neutral-900"
                     >
                         <option value="">Foto general</option>
@@ -92,7 +105,7 @@ export default function SubirEvidencia({
                     </NativeSelect>
                 )}
                 {!soloLectura && (
-                    <BotonFoto onFoto={subir} etiqueta="Agregar foto" />
+                    <BotonFoto onFoto={subir} etiqueta="Tomar foto" />
                 )}
                 {subiendo && (
                     <span className="text-xs text-neutral-500">

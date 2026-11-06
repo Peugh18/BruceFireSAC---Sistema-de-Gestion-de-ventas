@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import {
     Wrench,
     Boxes,
+    ClipboardList,
     Building2,
     CircleDollarSign,
     LayoutDashboard,
@@ -18,6 +19,7 @@ import GerenteRoutes from '@/routes/gerente';
 import ProductosRoutes from '@/routes/gerente/productos';
 import CajasRoutes from '@/routes/gerente/cajas';
 import CobranzasRoutes from '@/routes/gerente/cobranzas';
+import OrdenesRoutes from '@/routes/gerente/ordenes';
 import ServiciosRoutes from '@/routes/gerente/servicios';
 import AuditoriaRoutes from '@/routes/gerente/auditoria';
 import SedesRoutes from '@/routes/gerente/sedes';
@@ -65,6 +67,16 @@ function buildNavGroups(
                         current_team: teamSlug,
                     }),
                     icon: LayoutDashboard,
+                },
+            ],
+        },
+        {
+            label: 'Operación',
+            items: [
+                {
+                    title: 'Órdenes',
+                    href: OrdenesRoutes.index.url({ current_team: teamSlug }),
+                    icon: ClipboardList,
                 },
             ],
         },

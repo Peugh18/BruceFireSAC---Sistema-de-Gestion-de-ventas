@@ -1,55 +1,35 @@
-import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import CampoMarca from '@/components/campo-marca';
+import { Check, ChevronRight, Minus, Plus, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import AlertError from '@/components/alert-error';
+import BarraOrdenCampo from '@/components/barra-orden-campo';
+import type { ConversacionProps } from '@/components/conversacion-orden';
+import FirmaCanvas from '@/components/firma-canvas';
 import MedicionesCertificadoCampo, {
     iniciarMediciones,
     type FormularioCertificadoCampo,
 } from '@/components/mediciones-certificado-campo';
-import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
-import BarraOrdenCampo from '@/components/barra-orden-campo';
-import type { ConversacionProps } from '@/components/conversacion-orden';
-import FirmaCanvas from '@/components/firma-canvas';
-import { etiquetaEstadoOrden } from '@/lib/estados-orden';
+import OpcionesAgente from '@/components/opciones-agente';
+import {
+    botonPrincipal,
+    botonSecundario,
+    CabeceraPaso,
+    Contador,
+    enlaceWhatsApp,
+    PiePaso,
+    tarjeta,
+    TrabajoListo,
+} from '@/components/paso-campo';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
-import {
-    ArrowLeft,
-    Check,
-    FileCheck,
-    Flame,
-    MapPin,
-    Phone,
-    Plus,
-    Send,
-    Trash2,
-    UserCheck,
-    Wrench,
-} from 'lucide-react';
-import React, { useState } from 'react';
-import { toast } from 'sonner';
-
+import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
+import { NativeSelect } from '@/components/ui/native-select';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import instalaciones from '@/routes/tecnico-campo/instalaciones';
 import type { Team } from '@/types';
-import OpcionesAgente, {
-    useAgentesExtintor,
-} from '@/components/opciones-agente';
-import { NativeSelect } from '@/components/ui/native-select';
-
-type Client = {
-    id: number;
-    razon_social: string;
-    numero_documento?: string;
-    telefono?: string;
-    direccion_fiscal?: string;
-};
-
-type Sede = {
-    id: number;
-    nombre: string;
-    direccion?: string;
-};
 
 type Equipment = {
     id: number;
@@ -60,837 +40,635 @@ type Equipment = {
     ubicacion_actual?: string | null;
 };
 
-type CertificateType = {
-    id: number;
-    codigo: string;
-    nombre: string;
-};
-
-type ServiceOrder = {
+type Order = {
     id: number;
     codigo: string;
     estado: string;
-    events?: Array<{
-        payload: {
-            accion?: string;
-            area?: string;
-            ubicacion_instalada?: string;
-            pruebas?: string;
-            observaciones?: string;
-            conformidad_nombre?: string;
-        } | null;
-    }>;
-    tipo_servicio?: string;
-    client_id: number;
-    client: Client;
-    sede?: Sede;
+    referencia?: string | null;
+    events?: {
+        payload: { accion?: string; conformidad_nombre?: string } | null;
+    }[];
+    client: {
+        razon_social: string;
+        nombre_comercial?: string | null;
+        telefono?: string | null;
+    };
     equipments: Equipment[];
-    certificates: Array<{
-        id: number;
-        numero: string;
-        certificate_type?: { nombre: string };
-    }>;
+    certificates: { id: number; numero: string }[];
 };
 
 type Props = {
     formulariosCertificado: FormularioCertificadoCampo[];
     asignacion: AsignacionOrden;
-    currentTeam?: Team | null;
-    order: ServiceOrder;
-    customerEquipments: Equipment[];
+    order: Order;
     unidadesVendidas: Equipment[];
     evidencias: EvidenciaListada[];
     conversacion: ConversacionProps;
-    certificateTypes: CertificateType[];
 };
 
-type InstalledItem = {
-    equipment_id?: number | null;
+type Punto = {
+    equipment_id: number | null;
     numero_serie: string;
     tipo_agente: string;
     capacidad: string;
     marca: string;
     ubicacion_actual: string;
+    altura_m: string;
+    senalizacion: boolean;
+    acceso_libre: boolean;
 };
 
+const ALTURA_MAXIMA = 1.53;
+const FINALIZADA = [
+    'listo_certificado',
+    'listo_entrega',
+    'entregado',
+    'cerrado',
+    'anulada',
+];
+
+const punto = (eq?: Equipment): Punto => ({
+    equipment_id: eq?.id ?? null,
+    numero_serie: eq?.numero_serie ?? '',
+    tipo_agente: eq?.tipo_agente ?? '',
+    capacidad: eq?.capacidad ?? '',
+    marca: eq?.marca || 'Bruce Fire',
+    ubicacion_actual: eq?.ubicacion_actual ?? '',
+    altura_m: '1.50',
+    senalizacion: true,
+    acceso_libre: true,
+});
+
+function SiNo({
+    etiqueta,
+    valor,
+    onChange,
+}: {
+    etiqueta: string;
+    valor: boolean;
+    onChange: (v: boolean) => void;
+}) {
+    const estilo = (activo: boolean, si: boolean) =>
+        `min-h-11 rounded-xl text-sm font-semibold focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none ${activo ? (si ? 'bg-emerald-700 text-white' : 'bg-foreground text-background') : 'border-border bg-card border'}`;
+
+    return (
+        <div className="flex min-h-16 items-center justify-between gap-3 py-2 pr-2 pl-4">
+            <span className="text-sm font-semibold">{etiqueta}</span>
+            <div
+                role="group"
+                aria-label={etiqueta}
+                className="grid w-[150px] grid-cols-2 gap-1.5"
+            >
+                <button
+                    type="button"
+                    aria-pressed={valor}
+                    onClick={() => onChange(true)}
+                    className={estilo(valor, true)}
+                >
+                    Sí
+                </button>
+                <button
+                    type="button"
+                    aria-pressed={!valor}
+                    onClick={() => onChange(false)}
+                    className={estilo(!valor, false)}
+                >
+                    No
+                </button>
+            </div>
+        </div>
+    );
+}
+
+/** Instalación: cada extintor (altura, señalización, acceso y foto), revisión y firma. */
 export default function InstalacionShow({
     formulariosCertificado,
     asignacion,
-    currentTeam,
     order,
     unidadesVendidas,
     evidencias,
     conversacion,
-    certificateTypes,
 }: Props) {
-    const teamSlug = currentTeam?.slug ?? '';
-    const { flash } = usePage<{
-        auth?: { user?: { name?: string } };
-        flash?: { success?: string; error?: string };
-    }>().props;
-
-    const isFinalizada = [
-        'listo_certificado',
-        'listo_entrega',
-        'entregado',
-        'cerrado',
-        'anulada',
-    ].includes(order.estado);
-    const agentes = useAgentesExtintor();
-
-    // Lista de equipos a instalar en el formulario
-    const [equiposList, setEquiposList] = useState<InstalledItem[]>(
-        (unidadesVendidas.length > 0 || formulariosCertificado.length > 0) &&
-            !isFinalizada
-            ? []
-            : order.equipments.length > 0
-              ? order.equipments.map((eq) => ({
-                    equipment_id: eq.id,
-                    numero_serie: eq.numero_serie,
-                    tipo_agente: agentes.includes(eq.tipo_agente ?? '')
-                        ? (eq.tipo_agente as string)
-                        : '',
-                    capacidad: eq.capacidad || '6 kg',
-                    marca: eq.marca || 'Bruce Fire',
-                    ubicacion_actual: eq.ubicacion_actual || '',
-                }))
-              : [
-                    {
-                        equipment_id: null,
-                        numero_serie: '',
-                        tipo_agente: '',
-                        capacidad: '6 kg',
-                        marca: 'Bruce Fire',
-                        ubicacion_actual: '',
-                    },
-                ],
-    );
-
-    const instalacionRegistrada = order.events?.find(
-        (event) => event.payload?.accion === 'instalacion_campo_realizada',
-    )?.payload;
+    const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    const equipo = currentTeam?.slug ?? '';
+    const volver = instalaciones.index.url(equipo);
+    const cliente = order.client.nombre_comercial || order.client.razon_social;
+    const lugar = (order.referencia ?? '').replace(/^SEDE:\s*/i, '');
+    const iniciales = (
+        unidadesVendidas.length > 0 ? unidadesVendidas : order.equipments
+    ).map(punto);
+    const conMediciones = formulariosCertificado.length > 0;
     const form = useForm({
-        area:
-            instalacionRegistrada?.area ??
-            (isFinalizada ? '' : 'Área Principal / Operaciones'),
-        ubicacion_instalada: instalacionRegistrada?.ubicacion_instalada ?? '',
-        pruebas:
-            instalacionRegistrada?.pruebas ??
-            (isFinalizada
-                ? ''
-                : 'Soporte fijado a 1.50m sobre nivel de piso. Verificación de manómetro y precinto de seguridad conforme NTP 350.043.'),
-        observaciones: instalacionRegistrada?.observaciones ?? '',
-        conformidad_nombre: instalacionRegistrada?.conformidad_nombre ?? '',
+        area: lugar || 'Local del cliente',
+        ubicacion_instalada: '',
+        pruebas: '',
+        observaciones: '',
+        conformidad_nombre: '',
         conformidad_aceptada: false,
-        emitir_certificado: formulariosCertificado.length === 0,
+        emitir_certificado: !conMediciones,
         certificados_servicio: iniciarMediciones(formulariosCertificado),
         tipo_certificado_codigo: 'operatividad_garantia',
         firma: null as string | null,
-        equipos: equiposList,
+        equipos: iniciales.length > 0 || conMediciones ? iniciales : [punto()],
     });
+    const puntos = form.data.equipos;
+    const [vista, setVista] = useState<number | 'revision' | 'firma'>(
+        puntos.length > 0 ? 0 : 'revision',
+    );
+    const registrada = order.events?.find(
+        (e) => e.payload?.accion === 'instalacion_campo_realizada',
+    )?.payload;
 
-    // T4: cada unidad vendida se escanea (o se escribe su código BF-EQ).
-    const [codigo, setCodigo] = useState('');
-    const [errorEscaneo, setErrorEscaneo] = useState<string | null>(null);
-    const escaneadas = new Set(equiposList.map((i) => i.equipment_id));
-    const faltantes = unidadesVendidas.filter((u) => !escaneadas.has(u.id));
-
-    const escanear = () => {
-        const unidad = unidadesVendidas.find(
-            (u) => u.numero_serie.toLowerCase() === codigo.trim().toLowerCase(),
+    const fotoDe = (p: Punto) =>
+        evidencias.some(
+            (e) =>
+                e.etapa === 'despues' &&
+                e.tipo === 'foto' &&
+                (p.equipment_id === null || e.equipment_id === p.equipment_id),
         );
-
-        if (!unidad) {
-            setErrorEscaneo(
-                'Ese código no es de una unidad vendida a este cliente.',
-            );
-
-            return;
-        }
-
-        setErrorEscaneo(null);
-        setCodigo('');
-
-        if (escaneadas.has(unidad.id)) {
-            return;
-        }
-
-        const updated = [
-            ...equiposList,
-            {
-                equipment_id: unidad.id,
-                numero_serie: unidad.numero_serie,
-                tipo_agente: unidad.tipo_agente ?? '',
-                capacidad: unidad.capacidad ?? '',
-                marca: 'Bruce Fire',
-                ubicacion_actual: form.data.ubicacion_instalada || '',
-            },
-        ];
-        setEquiposList(updated);
-        form.setData('equipos', updated);
+    const altura = (p: Punto) => parseFloat(p.altura_m);
+    const falta = (p: Punto): string | null => {
+        if (!p.tipo_agente || !p.capacidad) return 'Falta tipo o capacidad';
+        if (!(altura(p) > 0) || altura(p) > ALTURA_MAXIMA)
+            return 'Revisa la altura';
+        if (p.ubicacion_actual.trim().length < 3) return 'Falta la ubicación';
+        if (!fotoDe(p)) return 'Falta la foto';
+        return null;
     };
-
-    const addEquipmentRow = () => {
-        const updated = [
-            ...equiposList,
-            {
-                equipment_id: null,
-                numero_serie: '',
-                tipo_agente: '',
-                capacidad: '6 kg',
-                marca: 'Bruce Fire',
-                ubicacion_actual: form.data.ubicacion_instalada || '',
-            },
-        ];
-        setEquiposList(updated);
-        form.setData('equipos', updated);
-    };
-
-    const removeEquipmentRow = (index: number) => {
-        const updated = equiposList.filter((_, i) => i !== index);
-        setEquiposList(updated);
-        form.setData('equipos', updated);
-    };
-
-    const updateEquipmentRow = (
-        index: number,
-        field: keyof InstalledItem,
-        value: unknown,
-    ) => {
-        const updated = equiposList.map((item, i) =>
-            i === index ? { ...item, [field]: value } : item,
+    const completos = puntos.filter((p) => falta(p) === null).length;
+    // Planta y el cliente ven cómo estaba el lugar antes de montar.
+    const fotoAntes = evidencias.some(
+        (e) => e.etapa === 'antes' && e.tipo === 'foto',
+    );
+    const cambiar = (i: number, cambios: Partial<Punto>) =>
+        form.setData(
+            'equipos',
+            puntos.map((p, j) => (j === i ? { ...p, ...cambios } : p)),
         );
-        setEquiposList(updated);
-        form.setData('equipos', updated);
-    };
+    // Lo que falta para confirmar, visible junto al botón (no se bloquea en silencio).
+    const faltaCierre =
+        form.data.conformidad_nombre.trim().length < 3
+            ? 'Escribe quién da la conformidad.'
+            : !form.data.firma
+              ? 'Falta la firma del cliente.'
+              : !form.data.conformidad_aceptada
+                ? 'Marca la conformidad del cliente antes de finalizar la instalación.'
+                : null;
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        form.setData('equipos', equiposList);
+    const confirmar = () => {
+        form.transform((data) => ({
+            ...data,
+            ubicacion_instalada:
+                [
+                    ...new Set(
+                        data.equipos
+                            .map((p) => p.ubicacion_actual.trim())
+                            .filter(Boolean),
+                    ),
+                ]
+                    .join(', ')
+                    .slice(0, 200) || data.area,
+        }));
         form.post(
             instalaciones.store.url({
-                current_team: teamSlug,
+                current_team: equipo,
                 service_order: order.id,
             }),
             {
-                onError: (errors) =>
+                preserveScroll: true,
+                onError: (errores) =>
                     toast.error(
-                        Object.values(errors)[0] ??
-                            'No se pudo completar la acción.',
+                        Object.values(errores)[0] ??
+                            'No se pudo registrar la instalación.',
                     ),
             },
         );
     };
 
-    return (
-        <TecnicoCampoLayout title={`Instalación ${order.codigo}`}>
-            <Head title={`Instalación ${order.codigo} - Técnico de Campo`} />
-            <BarraOrdenCampo
-                ordenId={order.id}
-                codigo={order.codigo}
-                conversacion={conversacion}
-            />
+    if (registrada || FINALIZADA.includes(order.estado)) {
+        const certificados = order.certificates.map((c) => c.numero).join(', ');
 
-            {/* Back link */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <Link
-                    href={instalaciones.index.url({ current_team: teamSlug })}
-                    className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center gap-1.5 text-xs font-bold"
-                >
-                    <ArrowLeft className="size-4" />
-                    <span>Volver a instalaciones</span>
-                </Link>
-                <span className="text-foreground font-mono text-xs font-black">
-                    {order.codigo}
-                </span>
-            </div>
-
-            {flash?.success && (
-                <div className="text-success-strong mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
-                    {flash.success}
-                </div>
-            )}
-
-            <TomarOrden asignacion={asignacion} />
-
-            {/* Header Data Card (§25) */}
-            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
-                <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
-                    <div>
-                        <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-                            Cliente & Sede de Montaje
-                        </span>
-                        <h1 className={pageTitleClass}>
-                            {order.client.razon_social}
-                        </h1>
-                        {order.client.numero_documento && (
-                            <span className="text-muted-foreground font-mono text-xs">
-                                RUC / DNI: {order.client.numero_documento}
-                            </span>
-                        )}
-                    </div>
-                    <span className="border-border bg-muted text-foreground rounded-full border px-2.5 py-1 text-xs font-black">
-                        {etiquetaEstadoOrden(order.estado).toUpperCase()}
-                    </span>
-                </div>
-
-                <div className="space-y-2 text-xs">
-                    <div className="flex items-start gap-2">
-                        <MapPin className="text-foreground mt-0.5 size-4 shrink-0" />
-                        <div>
-                            <span className="text-foreground font-semibold">
-                                Lugar de Instalación:{' '}
-                            </span>
-                            <span className="text-muted-foreground">
-                                {order.sede?.direccion ||
-                                    order.client.direccion_fiscal ||
-                                    'Sede no asignada'}
-                            </span>
-                        </div>
-                    </div>
-
-                    {order.client.telefono && (
-                        <div className="flex items-center justify-between pt-1">
-                            <div className="flex items-center gap-2">
-                                <Phone className="text-success-strong size-4 shrink-0" />
-                                <span className="text-foreground font-mono">
-                                    {order.client.telefono}
-                                </span>
-                            </div>
-                            <a
-                                href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex min-h-11 items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
-                            >
-                                <Phone className="size-3" />
-                                Contactar
-                            </a>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Emitted Certificates if any */}
-            {order.certificates && order.certificates.length > 0 && (
-                <div className="mb-5 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-                    <h3 className="text-success-strong mb-2 flex items-center gap-1.5 text-xs font-black">
-                        <FileCheck className="text-success-strong size-4" />
-                        Certificados Emitidos
-                    </h3>
-                    <div className="space-y-1.5">
-                        {order.certificates.map((cert) => (
-                            <div
-                                key={cert.id}
-                                className="bg-card flex items-center justify-between rounded-lg border border-emerald-500/20 p-2.5 text-xs"
-                            >
-                                <span className="text-foreground font-bold">
-                                    {cert.certificate_type?.nombre ||
-                                        'Certificado'}
-                                </span>
-                                <span className="text-success-strong font-mono font-bold">
-                                    {cert.numero}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Installation Form (§25) */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-                <MedicionesCertificadoCampo
-                    tipos={formulariosCertificado}
-                    value={form.data.certificados_servicio}
-                    onChange={(datos) =>
-                        form.setData('certificados_servicio', datos)
-                    }
-                    errors={form.errors as Record<string, string>}
-                    disabled={isFinalizada}
+        return (
+            <TecnicoCampoLayout>
+                <Head title={`Instalación ${order.codigo}`} />
+                <BarraOrdenCampo
+                    ordenId={order.id}
+                    codigo={order.codigo}
+                    conversacion={conversacion}
                 />
-                {/* 1. Datos del área y ubicación */}
-                <div className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
-                    <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                        <Wrench className="text-foreground size-4" />
-                        1. Ubicación y Área de Instalación
-                    </h2>
-
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <div>
-                            <label className="text-foreground mb-1 block text-xs font-bold">
-                                Área / Sección en Instalación{' '}
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                aria-label="Area"
-                                type="text"
-                                required
-                                disabled={isFinalizada}
-                                value={form.data.area}
-                                onChange={(e) =>
-                                    form.setData('area', e.target.value)
-                                }
-                                placeholder="ej. Almacén Central / Pasillo Oficinas"
-                                className="border-border bg-card disabled:bg-muted w-full rounded-lg border p-2 text-xs"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="text-foreground mb-1 block text-xs font-bold">
-                                Punto Específico de Montaje{' '}
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                aria-label="Ubicacion instalada"
-                                type="text"
-                                required
-                                disabled={isFinalizada}
-                                value={form.data.ubicacion_instalada}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'ubicacion_instalada',
-                                        e.target.value,
-                                    )
-                                }
-                                placeholder="ej. Columna 3 junto al extintor / Pared este a 1.50m"
-                                className="border-border bg-card disabled:bg-muted w-full rounded-lg border p-2 text-xs"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="text-foreground mb-1 block text-xs font-bold">
-                            Pruebas y Verificación de Montaje
-                        </label>
-                        <textarea
-                            aria-label="Pruebas y Verificación de Montaje"
-                            rows={2}
-                            disabled={isFinalizada}
-                            value={form.data.pruebas}
-                            onChange={(e) =>
-                                form.setData('pruebas', e.target.value)
-                            }
-                            className="border-border bg-card disabled:bg-muted w-full rounded-lg border p-2 text-xs"
+                <TrabajoListo
+                    codigo={order.codigo}
+                    titulo="Instalación lista"
+                    filas={[
+                        ['Cliente', cliente],
+                        ['Instalados', String(order.equipments.length)],
+                        ['Conformidad', registrada?.conformidad_nombre ?? '—'],
+                        ...(certificados
+                            ? ([['Certificado', certificados]] as [
+                                  string,
+                                  string,
+                              ][])
+                            : []),
+                    ]}
+                />
+                <div className="space-y-2.5">
+                    <a
+                        href={enlaceWhatsApp(
+                            order.client.telefono,
+                            `Bruce Fire instaló ${order.equipments.length} extintores en ${cliente}. Orden ${order.codigo}.${certificados ? ` Certificado ${certificados}.` : ''}`,
+                        )}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={botonPrincipal}
+                    >
+                        <MessageCircle
+                            className="size-[18px]"
+                            aria-hidden="true"
                         />
-                    </div>
+                        Enviar acta
+                    </a>
+                    <Link href={volver} className={botonSecundario}>
+                        Volver a instalaciones
+                    </Link>
                 </div>
+            </TecnicoCampoLayout>
+        );
+    }
 
-                {unidadesVendidas.length > 0 && (
-                    <div className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
-                        <h2 className="text-foreground text-xs font-black tracking-wider uppercase">
-                            Escanear unidades vendidas (
-                            {unidadesVendidas.length - faltantes.length}/
-                            {unidadesVendidas.length})
-                        </h2>
-                        {!isFinalizada && (
-                            <div className="flex gap-2">
+    return (
+        <TecnicoCampoLayout ocultarMenu>
+            <Head title={`Instalación ${order.codigo}`} />
+            <div className="space-y-4">
+                {typeof vista === 'number' && puntos[vista]
+                    ? (() => {
+                          const p = puntos[vista];
+                          const i = vista;
+                          const valorAltura = altura(p) || 0;
+                          const mover = (delta: number) =>
+                              cambiar(i, {
+                                  altura_m: Math.min(
+                                      ALTURA_MAXIMA,
+                                      Math.max(0.1, valorAltura + delta),
+                                  ).toFixed(2),
+                              });
+
+                          return (
+                              <>
+                                  <CabeceraPaso
+                                      etiqueta="Instalación"
+                                      titulo={
+                                          p.numero_serie || `Extintor ${i + 1}`
+                                      }
+                                      volver={
+                                          i === 0
+                                              ? volver
+                                              : () => setVista(i - 1)
+                                      }
+                                      paso={i + 1}
+                                      total={puntos.length}
+                                  />
+                                  {!asignacion.tecnico ? (
+                                      <TomarOrden asignacion={asignacion} />
+                                  ) : null}
+                                  {p.equipment_id ? (
+                                      <p className="text-muted-foreground px-1 text-sm font-semibold">
+                                          {[p.tipo_agente, p.capacidad]
+                                              .filter(Boolean)
+                                              .join(' ')}
+                                      </p>
+                                  ) : (
+                                      <div
+                                          className={`${tarjeta} grid grid-cols-2 gap-2 p-4`}
+                                      >
+                                          <NativeSelect
+                                              aria-label="Tipo"
+                                              value={p.tipo_agente}
+                                              onChange={(e) =>
+                                                  cambiar(i, {
+                                                      tipo_agente:
+                                                          e.target.value,
+                                                  })
+                                              }
+                                              className="min-h-11 w-full text-base"
+                                          >
+                                              <OpcionesAgente vacia="Tipo" />
+                                          </NativeSelect>
+                                          <input
+                                              aria-label="Capacidad"
+                                              placeholder="6 kg"
+                                              value={p.capacidad}
+                                              onChange={(e) =>
+                                                  cambiar(i, {
+                                                      capacidad: e.target.value,
+                                                  })
+                                              }
+                                              className="border-border bg-card rounded-xl border px-3"
+                                          />
+                                      </div>
+                                  )}
+                                  <div className={`${tarjeta} space-y-1.5 p-4`}>
+                                      <label
+                                          htmlFor="ubicacion"
+                                          className="text-sm font-semibold"
+                                      >
+                                          Dónde quedó
+                                      </label>
+                                      <input
+                                          id="ubicacion"
+                                          placeholder="Pasillo 2.º piso"
+                                          value={p.ubicacion_actual}
+                                          onChange={(e) =>
+                                              cambiar(i, {
+                                                  ubicacion_actual:
+                                                      e.target.value,
+                                              })
+                                          }
+                                          className="border-border bg-card w-full rounded-xl border px-3.5"
+                                      />
+                                  </div>
+                                  <div className={`${tarjeta} space-y-2.5 p-4`}>
+                                      <div className="flex items-baseline justify-between">
+                                          <span className="text-sm font-semibold">
+                                              Altura de la manija
+                                          </span>
+                                          <span className="text-muted-foreground text-xs">
+                                              máx. {ALTURA_MAXIMA} m
+                                          </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                          <button
+                                              type="button"
+                                              onClick={() => mover(-0.05)}
+                                              aria-label="Bajar altura"
+                                              className="border-border bg-card focus-visible:ring-ring flex size-12 items-center justify-center rounded-xl border focus-visible:ring-2 focus-visible:outline-none"
+                                          >
+                                              <Minus
+                                                  className="size-4"
+                                                  aria-hidden="true"
+                                              />
+                                          </button>
+                                          <label className="border-border flex h-12 flex-1 items-center justify-center gap-1 rounded-xl border">
+                                              <span className="sr-only">
+                                                  Altura en metros
+                                              </span>
+                                              <input
+                                                  inputMode="decimal"
+                                                  value={p.altura_m}
+                                                  onChange={(e) =>
+                                                      cambiar(i, {
+                                                          altura_m:
+                                                              e.target.value
+                                                                  .replace(
+                                                                      ',',
+                                                                      '.',
+                                                                  )
+                                                                  .replace(
+                                                                      /[^\d.]/g,
+                                                                      '',
+                                                                  ),
+                                                      })
+                                                  }
+                                                  className="w-16 border-0 bg-transparent text-center text-xl font-bold tabular-nums focus:outline-none"
+                                              />
+                                              <span className="text-muted-foreground text-sm font-semibold">
+                                                  m
+                                              </span>
+                                          </label>
+                                          <button
+                                              type="button"
+                                              onClick={() => mover(0.05)}
+                                              aria-label="Subir altura"
+                                              className="bg-primary text-primary-foreground focus-visible:ring-ring flex size-12 items-center justify-center rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+                                          >
+                                              <Plus
+                                                  className="size-4"
+                                                  aria-hidden="true"
+                                              />
+                                          </button>
+                                      </div>
+                                  </div>
+                                  <div
+                                      className={`${tarjeta} divide-border divide-y overflow-hidden`}
+                                  >
+                                      <SiNo
+                                          etiqueta="Señalización"
+                                          valor={p.senalizacion}
+                                          onChange={(v) =>
+                                              cambiar(i, { senalizacion: v })
+                                          }
+                                      />
+                                      <SiNo
+                                          etiqueta="Acceso libre"
+                                          valor={p.acceso_libre}
+                                          onChange={(v) =>
+                                              cambiar(i, { acceso_libre: v })
+                                          }
+                                      />
+                                  </div>
+                                  <section className={`${tarjeta} p-4`}>
+                                      <SubirEvidencia
+                                          ordenId={order.id}
+                                          etapa="despues"
+                                          titulo="Foto instalado"
+                                          evidencias={evidencias}
+                                          equipoId={p.equipment_id ?? undefined}
+                                      />
+                                  </section>
+                                  <PiePaso>
+                                      <button
+                                          type="button"
+                                          disabled={falta(p) !== null}
+                                          onClick={() =>
+                                              setVista(
+                                                  i + 1 < puntos.length
+                                                      ? i + 1
+                                                      : 'revision',
+                                              )
+                                          }
+                                          className={botonPrincipal}
+                                      >
+                                          {falta(p) ??
+                                              (i + 1 < puntos.length
+                                                  ? 'Siguiente extintor'
+                                                  : 'Revisar')}
+                                      </button>
+                                  </PiePaso>
+                              </>
+                          );
+                      })()
+                    : null}
+
+                {vista === 'revision' ? (
+                    <>
+                        <CabeceraPaso
+                            etiqueta={cliente}
+                            titulo="Revisión"
+                            volver={() =>
+                                setVista(Math.max(0, puntos.length - 1))
+                            }
+                            extra={
+                                puntos.length > 0 ? (
+                                    <Contador>{`${completos}/${puntos.length}`}</Contador>
+                                ) : undefined
+                            }
+                        />
+                        {puntos.length > 0 ? (
+                            <div
+                                className={`${tarjeta} divide-border divide-y overflow-hidden`}
+                            >
+                                {puntos.map((p, i) => {
+                                    const motivo = falta(p);
+
+                                    return (
+                                        <button
+                                            key={`${p.equipment_id ?? 'nuevo'}-${i}`}
+                                            type="button"
+                                            onClick={() => setVista(i)}
+                                            className={`focus-visible:ring-ring flex min-h-16 w-full items-center gap-3 px-4 text-left focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset ${motivo ? 'bg-primary/5' : ''}`}
+                                        >
+                                            {motivo ? (
+                                                <span
+                                                    className="border-primary size-6 shrink-0 rounded-full border-2"
+                                                    aria-hidden="true"
+                                                />
+                                            ) : (
+                                                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                                    <Check
+                                                        className="size-3.5"
+                                                        strokeWidth={3}
+                                                        aria-hidden="true"
+                                                    />
+                                                </span>
+                                            )}
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block font-mono text-sm font-bold">
+                                                    {p.numero_serie ||
+                                                        `Extintor ${i + 1}`}
+                                                </span>
+                                                <span
+                                                    className={`block text-xs ${motivo ? 'text-primary-strong font-semibold' : 'text-muted-foreground'}`}
+                                                >
+                                                    {motivo ??
+                                                        `${p.ubicacion_actual} · ${p.altura_m} m`}
+                                                </span>
+                                            </span>
+                                            <ChevronRight
+                                                className="size-4 shrink-0"
+                                                aria-hidden="true"
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : null}
+                        <section className={`${tarjeta} p-4`}>
+                            <SubirEvidencia
+                                ordenId={order.id}
+                                etapa="antes"
+                                titulo="Foto antes"
+                                evidencias={evidencias}
+                            />
+                        </section>
+                        {conMediciones ? (
+                            <MedicionesCertificadoCampo
+                                tipos={formulariosCertificado}
+                                value={form.data.certificados_servicio}
+                                onChange={(datos) =>
+                                    form.setData('certificados_servicio', datos)
+                                }
+                                errors={form.errors as Record<string, string>}
+                            />
+                        ) : null}
+                        <PiePaso>
+                            <button
+                                type="button"
+                                disabled={
+                                    completos < puntos.length || !fotoAntes
+                                }
+                                onClick={() => setVista('firma')}
+                                className={botonPrincipal}
+                            >
+                                {fotoAntes
+                                    ? 'Continuar a la firma'
+                                    : 'Falta la foto antes'}
+                            </button>
+                        </PiePaso>
+                    </>
+                ) : null}
+
+                {vista === 'firma' ? (
+                    <>
+                        <CabeceraPaso
+                            etiqueta={`Instalación · ${puntos.length} ${puntos.length === 1 ? 'extintor' : 'extintores'}`}
+                            titulo="¿Quién da conformidad?"
+                            volver={() => setVista('revision')}
+                        />
+                        <AlertError errors={Object.values(form.errors)} />
+                        <section className={`${tarjeta} space-y-4 p-4`}>
+                            <div className="space-y-1.5">
                                 <label
-                                    htmlFor="codigo-unidad"
-                                    className="sr-only"
+                                    htmlFor="conformidad"
+                                    className="text-sm font-semibold"
                                 >
-                                    Código del extintor
+                                    Nombre
                                 </label>
                                 <input
-                                    id="codigo-unidad"
-                                    value={codigo}
-                                    onChange={(e) => setCodigo(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            escanear();
-                                        }
-                                    }}
-                                    placeholder="Escanea o escribe BF-EQ-..."
-                                    className="border-border bg-card min-h-[44px] flex-1 rounded-lg border p-2 font-mono text-xs"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={escanear}
-                                    className="bg-primary min-h-[44px] rounded-lg px-4 text-xs font-bold text-white transition hover:brightness-95"
-                                >
-                                    Agregar
-                                </button>
-                            </div>
-                        )}
-                        {errorEscaneo && (
-                            <p
-                                className="text-destructive-strong text-xs font-semibold"
-                                role="alert"
-                            >
-                                {errorEscaneo}
-                            </p>
-                        )}
-                        <ul className="space-y-1">
-                            {unidadesVendidas.map((u) => (
-                                <li
-                                    key={u.id}
-                                    className="flex items-center gap-2 text-xs"
-                                >
-                                    {escaneadas.has(u.id) ? (
-                                        <Check className="text-success-strong size-4" />
-                                    ) : (
-                                        <span className="size-4 rounded-full border border-neutral-400" />
-                                    )}
-                                    <span className="font-mono font-semibold">
-                                        {u.numero_serie}
-                                    </span>
-                                    <span className="text-muted-foreground">
-                                        {u.tipo_agente} {u.capacidad}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                        {faltantes.length > 0 && (
-                            <p className="text-warning-strong text-xs font-semibold dark:text-amber-400">
-                                Faltan {faltantes.length} unidad(es) por
-                                escanear.
-                            </p>
-                        )}
-                    </div>
-                )}
-
-                {/* 2. Equipos Instalados -> Pasan a Equipos del Cliente (§25) */}
-                {(formulariosCertificado.length === 0 ||
-                    unidadesVendidas.length > 0 ||
-                    order.equipments.length > 0) && (
-                    <div className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                                    <Flame className="text-warning-strong size-4" />
-                                    2. Extintores / Unidades a Instalar (
-                                    {equiposList.length})
-                                </h2>
-                                <p className="text-muted-foreground text-xs">
-                                    Código y ubicación de cada extintor del
-                                    cliente.
-                                </p>
-                            </div>
-                            {!isFinalizada && (
-                                <button
-                                    type="button"
-                                    onClick={addEquipmentRow}
-                                    className="border-border bg-muted text-foreground inline-flex min-h-11 items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95"
-                                >
-                                    <Plus className="size-3.5" />
-                                    Agregar
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="space-y-3">
-                            {equiposList.map((item, idx) => (
-                                <div
-                                    key={idx}
-                                    className="border-border bg-muted/40 relative space-y-2 rounded-lg border p-3 text-xs"
-                                >
-                                    <div className="border-border flex items-center justify-between border-b pb-1.5">
-                                        <span className="text-foreground font-bold">
-                                            Extintor #{idx + 1}
-                                        </span>
-                                        {!isFinalizada &&
-                                            equiposList.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        removeEquipmentRow(idx)
-                                                    }
-                                                    className="rounded p-1 text-red-500 hover:bg-red-50"
-                                                >
-                                                    <Trash2 className="size-3.5" />
-                                                    <span className="sr-only">
-                                                        Quitar extintor
-                                                    </span>
-                                                </button>
-                                            )}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                                Agente Extintor
-                                            </label>
-                                            <NativeSelect
-                                                aria-label="Agente Extintor"
-                                                disabled={isFinalizada}
-                                                value={item.tipo_agente}
-                                                onChange={(e) =>
-                                                    updateEquipmentRow(
-                                                        idx,
-                                                        'tipo_agente',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
-                                            >
-                                                <OpcionesAgente vacia="Sin registrar" />
-                                            </NativeSelect>
-                                        </div>
-                                        <div>
-                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                                Capacidad
-                                            </label>
-                                            <input
-                                                aria-label="Capacidad"
-                                                type="text"
-                                                disabled={isFinalizada}
-                                                value={item.capacidad}
-                                                onChange={(e) =>
-                                                    updateEquipmentRow(
-                                                        idx,
-                                                        'capacidad',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="ej. 6 kg"
-                                                className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                                Serie Interna / Código
-                                            </label>
-                                            <input
-                                                aria-label="Serie Interna / Código"
-                                                type="text"
-                                                disabled={isFinalizada}
-                                                value={item.numero_serie}
-                                                onChange={(e) =>
-                                                    updateEquipmentRow(
-                                                        idx,
-                                                        'numero_serie',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Auto-correlativo si vacío"
-                                                className="border-border bg-card w-full rounded-md border p-1.5 font-mono text-xs"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                                Marca
-                                            </label>
-                                            <CampoMarca
-                                                disabled={isFinalizada}
-                                                value={item.marca}
-                                                onChange={(marca) =>
-                                                    updateEquipmentRow(
-                                                        idx,
-                                                        'marca',
-                                                        marca,
-                                                    )
-                                                }
-                                                className="border-border bg-card min-w-0 flex-1 rounded-md border p-1.5 text-xs"
-                                            />
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="text-muted-foreground mb-0.5 block text-xs font-bold">
-                                                Ubicación Exacta
-                                            </label>
-                                            <input
-                                                aria-label="Ubicación Exacta"
-                                                type="text"
-                                                disabled={isFinalizada}
-                                                value={item.ubicacion_actual}
-                                                onChange={(e) =>
-                                                    updateEquipmentRow(
-                                                        idx,
-                                                        'ubicacion_actual',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="ej. Pared norte frente a montacargas"
-                                                className="border-border bg-card w-full rounded-md border p-1.5 text-xs"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                {/* 3. Certificado Aplicable (§25) */}
-                {(formulariosCertificado.length === 0 ||
-                    equiposList.length > 0) && (
-                    <div className="border-border bg-card space-y-3 rounded-3xl border p-4 shadow-xs">
-                        <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                            <FileCheck className="text-success-strong size-4" />
-                            3. Certificado Aplicable
-                        </h2>
-
-                        <label className="text-foreground flex cursor-pointer items-center gap-2 text-xs font-bold">
-                            <input
-                                type="checkbox"
-                                disabled={isFinalizada}
-                                checked={form.data.emitir_certificado}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'emitir_certificado',
-                                        e.target.checked,
-                                    )
-                                }
-                                className="border-border text-foreground size-4 rounded"
-                            />
-                            <span>
-                                Emitir certificado automático al registrar la
-                                instalación
-                            </span>
-                        </label>
-
-                        {form.data.emitir_certificado && (
-                            <div>
-                                <label className="text-muted-foreground mb-1 block text-xs font-bold">
-                                    Tipo de Certificado
-                                </label>
-                                <NativeSelect
-                                    aria-label="Tipo de Certificado"
-                                    disabled={isFinalizada}
-                                    value={form.data.tipo_certificado_codigo}
+                                    id="conformidad"
+                                    autoComplete="name"
+                                    value={form.data.conformidad_nombre}
                                     onChange={(e) =>
                                         form.setData(
-                                            'tipo_certificado_codigo',
+                                            'conformidad_nombre',
                                             e.target.value,
                                         )
                                     }
-                                    className="border-border bg-card w-full rounded-lg border p-2 text-xs"
-                                >
-                                    {certificateTypes.map((ct) => (
-                                        <option key={ct.id} value={ct.codigo}>
-                                            {ct.nombre} ({ct.codigo})
-                                        </option>
-                                    ))}
-                                </NativeSelect>
-                            </div>
-                        )}
-                    </div>
-                )}
-                {/* 4. Conformidad del Cliente en Sitio (§25, §85.6.2) */}
-                {!isFinalizada && (
-                    <div className="bg-card border-border space-y-3 rounded-3xl border p-4 shadow-sm">
-                        <h2 className="text-foreground flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                            <UserCheck className="text-foreground size-4" />
-                            4. Conformidad de Instalación en Sitio
-                        </h2>
-
-                        <div>
-                            <label className="text-foreground mb-1 block text-xs font-bold">
-                                Nombre del Receptor / Encargado en Sitio{' '}
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                aria-label="Conformidad nombre"
-                                type="text"
-                                required
-                                value={form.data.conformidad_nombre}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'conformidad_nombre',
-                                        e.target.value,
-                                    )
-                                }
-                                placeholder="Nombre completo de quien recibe la instalación"
-                                className="border-border bg-card w-full rounded-lg border p-2 text-xs"
-                            />
-                            {form.errors.conformidad_nombre && (
-                                <p className="mt-0.5 text-xs text-red-500">
-                                    {form.errors.conformidad_nombre}
-                                </p>
-                            )}
-                        </div>
-
-                        <SubirEvidencia
-                            ordenId={order.id}
-                            etapa="antes"
-                            titulo="Fotos antes"
-                            evidencias={evidencias}
-                            equipos={conversacion.equipos}
-                        />
-                        <SubirEvidencia
-                            ordenId={order.id}
-                            etapa="despues"
-                            titulo="Fotos después"
-                            evidencias={evidencias}
-                            equipos={conversacion.equipos}
-                        />
-
-                        <FirmaCanvas
-                            onChange={(f) => form.setData('firma', f)}
-                        />
-                        {form.errors.firma && (
-                            <p className="text-xs text-red-500" role="alert">
-                                {form.errors.firma}
-                            </p>
-                        )}
-
-                        <div>
-                            <label className="text-foreground mb-1 block text-xs font-bold">
-                                Observaciones Adicionales
-                            </label>
-                            <textarea
-                                aria-label="Observaciones Adicionales"
-                                rows={2}
-                                value={form.data.observaciones}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'observaciones',
-                                        e.target.value,
-                                    )
-                                }
-                                placeholder="Detalles de señalética instalada, tarjetas de control entregadas..."
-                                className="border-border bg-card w-full rounded-lg border p-2 text-xs"
-                            />
-                        </div>
-
-                        <div className="border-border bg-muted rounded-lg border p-3">
-                            <label className="flex cursor-pointer items-start gap-2.5">
-                                <input
-                                    type="checkbox"
-                                    required
-                                    checked={form.data.conformidad_aceptada}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'conformidad_aceptada',
-                                            e.target.checked,
-                                        )
-                                    }
-                                    className="border-border text-foreground mt-0.5 size-4 rounded"
+                                    className="border-border bg-card w-full rounded-xl border px-3.5"
                                 />
-                                <span className="text-foreground text-xs leading-tight font-semibold">
-                                    Conformidad en sitio: El cliente valida la
-                                    instalación física de los extintores y los
-                                    soportes de montaje en las ubicaciones
-                                    acordadas.
-                                </span>
-                            </label>
-                            {form.errors.conformidad_aceptada && (
-                                <p className="mt-1 text-xs text-red-500">
-                                    {form.errors.conformidad_aceptada}
-                                </p>
-                            )}
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={
-                                form.processing ||
-                                !form.data.firma ||
-                                faltantes.length > 0
-                            }
-                            className="bg-primary hover:bg-primary/90 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg text-xs font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                            </div>
+                            <FirmaCanvas
+                                etiqueta="Firma"
+                                onChange={(f) => form.setData('firma', f)}
+                            />
+                        </section>
+                        <label
+                            className={`${tarjeta} flex min-h-14 items-center gap-3 px-4 text-sm font-semibold`}
                         >
-                            <Send className="size-4" />
-                            <span>Registrar y Guardar Instalación Técnica</span>
-                        </button>
-                        {!form.data.conformidad_aceptada ? (
-                            <p
-                                className="text-center text-xs font-semibold text-red-500"
-                                role="alert"
+                            <input
+                                type="checkbox"
+                                checked={form.data.conformidad_aceptada}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'conformidad_aceptada',
+                                        e.target.checked,
+                                    )
+                                }
+                                className="accent-primary size-[22px]"
+                            />
+                            Conforme con la instalación
+                        </label>
+                        <PiePaso>
+                            {faltaCierre ? (
+                                <p
+                                    role="alert"
+                                    className="text-destructive-strong text-center text-sm font-semibold"
+                                >
+                                    {faltaCierre}
+                                </p>
+                            ) : null}
+                            <button
+                                type="button"
+                                disabled={
+                                    form.processing || faltaCierre !== null
+                                }
+                                onClick={confirmar}
+                                className={botonPrincipal}
                             >
-                                Marca la conformidad del cliente antes de
-                                finalizar la instalación.
-                            </p>
-                        ) : null}
-                    </div>
-                )}
-            </form>
+                                Confirmar instalación
+                            </button>
+                        </PiePaso>
+                    </>
+                ) : null}
+            </div>
         </TecnicoCampoLayout>
     );
 }

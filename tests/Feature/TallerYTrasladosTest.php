@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TeamRole;
+use App\Models\Client;
 use App\Models\InventoryUnit;
 use App\Models\Sede;
 use App\Models\ServiceOrder;
@@ -68,7 +69,7 @@ test('campo desde taller elige la tienda si hay varias y no ofrece almacenes ni 
     $this->actingAs($campo)->get(route('tecnico-campo.recojos.create', $campo->currentTeam))
         ->assertOk()->assertInertia(fn (Assert $page) => $page->has('sedes', 2));
     $url = route('tecnico-campo.recojos.iniciar', $campo->currentTeam);
-    $datos = ['cliente' => ['razon_social' => 'Cliente de recojo', 'telefono' => '999888777'], 'referencia' => 'Local del cliente', 'cantidad' => 1];
+    $datos = ['client_id' => Client::factory()->create()->id, 'referencia' => 'Local del cliente', 'cantidad' => 1];
     $this->post($url, $datos)->assertSessionHasErrors('sede_id');
     $this->post($url, [...$datos, 'sede_id' => $taller->id])->assertSessionHasErrors('sede_id');
     $this->post($url, [...$datos, 'sede_id' => $segunda->id])->assertSessionHasNoErrors();

@@ -71,6 +71,11 @@ export type ReceptionItemForm = {
 };
 
 export type Props = {
+    // Borrador que dejó Chispa: proveedor y cantidades; se completan las series.
+    borrador?: {
+        proveedor: string;
+        items: { product_id: number; cantidad: number }[];
+    } | null;
     sedes: SedeOption[];
     products: ProductOption[];
     today: string;
@@ -78,6 +83,7 @@ export type Props = {
 };
 
 export default function RecepcionesCreate({
+    borrador = null,
     sedes,
     products,
     today,
@@ -91,12 +97,34 @@ export default function RecepcionesCreate({
             : '');
 
     const { data, setData, post, processing, errors } = useForm({
-        proveedor: '',
+        proveedor: borrador?.proveedor ?? '',
         documento_referencia: '',
         fecha: today,
         sede_almacen_id: sedes.length > 0 ? sedes[0].id : '',
         observacion: '',
-        items: [] as ReceptionItemForm[],
+        items: (borrador?.items ?? []).flatMap((linea): ReceptionItemForm[] => {
+            const producto = products.find((p) => p.id === linea.product_id);
+            if (!producto) return [];
+            return [
+                {
+                    product_id: linea.product_id,
+                    cantidad: linea.cantidad,
+                    cantidad_conforme: linea.cantidad,
+                    costo_unitario: '',
+                    observacion_item: '',
+                    lote: '',
+                    fecha_vencimiento: '',
+                    unidades: producto.serializado
+                        ? Array.from({ length: linea.cantidad }, () => ({
+                              capacidad: '',
+                              serie_fabricante: '',
+                              marca: '',
+                              anio_fabricacion: current_year,
+                          }))
+                        : [],
+                },
+            ];
+        }),
     });
 
     const newUnit = (): UnidadSerializadaForm => ({
@@ -376,6 +404,13 @@ export default function RecepcionesCreate({
                         <span>Confirmar Recepción</span>
                     </Button>
                 </div>
+
+                {borrador ? (
+                    <div className="text-foreground rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+                        <b>Preparado por Chispa.</b> Revisa las cantidades,
+                        completa series, marca y año, y confirma tú.
+                    </div>
+                ) : null}
 
                 {/* Error Banner General */}
                 {Object.keys(errors).length > 0 && (

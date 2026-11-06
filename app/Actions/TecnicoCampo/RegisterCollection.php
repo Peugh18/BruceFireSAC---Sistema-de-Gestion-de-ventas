@@ -2,6 +2,7 @@
 
 namespace App\Actions\TecnicoCampo;
 
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
 use App\Models\User;
@@ -16,13 +17,13 @@ class RegisterCollection
      * y genera el primer eslabón de la Cadena de Custodia (§22.4, §85.6.3).
      *
      * @param  array{
-     *     cantidad: int,
      *     contacto_nombre: string,
      *     contacto_telefono?: string|null,
      *     observaciones?: string|null,
      *     conformidad_cliente: bool,
      *     foto_path?: string|null,
-     *     equipos_ids?: list<int>|null
+     *     equipos_ids?: list<int>|null,
+     *     conteo?: list<array{tipo_agente: string, capacidad: string, cantidad: int|string, precio?: float|int|string|null}>
      * }  $data
      */
     public function execute(
@@ -30,7 +31,7 @@ class RegisterCollection
         User $user,
         array $data
     ): ServiceOrder {
-        if (! ($data['conformidad_cliente'] ?? false)) {
+        if (! $data['conformidad_cliente']) {
             throw new InvalidArgumentException('Se requiere la conformidad del cliente para el recojo de equipos.');
         }
 
@@ -44,11 +45,20 @@ class RegisterCollection
                 throw new InvalidArgumentException('Este recojo ya se registró.');
             }
 
-            $cantidad = $serviceOrder->equipments()->count();
+            // Lo que campo se llevó, por tipo y capacidad; sin conteo (orden con
+            // sus extintores ya identificados), cuentan los de la orden.
+            $conteo = array_map(fn (array $grupo) => [
+                'tipo_agente' => $grupo['tipo_agente'],
+                'capacidad' => trim($grupo['capacidad']),
+                'cantidad' => (int) $grupo['cantidad'],
+                'precio' => isset($grupo['precio']) && $grupo['precio'] !== '' ? round((float) $grupo['precio'], 2) : null,
+            ], $data['conteo'] ?? []);
+            $cantidad = $conteo !== [] ? array_sum(array_column($conteo, 'cantidad')) : $serviceOrder->equipments()->count();
             if ($cantidad === 0) {
-                throw new InvalidArgumentException('Registra al menos un extintor antes de confirmar el recojo.');
+                throw new InvalidArgumentException('Cuenta los extintores que te llevas antes de confirmar el recojo.');
             }
-            $contactoNombre = trim((string) ($data['contacto_nombre'] ?? ''));
+            $this->cobrarComoAcordo($serviceOrder, $conteo);
+            $contactoNombre = trim($data['contacto_nombre']);
             $contactoTelefono = $data['contacto_telefono'] ?? null;
             $observaciones = $data['observaciones'] ?? null;
             $fotoPath = $data['foto_path'] ?? null;
@@ -78,6 +88,7 @@ class RegisterCollection
                     'contacto_cliente' => $contactoNombre,
                     'contacto_telefono' => $contactoTelefono,
                     'cantidad_equipos' => $cantidad,
+                    'conteo' => $conteo,
                     'observaciones' => $observaciones,
                     'conformidad_cliente' => true,
                     'foto_path' => $fotoPath,
@@ -97,5 +108,46 @@ class RegisterCollection
 
             return $serviceOrder->refresh();
         });
+    }
+
+    /**
+     * Sin cotización, lo que cobra el vendedor es lo que campo dejó al cliente:
+     * una línea por tipo y capacidad con su precio. Queda anotado si fue el de
+     * lista, uno rebajado o uno sin precio de lista, para que el gerente lo vea.
+     *
+     * @param  array<int, array{tipo_agente: string, capacidad: string, cantidad: int, precio: float|null}>  $conteo
+     */
+    private function cobrarComoAcordo(ServiceOrder $orden, array $conteo): void
+    {
+        if ($orden->quote_id !== null || $conteo === [] || collect($conteo)->every(fn (array $g) => $g['precio'] === null)) {
+            return;
+        }
+
+        $orden->lines()->where('adicional', false)->whereNull('quote_item_id')->delete();
+
+        foreach ($conteo as $grupo) {
+            $tarifa = Service::tarifaDeRecarga($grupo['tipo_agente'], $grupo['capacidad']);
+            if ($grupo['precio'] === null || $grupo['precio'] <= 0) {
+                throw new InvalidArgumentException("Pon el precio de {$grupo['tipo_agente']} {$grupo['capacidad']}.");
+            }
+            // Una capacidad que no estaba en el catálogo (30 lb, 50 kg) no frena el
+            // recojo: se agrega su recarga, con su nombre real para la factura.
+            $servicio = $tarifa['service_id'] ?? Service::crearRecarga($grupo['tipo_agente'], $grupo['capacidad'], $grupo['precio'])?->id;
+            if ($servicio === null) {
+                throw new InvalidArgumentException('No hay ningún servicio de recarga en el catálogo. Pide al gerente que lo agregue.');
+            }
+
+            $orden->lines()->create([
+                'service_id' => $servicio,
+                'cantidad' => $grupo['cantidad'],
+                'precio_lista' => $tarifa['precio'] ?? null,
+                'precio_unitario' => $grupo['precio'],
+                'precio_estado' => match (true) {
+                    $tarifa === null => 'sin_lista',
+                    $grupo['precio'] < $tarifa['precio'] => 'rebajado',
+                    default => 'lista',
+                },
+            ]);
+        }
     }
 }

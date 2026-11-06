@@ -156,7 +156,14 @@ class InstallationController extends Controller
             'equipos.*.ubicacion_actual' => ['nullable', 'string', 'max:150'],
             'equipos.*.serie_fabricante' => ['nullable', 'string', 'max:50'],
             'equipos.*.anio_fabricacion' => ['nullable', 'integer', 'min:1970', 'max:'.today()->year],
+            // NTP 350.043: la manija de un extintor portátil queda a 1.53 m o menos del piso.
+            'equipos.*.altura_m' => ['required', 'numeric', 'min:0.1', 'max:1.53'],
+            'equipos.*.senalizacion' => ['required', 'boolean'],
+            'equipos.*.acceso_libre' => ['required', 'boolean'],
         ], [
+            'equipos.*.altura_m.required' => 'Escribe a qué altura quedó la manija de cada extintor.',
+            'equipos.*.altura_m.max' => 'La manija debe quedar a 1.53 m o menos del piso (NTP 350.043).',
+            'equipos.*.altura_m.min' => 'Escribe la altura en metros, por ejemplo 1.20.',
             'firma.required' => 'El cliente debe firmar en la pantalla.',
             'conformidad_nombre.regex' => 'Escribe el nombre de quien recibe (nombre y apellido).',
             'conformidad_nombre.min' => 'Escribe el nombre de quien recibe (nombre y apellido).',

@@ -158,6 +158,8 @@ type QuoteOption = {
  */
 type VentaPrefill = {
     id: number | null;
+    /** Borrador que dejó Chispa: el vendedor revisa y emite. */
+    de_chispa?: boolean;
     service_order_id?: number;
     quote_id?: number | null;
     corrige_sale_id?: number | null;
@@ -600,7 +602,8 @@ export default function NuevaVenta({
                 condicion === 'credito' ? '' : data.numero_operacion,
         }));
 
-        if (condicion === 'credito') {
+        // Sin productos el total es 0 y las cuotas no cuadran: se piden al emitir.
+        if (condicion === 'credito' && total > 0) {
             setCreditoAbierto(true);
         }
     };
@@ -756,11 +759,13 @@ export default function NuevaVenta({
                                         ? `Editando ${venta.comprobante ?? venta.numero_interno}`
                                         : editando
                                           ? `Editando el borrador ${venta.numero_interno}`
-                                          : venta.service_order_id
-                                            ? `Cobro de la orden ${venta.numero_interno}`
-                                            : venta.corrige_sale_id
-                                              ? `Corrección de ${venta.numero_interno}`
-                                              : `Copia de ${venta.numero_interno}`}
+                                          : venta.de_chispa
+                                            ? 'Preparado por Chispa'
+                                            : venta.service_order_id
+                                              ? `Cobro de la orden ${venta.numero_interno}`
+                                              : venta.corrige_sale_id
+                                                ? `Corrección de ${venta.numero_interno}`
+                                                : `Copia de ${venta.numero_interno}`}
                                 </p>
                                 <p className="text-muted-foreground">
                                     {editandoEmitida
@@ -769,11 +774,13 @@ export default function NuevaVenta({
                                             : 'Cambia cliente, comprobante, productos, precios o pago. Al guardar se vuelve a generar con el mismo número (si pasas de factura a boleta o al revés, toma el número de la otra serie).'
                                         : editando
                                           ? 'Cambia lo que haga falta y emite. La venta conserva su número.'
-                                          : venta.service_order_id
-                                            ? 'Ya están el cliente y los servicios de la orden: revisa y emite.'
-                                            : venta.corrige_sale_id
-                                              ? 'Cambia lo que estaba mal y emite. Los extintores que sigan conservan su certificado y sus fechas.'
-                                              : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
+                                          : venta.de_chispa
+                                            ? 'Revisa el cliente, las series y los precios. Si entregas otras unidades, usa «Cambiar». Emites tú.'
+                                            : venta.service_order_id
+                                              ? 'Ya están el cliente y los servicios de la orden: revisa y emite.'
+                                              : venta.corrige_sale_id
+                                                ? 'Cambia lo que estaba mal y emite. Los extintores que sigan conservan su certificado y sus fechas.'
+                                                : 'Ya está todo lleno con los datos de la venta anulada: corrige lo que estaba mal y emite.'}
                                 </p>
                                 {venta.adicionales_sin_cotizacion?.length ? (
                                     <p className="text-warning-strong mt-1 font-semibold">

@@ -64,6 +64,7 @@ test('si la orden ya tenia su certificado, el extintor vendido se suma al mismo 
     // Orden cerrada antes de este cambio: su certificado ya salió solo con la recarga.
     $order->quote->items()->whereNotNull('product_id')->delete();
     app(ExecuteAndCloseServiceOrder::class)->advanceState($order, 'listo_certificado', $this->user);
+    app(ExecuteAndCloseServiceOrder::class)->emitirCertificadosPendientes($order->fresh());
     $original = Certificate::where('service_order_id', $order->id)->whereHas('certificateType', fn ($q) => $q->where('codigo', 'operatividad_garantia'))->sole();
 
     $sale = Sale::factory()->create(['vendedor_id' => $this->user->id, 'client_id' => $order->client_id, 'sede_id' => $order->sede_id, 'estado' => 'confirmada', 'destino' => 'local_cliente', 'referencia' => 'SEDE: Chacarero']);

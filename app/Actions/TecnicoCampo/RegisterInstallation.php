@@ -45,6 +45,9 @@ class RegisterInstallation
      *         marca?: string|null,
      *         serie_fabricante?: string|null,
      *         anio_fabricacion?: int|null,
+     *         altura_m?: float|string|null,
+     *         senalizacion?: bool|null,
+     *         acceso_libre?: bool|null,
      *         ubicacion_actual?: string|null
      *     }>
      * }  $data
@@ -107,6 +110,13 @@ class RegisterInstallation
                     'fecha_instalacion' => now()->toIso8601String(),
                     'eslabon_custodia' => 'instalacion_campo',
                     'equipos_instalados_count' => count($equiposCreados),
+                    // Cómo quedó cada extintor, para el acta y la auditoría.
+                    'montaje' => empty($data['equipos']) ? [] : array_values(array_map(fn (array $eq) => [
+                        'numero_serie' => $eq['numero_serie'] ?? null,
+                        'altura_m' => isset($eq['altura_m']) ? (float) $eq['altura_m'] : null,
+                        'senalizacion' => (bool) ($eq['senalizacion'] ?? false),
+                        'acceso_libre' => (bool) ($eq['acceso_libre'] ?? false),
+                    ], $data['equipos'])),
                 ],
             ]);
 

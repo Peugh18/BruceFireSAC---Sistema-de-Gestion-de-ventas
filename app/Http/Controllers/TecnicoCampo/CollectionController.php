@@ -7,7 +7,9 @@ use App\Actions\Tecnico\GuardarEvidencia;
 use App\Actions\TecnicoCampo\RegisterCollection;
 use App\Enums\EquipmentType;
 use App\Http\Controllers\Controller;
+use App\Models\Service;
 use App\Models\ServiceOrder;
+use App\Models\ServiceOrderEvent;
 use App\Models\Team;
 use App\Rules\TelefonoPeru;
 use App\Services\Reports\ServiceOrderReceiptPdfService;
@@ -125,6 +127,10 @@ class CollectionController extends Controller
             'evidencias' => $service_order->evidencias()->where('etapa', 'recojo')->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'requiereFotoRecojo' => $requiereFotoRecojo,
             'cantidadEsperada' => (int) $service_order->lines()->where('adicional', false)->sum('cantidad'),
+            // Sin cotización, campo deja el precio; sale del catálogo por tipo y capacidad.
+            'conPrecio' => $service_order->quote_id === null,
+            'tarifas' => $service_order->quote_id === null ? Service::tarifasDeRecarga() : [],
+            'ultimosPrecios' => $service_order->quote_id === null ? $this->ultimosPrecios($service_order) : [],
             'order' => [
                 'id' => $service_order->id,
                 'codigo' => $service_order->codigo,
@@ -133,7 +139,9 @@ class CollectionController extends Controller
                     'documento' => $service_order->client->numero_documento,
                     'direccion' => $service_order->client->direccion_fiscal,
                     'telefono' => $service_order->client->telefono,
+                    'comprobante' => $service_order->client->tipo_documento === 'ruc' ? 'Factura' : 'Boleta',
                 ],
+                'lugar' => $service_order->referencia,
                 'vehiculo' => $service_order->vehicle ? "{$service_order->vehicle->marca} {$service_order->vehicle->modelo} ({$service_order->vehicle->placa})" : null,
                 'tipo_servicio' => $service_order->resumenServicios(),
                 'fecha' => $service_order->fecha->toDateString(),
@@ -154,6 +162,8 @@ class CollectionController extends Controller
                     'tipo_agente' => $eq->tipo_agente,
                     'capacidad' => $eq->capacidad,
                     'marca' => $eq->marca,
+                    // Lo que planta tendrá que completar antes del certificado.
+                    'faltan' => $eq->datosQueFaltan(),
                 ]),
             ],
             'custodyEvents' => $custodyEvents,
@@ -175,30 +185,30 @@ class CollectionController extends Controller
             'observaciones' => ['nullable', 'string', 'max:1000'],
             'conformidad_cliente' => ['required', 'accepted'],
             'foto_path' => ['nullable', 'string', 'max:255'],
-            'firma' => ['nullable', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
+            'firma' => ['required', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
+            // Campo solo cuenta lo que se lleva; planta identifica cada extintor.
+            'conteo' => ['required', 'array', 'min:1', 'max:20'],
+            'conteo.*.tipo_agente' => ['required', Rule::in(EquipmentType::etiquetas())],
+            'conteo.*.capacidad' => ['required', 'string', 'max:20'],
+            'conteo.*.cantidad' => ['required', 'integer', 'min:1', 'max:100'],
+            // Precio que campo deja al cliente; con cotización manda la cotización.
+            'conteo.*.precio' => [Rule::requiredIf($service_order->quote_id === null), 'nullable', 'numeric', 'min:0.01', 'max:99999'],
+        ], [
+            'conteo.*.precio.required' => 'Pon el precio que dejas al cliente en cada grupo.',
+            'conteo.required' => 'Cuenta los extintores que te llevas.',
+            'conteo.*.capacidad.required' => 'Elige la capacidad de cada grupo de extintores.',
+            'contacto_nombre.required' => 'Escribe el nombre de la persona del cliente que te da los extintores.',
+            'firma.required' => 'La persona del cliente debe firmar en la pantalla.',
         ]);
 
-        $esRecojoEspontaneo = $service_order->events()
-            ->where('tipo', 'creada')
-            ->where('payload->origen', 'campo')
-            ->exists();
-
-        if ($esRecojoEspontaneo) {
-            $fotos = $service_order->evidencias()->where('etapa', 'recojo')->where('tipo', 'foto')->count();
-            if ($fotos === 0) {
-                throw ValidationException::withMessages(['recojo' => 'Agrega al menos una foto del recojo antes de confirmar.']);
-            }
-
-            $esperados = (int) $service_order->lines()->where('adicional', false)->sum('cantidad');
-            if ($esperados !== $service_order->equipments()->count()) {
-                throw ValidationException::withMessages(['recojo' => "Registra los {$esperados} extintores esperados antes de confirmar el recojo."]);
-            }
+        if (! $service_order->evidencias()->where('etapa', 'recojo')->where('tipo', 'foto')->exists()) {
+            throw ValidationException::withMessages(['recojo' => 'Toma una foto general de los extintores antes de confirmar.']);
         }
 
         try {
             DB::transaction(function () use ($service_order, $request, $validated, $action): void {
                 $action->execute($service_order, $request->user(), [
-                    'cantidad' => $service_order->equipments()->count(),
+                    'conteo' => array_values($validated['conteo']),
                     'contacto_nombre' => $validated['contacto_nombre'],
                     'contacto_telefono' => $validated['contacto_telefono'] ?? null,
                     'observaciones' => $validated['observaciones'] ?? null,
@@ -222,6 +232,7 @@ class CollectionController extends Controller
         Team $current_team,
         ServiceOrder $service_order,
         QuickRegisterEquipment $action,
+        GuardarEvidencia $evidencias,
     ): RedirectResponse {
         $esRecojoEspontaneo = $service_order->events()
             ->where('tipo', 'creada')
@@ -234,15 +245,23 @@ class CollectionController extends Controller
             'capacidad' => [$esRecojoEspontaneo ? 'nullable' : 'required_without:numero_serie', 'string', 'max:100'],
             'marca' => ['nullable', 'string', 'max:100'],
             'serie_fabricante' => ['nullable', 'string', 'max:100'],
+            'anio_fabricacion' => ['nullable', 'integer', 'min:1980', 'max:'.today()->year],
             'observaciones_recepcion' => ['nullable', 'string', 'max:1000'],
+            // Foto del extintor tal como se recoge: ayuda a planta a identificarlo.
+            'foto' => ['nullable', 'image', 'max:10240'],
         ]);
+        $foto = $request->file('foto');
+        unset($data['foto']);
 
         $data['datos_tecnicos_pendientes'] = $esRecojoEspontaneo
             && (blank($data['tipo_agente'] ?? null) || blank($data['capacidad'] ?? null));
 
-        $action->execute($service_order, [...$data, 'recibido' => false], $request->user());
+        $equipo = $action->execute($service_order, [...$data, 'recibido' => false], $request->user());
+        if ($foto) {
+            $evidencias->archivo($service_order, $foto, 'recojo', $request->user(), $equipo->id);
+        }
 
-        return back()->with('success', 'Extintor agregado al recojo.');
+        return back()->with('success', "Extintor {$equipo->numero_serie} agregado al recojo.");
     }
 
     public function receipt(
@@ -251,5 +270,33 @@ class CollectionController extends Controller
         ServiceOrderReceiptPdfService $service,
     ): HttpResponse {
         return $service->generate($service_order)->stream("constancia-recepcion-{$service_order->codigo}.pdf");
+    }
+
+    /**
+     * Lo último que campo le dejó a este cliente por cada tipo y capacidad: sirve
+     * de precio cuando la capacidad no está en el catálogo (30 lb, 50 kg).
+     *
+     * @return list<array{tipo: string, capacidad: string, precio: float}>
+     */
+    private function ultimosPrecios(ServiceOrder $orden): array
+    {
+        $precios = [];
+        $eventos = ServiceOrderEvent::query()
+            ->where('payload->eslabon_custodia', 'recojo_campo')
+            ->whereHas('serviceOrder', fn ($q) => $q->where('client_id', $orden->client_id)->whereKeyNot($orden->id))
+            ->latest('id')
+            ->limit(20)
+            ->get(['id', 'payload']);
+
+        foreach ($eventos as $evento) {
+            foreach ($evento->payload['conteo'] ?? [] as $grupo) {
+                $clave = ($grupo['tipo_agente'] ?? '').'|'.($grupo['capacidad'] ?? '');
+                if (! isset($precios[$clave]) && ($grupo['precio'] ?? null)) {
+                    $precios[$clave] = ['tipo' => $grupo['tipo_agente'], 'capacidad' => $grupo['capacidad'], 'precio' => (float) $grupo['precio']];
+                }
+            }
+        }
+
+        return array_values($precios);
     }
 }

@@ -146,9 +146,9 @@ test('la entrega guarda la firma tactil y la rechaza si no es un PNG valido', fu
     $this->actingAs($campo)->post(($this->url)('tecnico-campo.entregas.confirm'), [...$datos, 'firma' => 'data:text/html;base64,AAAA'])->assertSessionHasErrors('firma');
     expect(Evidencia::count())->toBe(0);
 
-    $this->actingAs($campo)->post(($this->url)('tecnico-campo.entregas.confirm'), [...$datos, 'firma' => FIRMA_PNG])->assertSessionHasNoErrors();
+    $this->actingAs($campo)->post(($this->url)('tecnico-campo.entregas.confirm'), [...$datos, 'firma' => FIRMA_PNG, ...prepararEntrega($this->orden)])->assertSessionHasNoErrors();
 
-    $firma = Evidencia::sole();
+    $firma = Evidencia::where('tipo', 'firma')->sole();
     expect($firma->tipo)->toBe('firma')->and($firma->etapa)->toBe('entrega');
     Storage::disk('local')->assertExists($firma->path);
     $this->actingAs($campo)->get(($this->url)('tecnico-campo.entregas.pdf'))->assertOk();
@@ -197,7 +197,7 @@ test('T4 la instalacion exige escanear cada unidad vendida', function () {
     $datos = fn (array $ids) => [
         'area' => 'Almacén', 'ubicacion_instalada' => 'Pared norte', 'conformidad_nombre' => 'Jefe', 'conformidad_aceptada' => true,
         'emitir_certificado' => false, 'firma' => FIRMA_PNG,
-        'equipos' => array_map(fn (int $id) => ['equipment_id' => $id], $ids),
+        'equipos' => array_map(fn (int $id) => ['equipment_id' => $id, ...MONTAJE_OK], $ids),
     ];
 
     $this->actingAs($campo)->get(($this->url)('tecnico-campo.instalaciones.show'))

@@ -97,12 +97,14 @@ test('tecnico campo can register installation, creating client equipments and ce
                     'capacidad' => '5 lbs',
                     'marca' => 'Bruce Fire',
                     'ubicacion_actual' => 'Pilar central junto a montacargas',
+                    ...MONTAJE_OK,
                 ],
                 [
                     'tipo_agente' => 'PQS ABC',
                     'capacidad' => '6 kg',
                     'marca' => 'Bruce Fire',
                     'ubicacion_actual' => 'Pilar este',
+                    ...MONTAJE_OK,
                 ],
             ],
         ])

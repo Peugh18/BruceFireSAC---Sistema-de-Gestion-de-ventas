@@ -42,6 +42,7 @@ class ReceptionController extends Controller
                 'service',
                 'lines.service',
                 'equipments:id,numero_serie,tipo_agente,capacidad,marca',
+                'events' => fn ($events) => $events->where('payload->eslabon_custodia', 'recojo_campo'),
             ])
             ->latest('id');
 
@@ -78,6 +79,7 @@ class ReceptionController extends Controller
                 'prioridad' => $order->prioridad,
                 'estado' => $order->estado,
                 'equipos_count' => $order->equipments->count(),
+                'conteo_campo' => $order->conteoDeCampo(),
             ];
         });
 
@@ -207,6 +209,8 @@ class ReceptionController extends Controller
             'ubicacion_actual' => ['nullable', 'string', 'max:255'],
             'notas' => ['nullable', 'string', 'max:500'],
             'observaciones_recepcion' => ['nullable', 'string', 'max:500'],
+            // Planta confirma que el extintor no es lo que contó campo.
+            'corregir_conteo' => ['nullable', 'boolean'],
         ], FechasDelEquipo::anioObligatorio(true)['messages']);
 
         $equipment = $action->execute($service_order, [...$validated, 'recibido' => true], $request->user());

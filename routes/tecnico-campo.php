@@ -27,6 +27,8 @@ Route::prefix('tecnico-campo')
         Route::get('recojos/nuevo', [IniciarRecojoController::class, 'create'])->name('recojos.create');
         Route::post('recojos', [IniciarRecojoController::class, 'store'])->name('recojos.iniciar');
         Route::get('clientes/buscar', [IniciarRecojoController::class, 'search'])->name('clientes.search');
+        Route::post('clientes', [IniciarRecojoController::class, 'storeClient'])->middleware('throttle:20,1')->name('clientes.store');
+        Route::post('clientes/{client}/locales', [IniciarRecojoController::class, 'storeLocal'])->middleware('throttle:20,1')->name('clientes.locales.store');
         Route::get('clientes/{client}/ficha', [IniciarRecojoController::class, 'ficha'])->name('clientes.ficha');
         Route::get('documentos/consultar', [RucLookupController::class, 'show'])->middleware('throttle:20,1')->name('documentos.lookup');
         Route::get('recojos/{service_order}', [CollectionController::class, 'show'])->name('recojos.show');

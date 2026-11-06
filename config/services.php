@@ -27,10 +27,16 @@ return [
     ],
 
     /*
-    | Asistente virtual "Chispa": proveedor intercambiable (gemini o groq).
+    | Asistente virtual "Chispa": proveedor intercambiable (deepseek, gemini o groq).
+    | Solo deepseek usa herramientas (consultar y preparar borradores).
     */
     'chispa' => [
-        'provider' => env('CHISPA_PROVIDER', 'gemini'),
+        'provider' => env('CHISPA_PROVIDER', 'deepseek'),
+        'deepseek' => [
+            'key' => env('DEEPSEEK_API_KEY'),
+            'model' => env('DEEPSEEK_MODEL', 'deepseek-chat'),
+            'url' => env('DEEPSEEK_URL', 'https://api.deepseek.com'),
+        ],
         'gemini' => [
             'key' => env('GEMINI_API_KEY'),
             'model' => env('GEMINI_MODEL', 'gemini-flash-latest'),

@@ -37,6 +37,8 @@ function checklistConforme(Equipment $equipo): void
 }
 
 test('se certifica solo lo que llego y no se rechazo, y la ph va por extintor', function () {
+    // Ya cobrada: el certificado sale al terminar planta.
+    $this->orden->update(['sale_id' => Sale::factory()->create(['estado' => 'confirmada', 'client_id' => $this->orden->client_id])->id]);
     [$llego, $rechazado, $noLlego] = $this->equipos;
 
     $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id, $rechazado->id], 'diferencias' => 'Falta un equipo'])->assertSessionHasNoErrors();
@@ -129,6 +131,8 @@ test('un repuesto que sale de dos lotes deja los dos movimientos en la bitacora 
 });
 
 test('terminar y emitir certificados es un solo paso y no deja la orden a medias si falta el checklist', function () {
+    // Ya cobrada: el certificado sale al terminar planta.
+    $this->orden->update(['sale_id' => Sale::factory()->create(['estado' => 'confirmada', 'client_id' => $this->orden->client_id])->id]);
     [$llego] = $this->equipos;
     $this->actingAs($this->tecnico)->post(($this->ruta)('recepciones.confirm'), ['equipos_recibidos' => [$llego->id], 'diferencias' => 'El otro equipo no llegó'])->assertSessionHasNoErrors();
     $this->orden->update(['estado' => 'en_proceso']);

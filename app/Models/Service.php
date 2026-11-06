@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Certificates\EmitirCertificadoDeServicio;
 use App\Enums\EquipmentType;
 use App\Models\Concerns\AuditaElCatalogo;
 use App\Models\Concerns\TieneCodigoCorrelativo;
@@ -99,6 +100,26 @@ class Service extends Model
     public function certificateType(): BelongsTo
     {
         return $this->belongsTo(CertificateType::class);
+    }
+
+    /**
+     * Lo hace campo en el local del cliente (instalación o servicio con plantilla
+     * propia). Misma regla que la lista de Instalaciones de campo.
+     */
+    public function loAtiendeCampo(): bool
+    {
+        $nombre = mb_strtolower((string) $this->nombre);
+        if (str_contains($nombre, 'mantenim')) {
+            return false;
+        }
+        if (preg_match('/instalac|pozo/u', $nombre) === 1) {
+            return true;
+        }
+        $tipo = $this->certificateType;
+
+        return $tipo !== null
+            && ! in_array($tipo->codigo, EmitirCertificadoDeServicio::TIPOS_DE_EXTINTORES, true)
+            && ($tipo->columnas !== null || $tipo->composicion !== null);
     }
 
     /**
@@ -214,5 +235,88 @@ class Service extends Model
     public function codigoSunat(): ?string
     {
         return $this->tipoDeServicio?->codigo_sunat;
+    }
+
+    /**
+     * Precios de recarga que campo ve al recoger: uno por tipo de extintor y
+     * capacidad ("PQS 6 kg"), con la etiqueta de tipo que usa el conteo.
+     *
+     * @return list<array{tipo: string, capacidad: string, precio: float, service_id: int}>
+     */
+    public static function tarifasDeRecarga(): array
+    {
+        $servicios = self::query()->where('activo', true)
+            ->where(fn ($q) => $q->where('nombre', 'like', 'Recarga%')
+                ->orWhereHas('tipoDeServicio', fn ($t) => $t->where('nombre', 'like', 'Recarga%')))
+            ->orderBy('precio_venta')
+            ->get(['id', 'nombre', 'agente', 'capacidad', 'precio_venta']);
+
+        $tarifas = [];
+        foreach (EquipmentType::etiquetas() as $etiqueta) {
+            $tipo = EquipmentType::fromDescription($etiqueta);
+            foreach ($servicios as $servicio) {
+                $capacidad = self::normalizarCapacidad($servicio->capacidad ?: $servicio->nombre);
+                $clave = $etiqueta.'|'.$capacidad;
+                if ($capacidad === null || $tipo === EquipmentType::Otro || isset($tarifas[$clave])
+                    || EquipmentType::deAgente($servicio->agente, $servicio->nombre) !== $tipo) {
+                    continue;
+                }
+                $tarifas[$clave] = ['tipo' => $etiqueta, 'capacidad' => $capacidad, 'precio' => (float) $servicio->precio_venta, 'service_id' => $servicio->id];
+            }
+        }
+
+        return array_values($tarifas);
+    }
+
+    /**
+     * Servicio de recarga para una capacidad que aún no tiene precio de lista
+     * (30 lb, 50 kg…): el del mismo agente o, si no hay, cualquier recarga.
+     */
+    public static function recargaSinTarifa(string $tipo): ?int
+    {
+        $agente = EquipmentType::fromDescription($tipo);
+        $recargas = self::query()->where('activo', true)
+            ->where(fn ($q) => $q->where('nombre', 'like', 'Recarga%')
+                ->orWhereHas('tipoDeServicio', fn ($t) => $t->where('nombre', 'like', 'Recarga%')))
+            ->orderBy('precio_venta')
+            ->get(['id', 'nombre', 'agente']);
+
+        return ($recargas->first(fn (self $s) => EquipmentType::deAgente($s->agente, $s->nombre) === $agente) ?? $recargas->first())?->id;
+    }
+
+    /**
+     * Recarga de una capacidad que no estaba en el catálogo (CO2 15 lb): se crea
+     * a partir de la del mismo agente, con su capacidad en el nombre (así sale en
+     * la factura) y el precio que dejó campo como precio de lista inicial.
+     */
+    public static function crearRecarga(string $tipo, string $capacidad, float $precio): ?self
+    {
+        $base = ($id = self::recargaSinTarifa($tipo)) ? self::query()->find($id) : null;
+        if ($base === null) {
+            return null;
+        }
+
+        $mismoAgente = EquipmentType::deAgente($base->agente, $base->nombre) === EquipmentType::fromDescription($tipo);
+        $nombre = $mismoAgente && $base->capacidad && str_contains($base->nombre, $base->capacidad)
+            ? str_replace($base->capacidad, $capacidad, $base->nombre)
+            : "Recarga y mantenimiento de extintor {$tipo} {$capacidad}";
+
+        $existente = self::query()->where('nombre', $nombre)->first();
+        if ($existente !== null) {
+            return $existente;
+        }
+
+        $nueva = $base->replicate(['codigo']);
+        $nueva->fill(['nombre' => $nombre, 'agente' => $tipo, 'capacidad' => $capacidad, 'precio_venta' => $precio, 'activo' => true])->save();
+
+        return $nueva;
+    }
+
+    /** @return array{tipo: string, capacidad: string, precio: float, service_id: int}|null */
+    public static function tarifaDeRecarga(string $tipo, string $capacidad): ?array
+    {
+        $capacidad = self::normalizarCapacidad($capacidad);
+
+        return collect(self::tarifasDeRecarga())->first(fn (array $t) => $t['tipo'] === $tipo && $t['capacidad'] === $capacidad);
     }
 }
