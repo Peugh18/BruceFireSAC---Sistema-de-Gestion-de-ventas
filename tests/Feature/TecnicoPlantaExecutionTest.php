@@ -8,6 +8,7 @@ use App\Models\Deficiency;
 use App\Models\Equipment;
 use App\Models\InventoryMovement;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Models\Sede;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderEvent;
@@ -255,6 +256,8 @@ test('advancing order to listo_certificado automatically triggers certificates g
         'client_id' => $client->id,
         'codigo' => 'OS-EJEC-0003',
         'estado' => 'trabajo_terminado',
+        // Ya cobrada: el certificado sale al terminar planta.
+        'sale_id' => Sale::factory()->create(['client_id' => $client->id])->id,
     ]);
 
     $equipment = Equipment::factory()->create([

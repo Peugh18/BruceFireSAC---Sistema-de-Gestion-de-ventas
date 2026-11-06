@@ -30,6 +30,11 @@ interface OrderItem {
     prioridad: string;
     estado: string;
     equipos_count: number;
+    conteo_campo: {
+        tipo_agente: string;
+        capacidad: string;
+        cantidad: number;
+    }[];
 }
 
 interface Props {
@@ -211,6 +216,25 @@ export default function RecepcionesIndex({ orders, counts, filters }: Props) {
                                         <ArrowRight className="h-5 w-5 flex-shrink-0 text-neutral-300 dark:text-neutral-600" />
                                     </div>
 
+                                    {order.conteo_campo.length > 0 ? (
+                                        <p className="mt-2 text-xs text-neutral-700 dark:text-neutral-300">
+                                            <span className="font-semibold">
+                                                Campo trajo{' '}
+                                                {order.conteo_campo.reduce(
+                                                    (suma, g) =>
+                                                        suma + g.cantidad,
+                                                    0,
+                                                )}
+                                                :
+                                            </span>{' '}
+                                            {order.conteo_campo
+                                                .map(
+                                                    (g) =>
+                                                        `${g.tipo_agente} ${g.capacidad} × ${g.cantidad}`,
+                                                )
+                                                .join(' · ')}
+                                        </p>
+                                    ) : null}
                                     <div className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-neutral-700/60 dark:text-neutral-400">
                                         <div className="flex items-center gap-1.5">
                                             <QrCode className="text-warning-strong h-3.5 w-3.5" />

@@ -600,3 +600,74 @@
 - Se mantiene la "recompra" del panel del gerente: extintores que vencen en 30, 60 y 90 días (sale de los certificados, no es IA).
 - Siguiente: Chispa con consultas y acciones con confirmación; definir al final qué puede hacer cada rol.
 - Pruebas: `ClientesAntiguosPorRegistrarTest`. Sin commit, rama `feat/quitar-recompra`.
+
+## 2026-11-05 — Claude: campo con tres trabajos (recojo, entrega, instalación) según Claude Design
+
+- Diseño aprobado en Claude Design: https://claude.ai/artifact/W6UJERoLWBZUkMHJr9iYYZ. Pantallas con el estilo del sistema (`components/paso-campo.tsx`: cabecera, avance, botón fijo abajo, pantalla de "listo").
+- Recojo: cliente (alta completa del vendedor) → lugar (locales, dirección fiscal o local nuevo) → conteo por tipo y capacidad con agregar y quitar y foto de entrada → precio → firma.
+- Precio que deja campo: sale del catálogo de recargas (`Service::tarifasDeRecarga`) y se guarda por línea (`service_order_lines.precio_lista/precio_unitario/precio_estado`). Si baja más del 10 % (`config/campo.php`), queda "por aprobar"; no se cobra hasta que el gerente lo aprueba o manda a cobrar el de lista.
+- Entrega: marcar cada extintor, foto de salida y firma; solo si la orden está cobrada o a crédito ("Falta cobrar" en la lista y en la pantalla).
+- Instalación: cada extintor (dónde quedó, altura máx. 1.53 m, señalización, acceso libre y foto), revisión con foto antes, y firma.
+- Planta ve la foto de entrada y "Campo trajo X de Y" por tipo. El vendedor ve "Entrada y salida" y "Precio que dejó campo" en la orden. El gerente tiene un módulo nuevo, Operación → Órdenes, con filtros, detalle y aprobación del precio.
+- Arreglo: la ficha de cliente de campo ahora trae sus locales.
+- Pruebas: `PrecioCampoYCobroTest` (nueva) y las de campo, entrega, planta y líneas: 87 de 87. TypeScript, lint y PHPStan limpios. Simulación en navegador (celular) de los tres flujos: OT-2026-0003 y OT-2026-0004.
+- Datos de prueba locales: se cargó `CatalogoDemoSeeder` y se simularon planta y cobro por tinker.
+- Pendiente: suite completa, cobro real desde Caja con precio aprobado, y decidir si el cliente ve las fotos en su portal. Sin commit.
+
+## 2026-11-05 — Claude: agentes y capacidades administrables desde el recojo
+
+- En "Agregar tipo", junto a Tipo y a Capacidad hay el mismo botón de administrar que en marcas y agentes (`lista-administrable`).
+- Capacidades: tabla nueva `capacidades` (arranca con 1–12 kg, 5–20 lb, 6 y 9 L), `Capacidad::normalizar` ("30lb" → "30 lb", "50 KG" → "50 kg"), `CapacidadController` y prop compartida `capacidadesExtintor`.
+- Campo ahora también puede agregar agentes (antes no). Se cambió la prueba que lo prohibía.
+- Una capacidad sin precio de lista (30 lb, 50 kg) no frena el recojo: campo pone el precio y queda "por aprobar" para el gerente.
+- Pruebas: 18 de 18 (agentes, marcas, precio de campo) y PHPStan limpio. Revisado en el navegador en modo oscuro: se agregaron 30 lb y 50 kg. Sin commit.
+
+## 2026-11-05 — Claude: precio de campo sin aprobación del gerente
+
+- Pedido del usuario: nada de aprobar precios (mucha interacción con el gerente). El precio que firma el cliente en el recojo es el que se cobra.
+- La línea guarda cómo quedó: `lista`, `rebajado` o `sin_lista`. El gerente solo lo ve en Órdenes (filtro "Precio de campo distinto"); se quitaron la ruta y los botones de aprobar, el bloqueo en la venta y `config/campo.php`.
+- Sin precio de lista (30 lb, 50 kg): se propone lo último que campo le dejó a ese cliente por el mismo tipo y capacidad (`CollectionController::ultimosPrecios`); si no hay, el técnico lo escribe.
+- Constancia de recepción: la dirección es la del local elegido; antes salía "—" si el cliente no tenía dirección fiscal.
+- Botón de foto: dice "Tomar foto" y abre la cámara trasera en el celular (`capture="environment"`).
+- Pruebas: 64 de 64 (campo, entrega, instalación, agentes, marcas, líneas y recepción en planta). TypeScript, lint y PHPStan limpios. Sin commit.
+
+## 2026-11-05 — Claude: el recojo llega al vendedor correcto y con la capacidad real
+
+- Causa de "no aparece para cobrar": la OT-2026-0005 se creó en la sede Almacén Central y el vendedor de prueba es de Tienda Trujillo Centro (cada vendedor ve su sede). El recojo ahora propone la tienda donde el cliente compró o pidió su última orden (`sede_habitual` en la ficha de campo) y el campo dice "Tienda que cobra".
+- Capacidad que no estaba en el catálogo (CO2 15 lb): antes la línea usaba la recarga de 10 lb y así habría salido en la factura. Ahora se crea la recarga con su capacidad en el nombre y el precio de campo como precio de lista (`Service::crearRecarga`).
+- Datos locales corregidos: OT-2026-0005 pasó a Tienda Trujillo Centro y su línea de CO2 a "CO2 15 lb" (SRV-0014); los estados viejos de precio pasaron a `lista` / `sin_lista`.
+- Visto en el navegador como vendedor: la orden aparece en Servicios y "Cobrar" arma la boleta con S/ 310.00. No se emitió (falta caja abierta).
+- Pruebas: 32 de 32 de campo y precio. PHPStan, TypeScript y lint limpios. Sin commit.
+
+## 2026-11-05 — Claude: planta no registra en silencio algo distinto a lo que contó campo
+
+- Si planta registra un extintor que no coincide con el casillero que dejó campo (contó CO2 15 lb, planta pone 10 lb), sale el aviso "Campo contó CO2 15 lb y tú registras CO2 10 lb…" con el botón "Sí, corregir" (`QuickRegisterEquipment::corregirConteo`).
+- Al confirmar: ese extintor sale de su casillero y pasa a la recarga que le toca, con su precio de lista (o se crea si no existe). Al vendedor le llega en el chat de la orden "Planta corrigió el conteo… Revisa el precio antes de cobrar".
+- Órdenes sin conteo de campo siguen con el mensaje de siempre.
+- Pruebas: `PlantaCorrigeConteoTest` (nueva) + recepción, ejecución, fechas y precio de campo: 54 de 54. PHPStan limpio. Sin commit.
+- Pendiente de datos locales: en la OT-2026-0005 los 3 CO2 siguen registrados como 10 lb (de antes del arreglo).
+
+## 2026-11-06 — Claude: cobrar el recojo y certificados después del comprobante
+
+- La boleta de una orden de campo no salía: la regla "servicios solo desde cotización" ahora acepta cobrar desde la orden (`CreateSale::exigirCotizacion` con `service_order_id`).
+- Certificados: si planta termina sin cobro, quedan pendientes (`certificados_pendientes` en el evento de cierre) y salen al emitir factura, boleta o nota de venta (`ExecuteAndCloseServiceOrder::emitirCertificadosPendientes`, llamado desde `ConfirmSale`). Si la orden ya estaba cobrada, salen al cerrar planta como antes. El vendedor ve "Certificado: sale al emitir la factura, boleta o nota de venta".
+- Pruebas: `CertificadoAlCobrarTest` (nueva). Se ajustaron 7 pruebas que esperaban el certificado sin cobro o mandaban inspecciones a campo. Corrida de 22 archivos + reintento: 27 de 27 en los ajustados. PHPStan, TypeScript y lint limpios. Sin commit.
+- Pendiente de datos locales: la OT-2026-0005 ya tenía certificados emitidos antes del cambio (OG-2026-0002 y BF-UME-2026-0001).
+
+## 2026-11-06 — Claude: revisión de todos los módulos en el navegador
+
+- Barrido: todas las pantallas GET de los 5 roles cargan sin error 500. Los 404 son a propósito (nueva guía sale desde una venta; traslados solo con varios almacenes).
+- Recorrido completo: cotización → aceptación → venta (frena si falta stock) → recepción en almacén (2 unidades, stickers PDF) → venta con serie (NV-0002, certificado al cobrar) → caja (salida con motivo, cierre con faltante de S/ 4 que pide explicación y le llega al gerente) → venta a crédito (NV-0003) → cobranza parcial (el servidor frena pagos mayores al saldo) → Por vencer → QR público y PDF → panel y configuración del gerente.
+- Arreglado: "Crédito" sin productos abría las cuotas con total S/ 0 y no dejaba guardar (`ventas/nueva.tsx`: solo abre si el total es mayor que 0; si no, se piden al emitir).
+- Arreglado: una instalación vendida desde cotización iba a planta y nunca le aparecía a campo. Ahora `Service::loAtiendeCampo()` (misma regla que la lista de Instalaciones) decide el área en `SaleController` e `IniciarOrdenDesdeCotizacion`. Pruebas nuevas en `CampoTresTrabajosTest` y `CertificadoAlCobrarTest`.
+- Falta en el beta (no se construyó): portal del cliente y confirmación de salida física por el almacenero (hoy el stock baja al vender).
+- Datos locales: OT-2026-0009 pasada a campo a mano; recepción #1, NV-0002, NV-0003, COT-0001 y COT-0002 son de prueba.
+- PHPStan, TypeScript y lint limpios. Sin commit.
+
+## 2026-11-06 — Claude: Chispa por voz que consulta y prepara (vendedor, almacén y gerente)
+
+- Decisión del usuario: el panel del gerente se queda como está; Chispa solo para Vendedor, Almacén y Gerente. Diseño aprobado en Claude Design (artifact PPXAoXkpiB2gKgnsYPxTN7).
+- Proveedor DeepSeek (`services.chispa.deepseek`, `DEEPSEEK_API_KEY` en `.env`) con herramientas por rol (`App\Services\Chispa\Herramientas`): consultas con los mismos límites de cada pantalla y borradores en sesión que abren Nueva venta (`?chispa=1`), Nueva cotización y Nueva recepción llenadas. Cambio de precio: solo el gerente lo confirma (`asistente.precio`). Chispa nunca emite, cobra ni guarda sola.
+- Widget: micrófono (reconocimiento del navegador, es-PE), tarjetas con "Abrir … llenada" / "Confirmar cambio" y botón "Escuchar".
+- Rutas de Chispa cerradas a técnicos. Migración: `chispa_registros.herramientas`.
+- Pruebas: `ChispaHerramientasTest` (nueva, DeepSeek simulado) 5/5 y `ChispaAssistantTest` 15/15. PHPStan, TypeScript y lint limpios. Sin commit.

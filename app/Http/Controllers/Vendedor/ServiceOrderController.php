@@ -9,6 +9,7 @@ use App\Http\Requests\ServiceOrders\StoreServiceOrderRequest;
 use App\Models\Deficiency;
 use App\Models\Quote;
 use App\Models\Sede;
+use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Models\User;
@@ -138,6 +139,8 @@ class ServiceOrderController extends Controller
 
         return Inertia::render('vendedor/ordenes-servicio/show', [
             'serviceOrder' => $service_order,
+            'entradaSalida' => $service_order->entradaYSalida(),
+            'preciosCampo' => $service_order->preciosDeCampo(),
             'casilleros' => CasillerosDeLaOrden::paraPagina($service_order),
             // El mismo avance que ve el taller, y el chat de la orden.
             'paso' => PasoDelTaller::de($service_order),
@@ -145,6 +148,10 @@ class ServiceOrderController extends Controller
             'extintoresPorVender' => $service_order->certificates()->whereHas('certificateType', fn ($q) => $q->where('codigo', 'operatividad_garantia'))->exists()
                 ? 0
                 : $service_order->extintoresNuevosPorVender(),
+            // Planta terminó sin cobro: el certificado sale al emitir el comprobante.
+            'certificadoAlCobrar' => $service_order->sale_id === null
+                && in_array($service_order->estado, ServiceOrder::ESTADOS_LISTOS, true)
+                && ! $service_order->certificates()->exists(),
             'conversacion' => app(ConversacionDeLaOrden::class)->paraPagina($service_order),
             'tecnicos' => $this->tecnicosQueAtienden($service_order)->get(['id', 'name']),
             'tecnicosEntrega' => in_array($service_order->estado, ServiceOrder::ESTADOS_LISTOS, true)
@@ -295,6 +302,8 @@ class ServiceOrderController extends Controller
             'observaciones' => ['nullable', 'string', 'max:1000'],
             'service_id' => ['required', 'integer', 'exists:services,id'],
         ]);
+
+        ServiceOrder::exigirQueCampoLoAtienda($datos['departamento_tecnico'], Service::query()->whereKey($datos['service_id'])->first());
 
         if ($datos['departamento_tecnico'] !== $service_order->departamento_tecnico && $service_order->estado !== 'pendiente_recepcion') {
             throw ValidationException::withMessages(['departamento_tecnico' => 'La orden ya está en manos del técnico: no se puede cambiar de área.']);

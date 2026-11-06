@@ -5,11 +5,13 @@ namespace App\Actions\Sales;
 use App\Actions\Billing\EmitElectronicDocument;
 use App\Actions\Billing\ReserveNextCorrelativo;
 use App\Actions\Certificates\EmitirCertificadosDeVenta;
+use App\Actions\TecnicoPlanta\ExecuteAndCloseServiceOrder;
 use App\Models\CashRegister;
 use App\Models\CompanySetting;
 use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Models\SaleRefund;
+use App\Models\ServiceOrder;
 use App\Services\AuditLogger;
 use App\Services\Billing\DetraccionCalculator;
 use Illuminate\Support\Facades\DB;
@@ -92,6 +94,7 @@ class ConfirmSale
             $this->emitElectronicDocument->programar($sale);
             app(CorregirVenta::class)->trasladar($sale);
             $this->emitirCertificados->automaticos($sale);
+            $this->emitirCertificadosDeLaOrden($sale);
             $this->registrarCobroAlContado($sale);
 
             return $sale->refresh();
@@ -136,6 +139,7 @@ class ConfirmSale
 
             app(CorregirVenta::class)->trasladar($sale);
             $this->emitirCertificados->automaticos($sale);
+            $this->emitirCertificadosDeLaOrden($sale);
             $this->registrarCobroAlContado($sale);
 
             AuditLogger::log(
@@ -237,5 +241,13 @@ class ConfirmSale
     protected function partesDelCobro(Sale $sale, string $forma, float $monto, string $nota): array
     {
         return [[$monto, $nota !== '' ? $nota : $sale->numero_operacion]];
+    }
+
+    /** Los certificados que la orden cobrada dejó pendientes al cerrar planta. */
+    protected function emitirCertificadosDeLaOrden(Sale $sale): void
+    {
+        $sale->serviceOrders()->get()->each(
+            fn (ServiceOrder $orden) => app(ExecuteAndCloseServiceOrder::class)->emitirCertificadosPendientes($orden),
+        );
     }
 }

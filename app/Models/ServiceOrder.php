@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Orden de servicio (Documento Maestro §16). El estado fino de 13 pasos es la
@@ -205,6 +206,84 @@ class ServiceOrder extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(ServiceOrderLine::class);
+    }
+
+    /**
+     * Campo solo hace recojos, entregas e instalaciones: la inspección y el
+     * mantenimiento se atienden en planta.
+     */
+    /**
+     * Lo que campo se llevó, por tipo y capacidad ("PQS 6 kg × 2"), del último
+     * recojo confirmado; planta lo compara con lo que identifica al recibir.
+     *
+     * @return list<array{tipo_agente: string, capacidad: string, cantidad: int}>
+     */
+    public function conteoDeCampo(): array
+    {
+        $evento = $this->relationLoaded('events')
+            ? $this->events->where('payload.eslabon_custodia', 'recojo_campo')->sortByDesc('id')->first()
+            : $this->events()->where('payload->eslabon_custodia', 'recojo_campo')->latest('id')->first();
+
+        /** @var list<array{tipo_agente: string, capacidad: string, cantidad: int}> */
+        return $evento->payload['conteo'] ?? [];
+    }
+
+    /**
+     * Entrada (recojo) y salida (entrega) de la orden: quién, cuándo, dónde,
+     * cuántos, fotos y firma. Lo ven el vendedor, el gerente y planta.
+     *
+     * @return array{entrada: array<string, mixed>|null, salida: array<string, mixed>|null}
+     */
+    public function entradaYSalida(): array
+    {
+        $eventos = $this->events()->whereIn('payload->eslabon_custodia', ['recojo_campo', 'entrega_campo'])->with('user:id,name')->latest('id')->get();
+        $evidencias = $this->evidencias()->whereIn('etapa', ['recojo', 'entrega'])->get(['id', 'etapa', 'tipo']);
+        $lugar = preg_replace('/^\s*SEDE\s*:\s*/iu', '', (string) $this->referencia) ?: null;
+        $tramo = function (string $eslabon, string $etapa, string $persona, string $cantidad) use ($eventos, $evidencias, $lugar): ?array {
+            $evento = $eventos->first(fn ($e) => ($e->payload['eslabon_custodia'] ?? null) === $eslabon);
+
+            return $evento === null ? null : [
+                'fecha' => $evento->created_at?->timezone('America/Lima')->format('d/m/Y H:i'),
+                'tecnico' => $evento->payload['responsable_nombre'] ?? $evento->user?->name,
+                'lugar' => $lugar,
+                'persona' => $evento->payload[$persona] ?? null,
+                'cantidad' => $evento->payload[$cantidad] ?? null,
+                'fotos' => $evidencias->where('etapa', $etapa)->where('tipo', 'foto')->pluck('id')->values(),
+                'firma' => $evidencias->where('etapa', $etapa)->where('tipo', 'firma')->last()?->id,
+            ];
+        };
+
+        return [
+            'entrada' => $tramo('recojo_campo', 'recojo', 'contacto_cliente', 'cantidad_equipos'),
+            'salida' => $tramo('entrega_campo', 'entrega', 'receptor_nombre', 'equipos_entregados_count'),
+        ];
+    }
+
+    /**
+     * Precios que dejó campo y si esperan al gerente.
+     *
+     * @return list<array{id: int, servicio: string|null, cantidad: int, precio_lista: float|null, precio: float|null, estado: string|null}>
+     */
+    public function preciosDeCampo(): array
+    {
+        return array_values($this->lines()->with('service:id,nombre')->whereNotNull('precio_unitario')->get()
+            ->map(fn (ServiceOrderLine $linea) => [
+                'id' => $linea->id,
+                'servicio' => $linea->service?->nombre,
+                'cantidad' => $linea->cantidad,
+                'precio_lista' => $linea->precio_lista !== null ? (float) $linea->precio_lista : null,
+                'precio' => (float) $linea->precio_unitario,
+                'estado' => $linea->precio_estado,
+            ])->all());
+    }
+
+    public static function exigirQueCampoLoAtienda(?string $departamento, ?Service $servicio): void
+    {
+        if ($departamento === 'campo' && $servicio && preg_match('/inspecci|mantenim/iu', (string) $servicio->nombre) === 1) {
+            throw ValidationException::withMessages([
+                'departamento_tecnico' => "Campo solo hace recojos, entregas e instalaciones: «{$servicio->nombre}» lo atiende planta.",
+            ]);
+        }
     }
 
     /**

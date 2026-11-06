@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Enums\EquipmentType;
+use App\Models\Capacidad;
 use App\Models\CashRegister;
 use App\Models\Client;
 use App\Models\Deficiency;
@@ -65,6 +66,7 @@ class HandleInertiaRequests extends Middleware
             // Lista única de agentes extintores para los formularios (C1).
             'agentesExtintor' => fn () => $user ? EquipmentType::etiquetas() : [],
             'marcasExtintor' => fn () => $user ? Marca::nombresActivos() : [],
+            'capacidadesExtintor' => fn () => $user ? Capacidad::nombresActivos() : [],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
             'teams' => fn () => $user?->toUserTeams(includeCurrent: true) ?? [],

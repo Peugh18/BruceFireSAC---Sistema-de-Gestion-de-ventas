@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['service_order_id', 'service_id', 'cantidad', 'quote_item_id', 'adicional'])]
+#[Fillable(['service_order_id', 'service_id', 'cantidad', 'quote_item_id', 'adicional', 'precio_lista', 'precio_unitario', 'precio_estado'])]
 class ServiceOrderLine extends Model
 {
     /** @use HasFactory<ServiceOrderLineFactory> */
@@ -20,6 +20,8 @@ class ServiceOrderLine extends Model
         return [
             'cantidad' => 'integer',
             'adicional' => 'boolean',
+            'precio_lista' => 'decimal:2',
+            'precio_unitario' => 'decimal:2',
         ];
     }
 

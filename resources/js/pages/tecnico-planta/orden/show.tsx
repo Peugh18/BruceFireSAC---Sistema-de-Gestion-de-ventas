@@ -87,6 +87,7 @@ interface Props {
     paso: PasoTaller;
     order: {
         id: number;
+        cobrada: boolean;
         codigo: string;
         cliente: string;
         cliente_doc: string | null;
@@ -100,6 +101,7 @@ interface Props {
     };
     casilleros: Casilleros;
     evidenciasRecojo: EvidenciaListada[];
+    conteoCampo: { tipo_agente: string; capacidad: string; cantidad: number }[];
     revision: Revision[];
     deficiencias: Deficiencia[];
     repuestos: Repuesto[];
@@ -228,6 +230,7 @@ export default function OrdenTaller({
     certificados,
     conversacion,
     evidenciasRecojo,
+    conteoCampo,
 }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const equipo = currentTeam?.slug ?? '';
@@ -406,11 +409,17 @@ export default function OrdenTaller({
                             <SubirEvidencia
                                 ordenId={order.id}
                                 etapa="recojo"
-                                titulo="Así se recogieron los extintores"
+                                titulo="Foto de entrada"
                                 evidencias={evidenciasRecojo}
                                 soloLectura
                             />
                         </section>
+                    )}
+                    {conteoCampo.length > 0 && (
+                        <ConteoDeCampo
+                            conteo={conteoCampo}
+                            registrados={casilleros.equipos}
+                        />
                     )}
 
                     {order.observaciones && (
@@ -461,6 +470,7 @@ export default function OrdenTaller({
                     )}
                     {vista === 5 && (
                         <PasoCierre
+                            cobrada={order.cobrada}
                             estado={order.estado}
                             cliente={order.cliente}
                             direccion={order.direccion}
@@ -1162,6 +1172,7 @@ function PasoReparar({
 }
 
 function PasoCierre({
+    cobrada,
     estado,
     cliente,
     direccion,
@@ -1178,6 +1189,7 @@ function PasoCierre({
     revision: Revision[];
     reparadas: number;
     certificados: Props['certificados'];
+    cobrada: boolean;
     ruta: Ruta;
 }) {
     const recibidos = revision.filter((r) => r.recibido);
@@ -1234,7 +1246,9 @@ function PasoCierre({
             <p className="text-muted-foreground text-sm leading-relaxed">
                 {paso.completa
                     ? 'Trabajo terminado. Este es el resumen de los extintores recibidos.'
-                    : 'Revisa el resumen. Al terminar se generan los certificados de los aptos.'}
+                    : cobrada
+                      ? 'Revisa el resumen. Al terminar se generan los certificados de los aptos.'
+                      : 'Revisa el resumen. Los certificados salen cuando ventas emita el comprobante.'}
             </p>
             <div className="border-border bg-card divide-border grid grid-cols-3 divide-x overflow-hidden rounded-2xl border shadow-sm">
                 {[
@@ -1485,11 +1499,63 @@ function PasoCierre({
                             disabled={enviando || !puedeTerminar}
                             className={botonPrincipal}
                         >
-                            Terminar y emitir certificados
+                            {cobrada
+                                ? 'Terminar y emitir certificados'
+                                : 'Terminar el trabajo'}
                         </button>
                     </>
                 )}
             </BarraAccion>
         </div>
+    );
+}
+
+/** Lo que contó campo frente a lo que planta ya registró, por tipo y capacidad. */
+function ConteoDeCampo({
+    conteo,
+    registrados,
+}: {
+    conteo: { tipo_agente: string; capacidad: string; cantidad: number }[];
+    registrados: { tipo_agente?: string | null; capacidad?: string | null }[];
+}) {
+    const normal = (texto?: string | null) =>
+        (texto ?? '').toLowerCase().replace(/\s+/g, '');
+    const total = conteo.reduce((suma, grupo) => suma + grupo.cantidad, 0);
+
+    return (
+        <section className="border-border bg-card divide-border divide-y overflow-hidden rounded-2xl border">
+            <div className="flex items-center justify-between px-4 py-3.5 text-sm">
+                <span className="font-semibold">Campo trajo</span>
+                <span className="font-bold">
+                    <span className="text-primary-strong">
+                        {Math.min(registrados.length, total)}
+                    </span>{' '}
+                    de {total} registrados
+                </span>
+            </div>
+            {conteo.map((grupo) => {
+                const hechos = registrados.filter(
+                    (eq) =>
+                        normal(eq.tipo_agente) === normal(grupo.tipo_agente) &&
+                        normal(eq.capacidad) === normal(grupo.capacidad),
+                ).length;
+
+                return (
+                    <div
+                        key={`${grupo.tipo_agente}${grupo.capacidad}`}
+                        className="flex min-h-13 items-center justify-between px-4 text-sm"
+                    >
+                        <span className="font-semibold">
+                            {grupo.tipo_agente} {grupo.capacidad}
+                        </span>
+                        <span
+                            className={`font-bold tabular-nums ${hechos >= grupo.cantidad ? 'text-success-strong' : ''}`}
+                        >
+                            {hechos}/{grupo.cantidad}
+                        </span>
+                    </div>
+                );
+            })}
+        </section>
     );
 }

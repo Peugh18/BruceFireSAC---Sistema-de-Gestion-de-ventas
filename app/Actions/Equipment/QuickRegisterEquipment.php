@@ -107,7 +107,15 @@ class QuickRegisterEquipment
             }
 
             if ($service !== null && ($incompatibilidad = $service->incompatibilidadConEquipo($equipment)) !== null) {
-                throw ValidationException::withMessages(['tipo_agente' => $incompatibilidad]);
+                // Lo contó campo: planta no se equivoca en silencio. Se avisa y, si
+                // confirma lo que tiene en la mano, la orden se corrige.
+                if ($serviceOrder->conteoDeCampo() === []) {
+                    throw ValidationException::withMessages(['tipo_agente' => $incompatibilidad]);
+                }
+                if (! ($data['corregir_conteo'] ?? false)) {
+                    throw ValidationException::withMessages(['corregir_conteo' => "Campo contó {$service->agente} {$service->capacidad} y tú registras {$equipment->tipo_agente} {$equipment->capacidad}. Si es así, confirma y se corrige la orden."]);
+                }
+                $line = $this->corregirConteo($serviceOrder, $line, $equipment, $user);
             }
 
             $position = ((int) $serviceOrder->equipments()->max('service_order_equipment.posicion')) + 1;
@@ -226,5 +234,48 @@ class QuickRegisterEquipment
         $value = trim((string) $value);
 
         return $value !== '' ? $value : self::DEFAULT_UNREADABLE;
+    }
+
+    /**
+     * Planta confirma que el extintor no es lo que contó campo (CO2 10 lb y no
+     * 15 lb): sale de su casillero y va a la recarga que de verdad le toca, con
+     * su precio de lista. El vendedor ve el aviso antes de cobrar.
+     */
+    private function corregirConteo(ServiceOrder $orden, ServiceOrderLine $linea, Equipment $equipo, ?User $user): ServiceOrderLine
+    {
+        $tarifa = Service::tarifaDeRecarga((string) $equipo->tipo_agente, (string) $equipo->capacidad);
+        $precio = $tarifa['precio'] ?? (float) ($linea->precio_unitario ?? 0);
+        $servicio = $tarifa['service_id'] ?? Service::crearRecarga((string) $equipo->tipo_agente, (string) $equipo->capacidad, $precio)?->id;
+        if ($servicio === null) {
+            throw ValidationException::withMessages(['corregir_conteo' => 'No hay una recarga para ese extintor en el catálogo. Pide al gerente que la agregue.']);
+        }
+
+        $antes = trim(($linea->service->agente ?? '').' '.($linea->service->capacidad ?? ''));
+        $linea->cantidad > 1 ? $linea->decrement('cantidad') : $linea->delete();
+
+        $nueva = $orden->lines()->where('service_id', $servicio)->where('adicional', false)->first();
+        if ($nueva !== null) {
+            $nueva->increment('cantidad');
+        } else {
+            $nueva = $orden->lines()->create([
+                'service_id' => $servicio,
+                'cantidad' => 1,
+                'precio_lista' => $tarifa['precio'] ?? null,
+                'precio_unitario' => $precio,
+                'precio_estado' => $tarifa === null ? 'sin_lista' : 'lista',
+            ]);
+        }
+
+        ServiceOrderEvent::create([
+            'service_order_id' => $orden->id,
+            'tipo' => 'otro',
+            'user_id' => $user?->id,
+            'payload' => [
+                'origen' => 'planta',
+                'mensaje' => "Planta corrigió el conteo: un extintor era {$equipo->tipo_agente} {$equipo->capacidad}, no {$antes}. Revisa el precio antes de cobrar.",
+            ],
+        ]);
+
+        return $nueva->refresh();
     }
 }

@@ -58,7 +58,8 @@ class DeliveryController extends Controller
             $query->whereIn('estado', [...ServiceOrder::ESTADOS_LISTOS, 'entregado', 'cerrado']);
         }
 
-        $entregas = $query->paginate(15)->withQueryString();
+        $entregas = $query->with('sale:id,condicion_pago')->paginate(15)->withQueryString()
+            ->through(fn (ServiceOrder $orden) => [...$orden->toArray(), 'cobro' => self::cobro($orden)]);
 
         $baseStatsQuery = ServiceOrder::query()
             ->accessibleToTechnician($request->user())
@@ -113,6 +114,8 @@ class DeliveryController extends Controller
             'evidencias' => $serviceOrder->evidencias()->where('etapa', 'entrega')->get(['id', 'etapa', 'tipo', 'equipment_id']),
             'order' => $serviceOrder,
             'custodyEvents' => $custodyEvents,
+            'cobro' => self::cobro($serviceOrder),
+            'lista' => in_array($serviceOrder->estado, ServiceOrder::ESTADOS_LISTOS, true),
         ]);
     }
 
@@ -132,6 +135,9 @@ class DeliveryController extends Controller
             'conformidad_aceptada' => ['required', 'accepted'],
             'cerrar_orden' => ['nullable', 'boolean'],
             'firma' => ['required', 'string', 'max:1500000', 'starts_with:data:image/png;base64,'],
+            // Cada extintor se marca al dejarlo: así no se queda ninguno en la camioneta.
+            'entregados' => ['present', 'array'],
+            'entregados.*' => ['integer'],
         ], [
             'firma.required' => 'El cliente debe firmar en la pantalla.',
             'receptor_nombre.regex' => 'Escribe el nombre de quien recibe (nombre y apellido).',
@@ -146,6 +152,17 @@ class DeliveryController extends Controller
             // Se entrega una sola vez y solo lo que ya está listo.
             abort_unless(in_array($serviceOrder->estado, ServiceOrder::ESTADOS_LISTOS, true), 422, 'La orden todavía no está lista para entregar.');
             abort_if($serviceOrder->events()->where('payload->accion', 'entrega_final_realizada')->exists(), 422, 'Esta orden ya se entregó.');
+
+            $sinMarcar = $serviceOrder->equipments()->whereNotIn('equipment.id', $validated['entregados'])->pluck('numero_serie');
+            if ($sinMarcar->isNotEmpty()) {
+                throw ValidationException::withMessages(['entregados' => 'Marca cada extintor que entregas. Falta: '.$sinMarcar->join(', ').'.']);
+            }
+            if (! $serviceOrder->evidencias()->where('etapa', 'entrega')->where('tipo', 'foto')->exists()) {
+                throw ValidationException::withMessages(['fotos' => 'Toma al menos una foto de la entrega.']);
+            }
+            if ($serviceOrder->sale_id === null) {
+                throw ValidationException::withMessages(['cobro' => 'Falta cobrar: el vendedor debe cobrar esta orden antes de entregarla.']);
+            }
             $serviceOrder->tomarSiLibre($request->user());
 
             app(GuardarEvidencia::class)->firma($serviceOrder, $validated['firma'], 'entrega', $request->user());
@@ -249,5 +266,11 @@ class DeliveryController extends Controller
         $dompdf = $pdfService->generate($serviceOrder);
 
         return $dompdf->stream("acta-conformidad-{$serviceOrder->codigo}.pdf");
+    }
+
+    /** @return array{cobrada: bool, credito: bool} */
+    private static function cobro(ServiceOrder $orden): array
+    {
+        return ['cobrada' => $orden->sale_id !== null, 'credito' => (bool) $orden->sale?->esCredito()];
     }
 }

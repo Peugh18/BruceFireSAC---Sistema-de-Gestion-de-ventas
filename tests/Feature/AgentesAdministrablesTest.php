@@ -46,11 +46,15 @@ test('no se repite un nombre y volver a agregar uno quitado lo reactiva', functi
         ->assertJsonValidationErrors('nombre');
 });
 
-test('el técnico de campo no administra agentes', function () {
+test('el técnico de campo agrega un agente que no está en la lista al recoger', function () {
     $campo = User::factory()->create();
     $campo->assignRole('TecnicoCampo');
 
-    $this->actingAs($campo)->postJson(route('agentes.store'), ['nombre' => 'Nuevo', 'tipo_base' => 'otro'])->assertForbidden();
+    $this->actingAs($campo)->postJson(route('agentes.store'), ['nombre' => 'Nuevo', 'tipo_base' => 'otro'])->assertCreated();
+});
+
+test('un usuario sin rol no administra agentes', function () {
+    $this->actingAs(User::factory()->create())->postJson(route('agentes.store'), ['nombre' => 'Nuevo', 'tipo_base' => 'otro'])->assertForbidden();
 });
 
 test('renombrar un agente personalizado conserva sus nombres anteriores y sus reglas', function () {

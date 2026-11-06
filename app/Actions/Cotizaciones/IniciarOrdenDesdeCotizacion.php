@@ -39,6 +39,9 @@ class IniciarOrdenDesdeCotizacion
                 throw ValidationException::withMessages(['quote_id' => 'La cotización debe incluir un servicio para abrir una orden.']);
             }
 
+            $opciones['departamento_tecnico'] ??= $servicios->first()->service?->loAtiendeCampo() ? 'campo' : 'planta';
+            ServiceOrder::exigirQueCampoLoAtienda($opciones['departamento_tecnico'], $servicios->first()->service);
+
             $orden = ServiceOrder::create([
                 'codigo' => $this->numeracion->next(),
                 'client_id' => $quote->client_id,
@@ -48,7 +51,7 @@ class IniciarOrdenDesdeCotizacion
                 'quote_id' => $quote->id,
                 'service_id' => $servicios->first()->service_id,
                 'fecha' => $opciones['fecha'] ?? today(),
-                'departamento_tecnico' => $opciones['departamento_tecnico'] ?? 'planta',
+                'departamento_tecnico' => $opciones['departamento_tecnico'],
                 'prioridad' => $opciones['prioridad'] ?? 'normal',
                 'tecnico_id' => $opciones['tecnico_id'] ?? null,
                 'estado' => 'pendiente_recepcion',

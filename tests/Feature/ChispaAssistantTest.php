@@ -104,12 +104,16 @@ test('cada rol recibe solo su manual y el gerente recibe el de todos', function 
             && collect($noDebe)->every(fn (string $t) => ! str_contains($sistema, $t));
     });
 })->with([
-    'técnico de campo' => ['TecnicoCampo', ['Manual del Técnico de Campo'], ['Manual del Vendedor', 'Manual del Gerente', 'Manual de Almacén', 'Manual del Técnico de Planta']],
-    'técnico de planta' => ['TecnicoPlanta', ['Manual del Técnico de Planta'], ['Manual del Vendedor', 'Manual del Técnico de Campo']],
     'almacén' => ['Almacen', ['Manual de Almacén'], ['Manual del Vendedor', 'Manual del Gerente']],
     'vendedor' => ['Vendedor', ['Manual del Vendedor'], ['Manual del Gerente', 'Manual de Almacén']],
     'gerente' => ['Gerente', ['Manual del Gerente', 'Manual del Vendedor', 'Manual de Almacén', 'Manual del Técnico de Planta', 'Manual del Técnico de Campo'], []],
 ]);
+
+test('los tecnicos no usan chispa', function (string $rol) {
+    $this->actingAs(usuarioConRol($rol))
+        ->postJson(route('asistente'), ['mensajes' => [['role' => 'user', 'content' => 'hola']]])
+        ->assertForbidden();
+})->with(['TecnicoPlanta', 'TecnicoCampo']);
 
 test('las claves y tarjetas se ocultan antes de salir al proveedor y de guardarse', function () {
     Http::fake(['*' => Http::response(['candidates' => [['content' => ['parts' => [['text' => 'ok']]]]]])]);

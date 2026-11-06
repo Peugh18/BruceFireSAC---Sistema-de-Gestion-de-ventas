@@ -21,12 +21,13 @@ use Illuminate\Support\Carbon;
  * @property string|null $pagina
  * @property string $pregunta
  * @property string $respuesta
- * @property string $fuente gemini, groq, manual o sin_respuesta
+ * @property string $fuente deepseek, gemini, groq, manual o sin_respuesta
+ * @property list<string>|null $herramientas
  * @property bool|null $util
  * @property Carbon|null $created_at
  * @property-read User|null $user
  */
-#[Fillable(['user_id', 'rol', 'pagina', 'pregunta', 'respuesta', 'fuente', 'util'])]
+#[Fillable(['user_id', 'rol', 'pagina', 'pregunta', 'respuesta', 'fuente', 'herramientas', 'util'])]
 class ChispaRegistro extends Model
 {
     /** @use HasFactory<ChispaRegistroFactory> */
@@ -35,7 +36,7 @@ class ChispaRegistro extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['util' => 'boolean'];
+        return ['util' => 'boolean', 'herramientas' => 'array'];
     }
 
     /** @return BelongsTo<User, $this> */

@@ -1,15 +1,22 @@
-import { pageTitleClass } from '@/components/page-header';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Truck } from 'lucide-react';
-import { useMemo, useState, type FormEvent } from 'react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { Building2, MapPin, Plus } from 'lucide-react';
+import { useMemo, useState, type FormEvent, type MouseEvent } from 'react';
+
 import AlertError from '@/components/alert-error';
+import ClientCreateDialog, {
+    type RutasAltaCliente,
+} from '@/components/client-create-dialog';
 import ClientPicker, { type ClientFicha } from '@/components/client-picker';
-import ReferenciaField from '@/components/referencia-field';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import NuevoLocalCampo from '@/components/nuevo-local-campo';
+import {
+    botonPrincipal,
+    botonSecundario,
+    CabeceraPaso,
+    PiePaso,
+    tarjeta,
+} from '@/components/paso-campo';
 import { Label } from '@/components/ui/label';
 import { NativeSelect } from '@/components/ui/native-select';
-import { Textarea } from '@/components/ui/textarea';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
 import clientes from '@/routes/tecnico-campo/clientes';
 import documentos from '@/routes/tecnico-campo/documentos';
@@ -24,29 +31,26 @@ type Props = {
     }[];
 };
 
+type Lugar = {
+    clave: string;
+    nombre: string;
+    direccion: string;
+    valor: string;
+};
+
+/** Nuevo recojo, pasos 1 y 2: de quién son los extintores y de dónde salen. */
 export default function IniciarRecojo({ sedes }: Props) {
     const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
     const equipo = currentTeam?.slug ?? '';
+    const [paso, setPaso] = useState<1 | 2>(1);
     const [cliente, setCliente] = useState<ClientFicha | null>(null);
-    const [nuevo, setNuevo] = useState(false);
-    const [consultando, setConsultando] = useState(false);
-    const [mensajeConsulta, setMensajeConsulta] = useState('');
+    const [altaAbierta, setAltaAbierta] = useState(false);
+    const [documentoInicial, setDocumentoInicial] = useState('');
     const form = useForm({
         client_id: null as number | null,
-        cliente: {
-            razon_social: '',
-            telefono: '',
-            tipo_documento: '',
-            numero_documento: '',
-        },
         sede_id: sedes.length === 1 ? String(sedes[0].id) : '',
         referencia: '',
-        cantidad: '1',
-        prioridad: 'normal',
-        observaciones: '',
-        precio_acordado: '',
     });
-    const [precioAcordado, setPrecioAcordado] = useState(false);
     const endpoints = useMemo(
         () => ({
             search: (search: string) =>
@@ -58,310 +62,209 @@ export default function IniciarRecojo({ sedes }: Props) {
     );
     const elegirCliente = (value: ClientFicha | null) => {
         setCliente(value);
-        form.setData('client_id', value?.id ?? null);
-        setNuevo(false);
-    };
-    const consultarDocumento = async () => {
-        const numero = form.data.cliente.numero_documento;
-        if (!/^\d{8}$|^\d{11}$/.test(numero)) {
-            setMensajeConsulta(
-                'Escribe un DNI de 8 dígitos o RUC de 11 dígitos.',
-            );
-            return;
-        }
-        setConsultando(true);
-        setMensajeConsulta('');
-        try {
-            const response = await fetch(endpoints.search(numero));
-            if (!response.ok) {
-                throw new Error('búsqueda');
-            }
-            const registrados = (await response.json()) as ClientFicha[];
-            const existente = registrados.find(
-                (item) => item.numero_documento === numero,
-            );
-            if (existente) {
-                const ficha = await fetch(endpoints.ficha(existente.id));
-                if (!ficha.ok) {
-                    throw new Error('ficha');
-                }
-                elegirCliente((await ficha.json()) as ClientFicha);
-                setMensajeConsulta(
-                    'Cliente existente seleccionado. Se reutilizan sus datos.',
-                );
-                return;
-            }
-            const consulta = await fetch(
-                documentos.lookup.url(equipo, {
-                    query: { numero_documento: numero },
-                }),
-            );
-            const resultado = await consulta.json();
-            if (!consulta.ok) {
-                setMensajeConsulta(
-                    resultado.message ??
-                        'Consulta no disponible. Puedes completar los datos manualmente.',
-                );
-                return;
-            }
-            form.setData('cliente', {
-                ...form.data.cliente,
-                razon_social:
-                    resultado.razon_social ?? form.data.cliente.razon_social,
-            });
-            setMensajeConsulta(
-                'Nombre consultado. Confirma el teléfono y lugar de recojo.',
-            );
-        } catch {
-            setMensajeConsulta(
-                'No se pudo completar la consulta. Revisa la conexión antes de registrar al cliente.',
-            );
-        } finally {
-            setConsultando(false);
-        }
-    };
-    const submit = (event: FormEvent) => {
-        event.preventDefault();
-        form.transform((data) => ({
+        // Se propone la tienda donde el cliente compra: ahí lo cobra el vendedor.
+        const habitual = (value as { sede_habitual?: number | null } | null)
+            ?.sede_habitual;
+        form.setData((data) => ({
             ...data,
-            cliente: data.client_id
-                ? null
-                : {
-                      ...data.cliente,
-                      tipo_documento: data.cliente.tipo_documento || null,
-                      numero_documento: data.cliente.numero_documento || null,
-                  },
-            precio_acordado: precioAcordado ? data.precio_acordado : null,
+            client_id: value?.id ?? null,
+            referencia: '',
+            sede_id:
+                habitual && sedes.some((s) => s.id === habitual)
+                    ? String(habitual)
+                    : data.sede_id,
         }));
+    };
+    // El alta de campo usa la misma pantalla y acción que Clientes del vendedor.
+    const rutasAlta: RutasAltaCliente = {
+        guardar: clientes.store.url(equipo),
+        buscar: endpoints.search,
+        consultar: (numero) =>
+            documentos.lookup.url(equipo, {
+                query: { numero_documento: numero },
+            }),
+    };
+    const traerFicha = async (id: number) => {
+        const ficha = await fetch(endpoints.ficha(id));
+
+        return ficha.ok ? ((await ficha.json()) as ClientFicha) : null;
+    };
+
+    // El local elegido viaja como "SEDE: nombre": de ahí salen la dirección
+    // de la constancia, de la entrega y del certificado.
+    const lugares: Lugar[] = [
+        ...(cliente?.sedes ?? []).map((sede) => ({
+            clave: `sede-${sede.id}`,
+            nombre: sede.nombre,
+            direccion: sede.direccion ?? '',
+            valor: `SEDE: ${sede.nombre}`,
+        })),
+        ...(cliente?.direccion_fiscal
+            ? [
+                  {
+                      clave: 'fiscal',
+                      nombre: 'Dirección fiscal',
+                      direccion: cliente.direccion_fiscal,
+                      valor: `Dirección fiscal: ${cliente.direccion_fiscal}`,
+                  },
+              ]
+            : []),
+    ];
+
+    const submit = (event: FormEvent | MouseEvent) => {
+        event.preventDefault();
         form.post(recojos.iniciar.url(equipo));
     };
+
     return (
-        <TecnicoCampoLayout>
-            <Head title="Iniciar recojo" />
-            <div className="space-y-5">
-                <div className="flex items-center gap-3">
-                    <Button
-                        asChild
-                        variant="outline"
-                        size="icon"
-                        className="size-11 rounded-2xl"
-                    >
-                        <Link
-                            href={recojos.index.url(equipo)}
-                            aria-label="Volver a recojos"
-                        >
-                            <ArrowLeft />
-                        </Link>
-                    </Button>
-                    <div>
-                        <p className="text-primary-strong text-xs font-bold uppercase">
-                            Campo
-                        </p>
-                        <h1 className={pageTitleClass}>Iniciar recojo</h1>
-                    </div>
-                </div>
-                <p className="text-muted-foreground text-sm">
-                    Identifica al cliente y el lugar. Después registra sus
-                    extintores, fotos y conformidad.
-                </p>
-                <form onSubmit={submit} className="space-y-4">
-                    <AlertError errors={Object.values(form.errors)} />
-                    <section className="border-border bg-card space-y-4 rounded-3xl border p-4">
-                        <h2 className="font-semibold">
-                            ¿De quién son los extintores?
-                        </h2>
-                        <ClientPicker
-                            teamSlug={equipo}
-                            value={cliente}
-                            onChange={elegirCliente}
-                            endpoints={endpoints}
-                            onAddClient={(term) => {
-                                setNuevo(true);
-                                form.setData('cliente', {
-                                    ...form.data.cliente,
-                                    razon_social: /^\d+$/.test(term)
-                                        ? ''
-                                        : term,
-                                    numero_documento: /^\d{8}$|^\d{11}$/.test(
-                                        term,
-                                    )
-                                        ? term
-                                        : '',
-                                    tipo_documento:
-                                        term.length === 8
-                                            ? 'dni'
-                                            : term.length === 11
-                                              ? 'ruc'
-                                              : '',
-                                });
-                            }}
+        <TecnicoCampoLayout ocultarMenu>
+            <Head title="Nuevo recojo" />
+            <ClientCreateDialog
+                open={altaAbierta}
+                onOpenChange={setAltaAbierta}
+                teamSlug={equipo}
+                initialDocumento={documentoInicial}
+                rutas={rutasAlta}
+                onCreated={(creado) =>
+                    void traerFicha(creado.id).then(elegirCliente)
+                }
+            />
+            <form onSubmit={submit} className="space-y-5">
+                {paso === 1 ? (
+                    <>
+                        <CabeceraPaso
+                            etiqueta="Recojo"
+                            titulo="Cliente"
+                            volver={recojos.index.url(equipo)}
+                            paso={1}
+                            total={4}
                         />
-                        {cliente?.telefono && (
-                            <p className="text-muted-foreground text-sm">
-                                Teléfono: {cliente.telefono}
-                            </p>
-                        )}
-                        {nuevo && !cliente && (
-                            <div className="space-y-3">
-                                <p className="text-muted-foreground text-sm">
-                                    Cliente nuevo. Si todavía no tienes su
-                                    documento, lo completan después en la misma
-                                    ficha.
-                                </p>
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                    <div>
-                                        <Label htmlFor="tipo-documento">
-                                            Documento
-                                        </Label>
-                                        <NativeSelect
-                                            id="tipo-documento"
-                                            className="mt-1 min-h-11 w-full text-base"
-                                            value={
-                                                form.data.cliente.tipo_documento
-                                            }
-                                            onChange={(e) =>
-                                                form.setData('cliente', {
-                                                    ...form.data.cliente,
-                                                    tipo_documento:
-                                                        e.target.value,
-                                                    numero_documento: '',
-                                                })
-                                            }
-                                        >
-                                            <option value="">Pendiente</option>
-                                            <option value="dni">DNI</option>
-                                            <option value="ruc">RUC</option>
-                                        </NativeSelect>
-                                    </div>
-                                    {form.data.cliente.tipo_documento && (
-                                        <div>
-                                            <Label htmlFor="documento">
-                                                Número
-                                            </Label>
-                                            <Input
-                                                id="documento"
-                                                inputMode="numeric"
-                                                maxLength={
-                                                    form.data.cliente
-                                                        .tipo_documento ===
-                                                    'dni'
-                                                        ? 8
-                                                        : 11
-                                                }
-                                                className="mt-1 min-h-11 text-base"
-                                                value={
-                                                    form.data.cliente
-                                                        .numero_documento
-                                                }
-                                                onChange={(e) =>
-                                                    form.setData('cliente', {
-                                                        ...form.data.cliente,
-                                                        numero_documento:
-                                                            e.target.value.replace(
-                                                                /\D/g,
-                                                                '',
-                                                            ),
-                                                    })
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                                {form.data.cliente.tipo_documento && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        loading={consultando}
-                                        onClick={() =>
-                                            void consultarDocumento()
-                                        }
-                                    >
-                                        Buscar DNI / RUC
-                                    </Button>
-                                )}
-                                <div>
-                                    <Label htmlFor="cliente-nombre">
-                                        Nombre o razón social
-                                    </Label>
-                                    <Input
-                                        id="cliente-nombre"
-                                        required
-                                        className="mt-1 min-h-11 text-base"
-                                        value={form.data.cliente.razon_social}
-                                        onChange={(e) =>
-                                            form.setData('cliente', {
-                                                ...form.data.cliente,
-                                                razon_social: e.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="cliente-telefono">
-                                        Teléfono
-                                    </Label>
-                                    <Input
-                                        id="cliente-telefono"
-                                        type="tel"
-                                        required
-                                        className="mt-1 min-h-11 text-base"
-                                        value={form.data.cliente.telefono}
-                                        onChange={(e) =>
-                                            form.setData('cliente', {
-                                                ...form.data.cliente,
-                                                telefono: e.target.value,
-                                            })
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        )}
-                        {mensajeConsulta && (
-                            <p
-                                role="status"
-                                className="text-muted-foreground text-sm"
+                        <section className={`${tarjeta} space-y-3 p-4`}>
+                            <ClientPicker
+                                teamSlug={equipo}
+                                value={cliente}
+                                onChange={elegirCliente}
+                                endpoints={endpoints}
+                                autoFocus
+                                onAddClient={(term) => {
+                                    setDocumentoInicial(
+                                        /^\d{8}$|^\d{11}$/.test(term)
+                                            ? term
+                                            : '',
+                                    );
+                                    setAltaAbierta(true);
+                                }}
+                            />
+                        </section>
+                        {!cliente ? (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDocumentoInicial('');
+                                    setAltaAbierta(true);
+                                }}
+                                className={botonSecundario}
                             >
-                                {mensajeConsulta}
-                            </p>
-                        )}
-                    </section>
-                    <section className="border-border bg-card space-y-4 rounded-3xl border p-4">
-                        <h2 className="font-semibold">Lugar y trabajo</h2>
-                        <ReferenciaField
-                            label="Lugar / referencia / puesto"
-                            placeholder="Ej. Mercado Central · puesto 24, pasillo B"
-                            required
-                            cliente={cliente}
-                            destino="local_cliente"
-                            value={form.data.referencia}
-                            onChange={(value) =>
-                                form.setData('referencia', value)
-                            }
-                            error={form.errors.referencia}
+                                <Plus
+                                    className="size-[18px]"
+                                    aria-hidden="true"
+                                />
+                                Agregar cliente
+                            </button>
+                        ) : null}
+                        <PiePaso>
+                            <button
+                                type="button"
+                                disabled={!cliente}
+                                onClick={() => setPaso(2)}
+                                className={botonPrincipal}
+                            >
+                                Continuar
+                            </button>
+                        </PiePaso>
+                    </>
+                ) : (
+                    <>
+                        <CabeceraPaso
+                            etiqueta="Recojo"
+                            titulo="¿Dónde recoges?"
+                            volver={() => setPaso(1)}
+                            paso={2}
+                            total={4}
                         />
-                        <p className="text-muted-foreground text-xs">
-                            Indica empresa, local o mercado y puesto. Aquí se
-                            devolverán los equipos.
+                        <AlertError errors={Object.values(form.errors)} />
+                        <p className="text-muted-foreground text-sm font-semibold">
+                            {cliente?.razon_social}
                         </p>
-                        {sedes.length === 1 ? (
-                            <div className="border-border bg-muted/40 rounded-2xl border p-3">
-                                <p className="text-muted-foreground text-xs font-semibold">
-                                    Sede responsable
-                                </p>
-                                <p className="mt-1 font-semibold">
-                                    {sedes[0].nombre}
-                                </p>
-                                {sedes[0].almacen && (
-                                    <p className="text-muted-foreground mt-1 text-xs">
-                                        Planta lo recibirá en{' '}
-                                        {sedes[0].almacen.nombre}. El recojo y
-                                        la cotización quedan en la misma sede.
-                                    </p>
-                                )}
+                        {lugares.length > 0 ? (
+                            <div
+                                role="radiogroup"
+                                aria-label="Lugar del recojo"
+                                className={`${tarjeta} divide-border divide-y overflow-hidden`}
+                            >
+                                {lugares.map((lugar) => {
+                                    const activo =
+                                        form.data.referencia === lugar.valor;
+                                    const Icono =
+                                        lugar.clave === 'fiscal'
+                                            ? Building2
+                                            : MapPin;
+
+                                    return (
+                                        <button
+                                            key={lugar.clave}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={activo}
+                                            onClick={() =>
+                                                form.setData(
+                                                    'referencia',
+                                                    lugar.valor,
+                                                )
+                                            }
+                                            className={`focus-visible:ring-ring flex min-h-18 w-full items-center gap-3.5 px-4 py-3 text-left focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset ${activo ? 'bg-primary/5' : ''}`}
+                                        >
+                                            <Icono
+                                                className={`size-5 shrink-0 ${activo ? 'text-primary-strong' : 'text-muted-foreground'}`}
+                                                aria-hidden="true"
+                                            />
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block text-sm font-bold">
+                                                    {lugar.nombre}
+                                                </span>
+                                                <span className="text-muted-foreground block text-xs">
+                                                    {lugar.direccion ||
+                                                        'Sin dirección'}
+                                                </span>
+                                            </span>
+                                            <span
+                                                className={`size-[22px] shrink-0 rounded-full ${activo ? 'border-primary border-[7px]' : 'border-2 border-neutral-400'}`}
+                                                aria-hidden="true"
+                                            />
+                                        </button>
+                                    );
+                                })}
                             </div>
-                        ) : (
-                            <div>
-                                <Label htmlFor="sede">Sede responsable</Label>
+                        ) : null}
+                        {cliente ? (
+                            <NuevoLocalCampo
+                                teamSlug={equipo}
+                                clienteId={cliente.id}
+                                onCreado={async (local) => {
+                                    const ficha = await traerFicha(cliente.id);
+                                    if (ficha) {
+                                        setCliente(ficha);
+                                    }
+                                    form.setData(
+                                        'referencia',
+                                        `SEDE: ${local.nombre}`,
+                                    );
+                                }}
+                            />
+                        ) : null}
+                        {sedes.length > 1 ? (
+                            <div className={`${tarjeta} space-y-1.5 p-4`}>
+                                <Label htmlFor="sede">Tienda que cobra</Label>
                                 <NativeSelect
                                     id="sede"
                                     required
@@ -369,9 +272,9 @@ export default function IniciarRecojo({ sedes }: Props) {
                                     onChange={(e) =>
                                         form.setData('sede_id', e.target.value)
                                     }
-                                    className="mt-1 min-h-11 w-full text-base"
+                                    className="min-h-11 w-full text-base"
                                 >
-                                    <option value="">Seleccionar equipo</option>
+                                    <option value="">Elige la sede</option>
                                     {sedes.map((sede) => (
                                         <option key={sede.id} value={sede.id}>
                                             {sede.nombre}
@@ -379,135 +282,24 @@ export default function IniciarRecojo({ sedes }: Props) {
                                     ))}
                                 </NativeSelect>
                             </div>
-                        )}
-                        <div className="border-border bg-muted/40 rounded-2xl border p-3">
-                            <p className="text-foreground text-sm font-semibold">
-                                Recojo de extintores
-                            </p>
-                            <p className="text-muted-foreground mt-1 text-xs">
-                                En Planta se identifica cada equipo. El vendedor
-                                define los servicios y cantidades al preparar la
-                                cotización.
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <Label htmlFor="cantidad">
-                                    Extintores a recoger
-                                </Label>
-                                <Input
-                                    id="cantidad"
-                                    type="number"
-                                    min={1}
-                                    max={100}
-                                    required
-                                    className="mt-1 min-h-11 text-base"
-                                    value={form.data.cantidad}
-                                    onChange={(e) =>
-                                        form.setData('cantidad', e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="prioridad">Prioridad</Label>
-                                <NativeSelect
-                                    id="prioridad"
-                                    value={form.data.prioridad}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'prioridad',
-                                            e.target.value,
-                                        )
-                                    }
-                                    className="mt-1 min-h-11 w-full text-base"
-                                >
-                                    <option value="normal">Normal</option>
-                                    <option value="alta">Alta</option>
-                                    <option value="urgente">Urgente</option>
-                                </NativeSelect>
-                            </div>
-                        </div>
-                    </section>
-                    <section className="border-border bg-card space-y-4 rounded-3xl border p-4">
-                        <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
-                            <input
-                                type="checkbox"
-                                checked={precioAcordado}
-                                onChange={(e) =>
-                                    setPrecioAcordado(e.target.checked)
+                        ) : null}
+                        <PiePaso>
+                            <button
+                                type="button"
+                                onClick={submit}
+                                disabled={
+                                    !form.data.referencia ||
+                                    !form.data.sede_id ||
+                                    form.processing
                                 }
-                                className="size-5 accent-current"
-                            />
-                            Ya se acordó un precio con el cliente
-                        </label>
-                        {precioAcordado && (
-                            <div>
-                                <Label htmlFor="precio-acordado">
-                                    Importe acordado (S/)
-                                </Label>
-                                <Input
-                                    id="precio-acordado"
-                                    required
-                                    type="number"
-                                    inputMode="decimal"
-                                    min="0.01"
-                                    step="0.01"
-                                    className="mt-1 min-h-11 text-base"
-                                    value={form.data.precio_acordado}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'precio_acordado',
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                                <p className="text-muted-foreground mt-1 text-xs">
-                                    El vendedor de la sede revisará el acuerdo
-                                    al cotizar.
-                                </p>
-                            </div>
-                        )}
-                        <div>
-                            <Label htmlFor="observaciones">
-                                Observaciones del recojo o acuerdo
-                            </Label>
-                            <Textarea
-                                id="observaciones"
-                                value={form.data.observaciones}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'observaciones',
-                                        e.target.value,
-                                    )
-                                }
-                                className="mt-1 text-base"
-                            />
-                        </div>
-                    </section>
-                    <Button
-                        type="submit"
-                        disabled={!cliente && !nuevo}
-                        loading={form.processing}
-                        className="min-h-12 w-full rounded-2xl font-semibold"
-                    >
-                        <Truck />
-                        Continuar con equipos y fotos
-                        <ArrowRight />
-                    </Button>
-                    {!cliente && !nuevo ? (
-                        <p
-                            role="status"
-                            className="text-warning-strong text-center text-xs font-semibold"
-                        >
-                            Falta elegir el cliente para continuar.
-                        </p>
-                    ) : null}
-                    <p className="text-muted-foreground text-center text-xs">
-                        El recojo se confirma en el siguiente paso. Planta y
-                        Vendedor reutilizan estos datos.
-                    </p>
-                </form>
-            </div>
+                                className={botonPrincipal}
+                            >
+                                Continuar
+                            </button>
+                        </PiePaso>
+                    </>
+                )}
+            </form>
         </TecnicoCampoLayout>
     );
 }

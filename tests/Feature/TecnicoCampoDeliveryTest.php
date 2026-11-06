@@ -94,6 +94,7 @@ test('tecnico campo can confirm final delivery and close service order', functio
             'conformidad_aceptada' => true,
             'firma' => FIRMA_PNG,
             'cerrar_orden' => true,
+            ...prepararEntrega($order),
         ])
         ->assertRedirect(route('tecnico-campo.entregas.show', [
             'current_team' => $this->team,
@@ -154,6 +155,7 @@ test('tecnico campo can download acta de conformidad PDF once the delivery is co
         'receptor_dni' => '09483210',
         'conformidad_aceptada' => true,
         'firma' => FIRMA_PNG,
+        ...prepararEntrega($order),
     ]);
 
     $response = $this->actingAs($this->user)

@@ -2,6 +2,7 @@
 
 namespace App\Services\Reports;
 
+use App\Models\ClientSite;
 use App\Models\CompanySetting;
 use App\Models\ServiceOrder;
 use App\Services\Tecnico\EvidenciasParaPdf;
@@ -15,11 +16,14 @@ class ServiceOrderReceiptPdfService
     public function generate(ServiceOrder $serviceOrder): PDF
     {
         $serviceOrder->loadMissing('client', 'sede', 'equipments', 'quote');
+        $local = ClientSite::deReferencia($serviceOrder->client, $serviceOrder->referencia);
 
         return PdfFacade::loadView('pdf.service-order-receipt', [
             'order' => $serviceOrder,
             ...CompanySetting::current()->identidadPdf(),
             'firmaRecojo' => $this->evidencias->firma($serviceOrder, ['recojo']),
+            'conteo' => $serviceOrder->conteoDeCampo(),
+            'local' => $local,
         ])->setPaper('a4');
     }
 }

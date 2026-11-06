@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\TecnicoCampo;
 
+use App\Actions\Clientes\CreateClient;
+use App\Actions\Clientes\CreateClientSite;
 use App\Actions\TecnicoCampo\IniciarRecojo;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Clientes\StoreClientRequest;
+use App\Http\Requests\Clientes\StoreClientSiteRequest;
 use App\Http\Requests\TecnicoCampo\IniciarRecojoRequest;
 use App\Models\Client;
 use App\Models\Sede;
+use App\Models\ServiceOrder;
 use App\Models\Team;
 use App\Support\DatosPeru;
 use Illuminate\Http\JsonResponse;
@@ -42,6 +47,31 @@ class IniciarRecojoController extends Controller
         ])->with('success', 'Recojo iniciado. Registra los extintores y la evidencia antes de confirmar la salida a Planta.');
     }
 
+    /**
+     * Registra al cliente con el alta completa de Clientes (misma validación
+     * y misma acción que el vendedor), para elegirlo en el recojo.
+     */
+    public function storeClient(StoreClientRequest $request, CreateClient $createClient): JsonResponse
+    {
+        $client = $createClient->handle($request->validated());
+
+        return response()->json($client->only(['id', 'tipo_documento', 'razon_social', 'numero_documento']), 201);
+    }
+
+    /**
+     * Agrega un local al cliente (misma validación y acción que el vendedor):
+     * su dirección sale en la constancia y en el certificado.
+     */
+    public function storeLocal(Team $current_team, Client $client, StoreClientSiteRequest $request, CreateClientSite $createClientSite): JsonResponse
+    {
+        // Mismo filtro que al iniciar el recojo: sin clientes inactivos ni "varios".
+        abort_if(! $client->activo || $client->esClientesVarios(), 422, 'Elige un cliente activo con identidad propia.');
+
+        $local = $createClientSite->handle($client, $request->validated());
+
+        return response()->json($local->only(['id', 'nombre', 'direccion']), 201);
+    }
+
     public function search(Request $request): JsonResponse
     {
         $search = trim($request->validate(['search' => ['required', 'string', 'max:255']])['search']);
@@ -73,8 +103,11 @@ class IniciarRecojoController extends Controller
     {
         abort_unless($client->activo && ! $client->esClientesVarios(), 404);
 
-        return response()->json($client->only([
-            'id', 'tipo_documento', 'numero_documento', 'razon_social', 'nombre_comercial', 'telefono', 'whatsapp', 'direccion_fiscal',
-        ]));
+        // La misma ficha del vendedor: con sus locales, de donde sale el lugar del recojo.
+        // La tienda que cobra el recojo: donde el cliente compró o pidió su última orden.
+        $sedeHabitual = $client->sales()->latest('id')->value('sede_id')
+            ?? ServiceOrder::query()->where('client_id', $client->id)->latest('id')->value('sede_id');
+
+        return response()->json([...$client->ficha(), 'whatsapp' => $client->whatsapp, 'sede_habitual' => $sedeHabitual]);
     }
 }

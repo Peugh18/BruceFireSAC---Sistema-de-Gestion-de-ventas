@@ -9,6 +9,7 @@ use App\Http\Controllers\Gerente\CompanyBankAccountController;
 use App\Http\Controllers\Gerente\CompanySettingController;
 use App\Http\Controllers\Gerente\ConsultaController;
 use App\Http\Controllers\Gerente\DashboardController;
+use App\Http\Controllers\Gerente\OrdenController;
 use App\Http\Controllers\Gerente\ProductCategoryController;
 use App\Http\Controllers\Gerente\ProductController;
 use App\Http\Controllers\Gerente\ReportController;
@@ -30,6 +31,10 @@ Route::prefix('gerente')
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
         Route::get('dashboard/detalle', [DashboardController::class, 'detalle'])->name('dashboard.detalle');
+
+        // Órdenes: entrada y salida, y el precio que dejó campo.
+        Route::get('ordenes', [OrdenController::class, 'index'])->name('ordenes.index');
+        Route::get('ordenes/{service_order}', [OrdenController::class, 'show'])->name('ordenes.show');
         Route::get('consulta/ventas/{sale}', [ConsultaController::class, 'venta'])->middleware('can:sales.view')->name('consulta.venta');
         Route::get('consulta/ordenes/{service_order}', [ConsultaController::class, 'orden'])->middleware('can:service_orders.view')->name('consulta.orden');
         Route::get('consulta/clientes/{client}', [ConsultaController::class, 'cliente'])->middleware('can:clients.view')->name('consulta.cliente');

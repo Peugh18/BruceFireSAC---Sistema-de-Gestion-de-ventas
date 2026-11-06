@@ -52,6 +52,7 @@ it('registra la entrega conforme como acta en la bitácora y cierra la orden', f
             'conformidad_aceptada' => true,
             'firma' => FIRMA_PNG,
             'cerrar_orden' => true,
+            ...prepararEntrega($order),
         ])
         ->assertSessionHasNoErrors();
 

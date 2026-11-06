@@ -43,6 +43,7 @@ type ServiceOrder = {
     id: number;
     codigo: string;
     estado: string;
+    cobro?: { cobrada: boolean; credito: boolean };
     tipo_servicio?: string;
     fecha?: string;
     client: Client;
@@ -288,6 +289,16 @@ export default function EntregasIndex({
                                             >
                                                 {estadoMeta.label}
                                             </span>
+                                            {order.cobro &&
+                                            !order.cobro.cobrada ? (
+                                                <span className="bg-primary/10 text-primary-strong rounded-full px-2 py-0.5 text-xs font-bold">
+                                                    Falta cobrar
+                                                </span>
+                                            ) : order.cobro?.credito ? (
+                                                <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-bold text-sky-900 dark:bg-sky-950 dark:text-sky-200">
+                                                    Crédito
+                                                </span>
+                                            ) : null}
                                         </div>
                                         <h2 className="text-foreground mt-0.5 line-clamp-1 text-sm font-bold">
                                             {order.client?.razon_social}

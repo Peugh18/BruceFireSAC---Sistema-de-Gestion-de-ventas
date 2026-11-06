@@ -494,19 +494,39 @@ function ClientFormFields({
  * Venta. Autocompleta desde RENIEC/SUNAT y devuelve el cliente creado sin
  * salir de la página, para que quien lo abre pueda seleccionarlo al toque.
  */
+/** Rutas del alta: las del vendedor, o las de campo al iniciar un recojo. */
+export type RutasAltaCliente = {
+    guardar: string;
+    buscar: (texto: string) => string;
+    consultar: (numero: string) => string;
+    /** Sin ficha (campo): el duplicado solo se puede usar, no abrir. */
+    ficha?: (id: number) => string;
+};
+
 export default function ClientCreateDialog({
     open,
     onOpenChange,
     teamSlug,
     initialDocumento = '',
     onCreated,
+    rutas,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     teamSlug: string;
     initialDocumento?: string;
     onCreated: (client: CreatedClient) => void;
+    rutas?: RutasAltaCliente;
 }) {
+    const destino: RutasAltaCliente = rutas ?? {
+        guardar: clientes.store.url(teamSlug),
+        buscar: (texto) =>
+            clientes.search.url(teamSlug, { query: { search: texto } }),
+        consultar: (numero) =>
+            rucLookup.url(teamSlug, { query: { numero_documento: numero } }),
+        ficha: (id) =>
+            clientes.show.url({ current_team: teamSlug, client: id }),
+    };
     const form = useHttp<ClientFormData, CreatedClient>(emptyClientForm);
     const [lookupLoading, setLookupLoading] = useState(false);
     const [lookupMessage, setLookupMessage] = useState<string | null>(null);
@@ -560,11 +580,7 @@ export default function ClientCreateDialog({
         const timeout = window.setTimeout(async () => {
             setLookupLoading(true);
             try {
-                const localResponse = await fetch(
-                    clientes.search.url(teamSlug, {
-                        query: { search: numero },
-                    }),
-                );
+                const localResponse = await fetch(destino.buscar(numero));
                 const localClients =
                     (await localResponse.json()) as CreatedClient[];
                 const existingClient = localClients.find(
@@ -576,11 +592,7 @@ export default function ClientCreateDialog({
                     return;
                 }
 
-                const response = await fetch(
-                    rucLookup.url(teamSlug, {
-                        query: { numero_documento: numero },
-                    }),
-                );
+                const response = await fetch(destino.consultar(numero));
                 const payload = await response.json();
 
                 if (!response.ok) {
@@ -634,7 +646,7 @@ export default function ClientCreateDialog({
             return;
         }
 
-        void form.post(clientes.store.url(teamSlug), {
+        void form.post(destino.guardar, {
             onError: (errors) =>
                 toast.error(
                     Object.values(errors)[0] ??
@@ -686,18 +698,23 @@ export default function ClientCreateDialog({
                                 >
                                     Usar este cliente
                                 </Button>
-                                <Button asChild type="button" variant="outline">
-                                    <a
-                                        href={clientes.show.url({
-                                            current_team: teamSlug,
-                                            client: duplicateClient.id,
-                                        })}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                {destino.ficha ? (
+                                    <Button
+                                        asChild
+                                        type="button"
+                                        variant="outline"
                                     >
-                                        Ver ficha
-                                    </a>
-                                </Button>
+                                        <a
+                                            href={destino.ficha(
+                                                duplicateClient.id,
+                                            )}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Ver ficha
+                                        </a>
+                                    </Button>
+                                ) : null}
                             </div>
                         </div>
                     )}

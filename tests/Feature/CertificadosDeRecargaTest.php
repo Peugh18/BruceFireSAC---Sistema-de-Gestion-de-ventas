@@ -77,8 +77,12 @@ test('rechazar un equipo ajeno no modifica su serie ni los equipos validos', fun
         ->and($equipment->fresh()->serie_fabricante)->toBe('CIL-123');
 });
 
-test('una recarga vehicular cotizada con placa manual conserva ph pendiente antes del cobro', function () {
+test('una recarga vehicular cotizada sin cobrar espera al cobro y conserva placa y ph pendiente', function () {
     [$user, $sale, $order, $equipment] = recargaTerminada('vehiculo', true);
+    // Sin comprobante no hay certificado; sale cuando se cobra la orden.
+    expect(Certificate::where('service_order_id', $order->id)->count())->toBe(0);
+    $order->update(['sale_id' => $sale->id]);
+    app(ExecuteAndCloseServiceOrder::class)->emitirCertificadosPendientes($order->fresh());
     $certificado = Certificate::where('service_order_id', $order->id)->sole();
     expect($certificado->datos['destino'])->toBe('vehiculo')
         ->and($certificado->datos['tipos'])->toBe(['operatividad_garantia', 'prueba_hidrostatica'])

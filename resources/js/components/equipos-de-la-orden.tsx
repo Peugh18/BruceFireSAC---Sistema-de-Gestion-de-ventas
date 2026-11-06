@@ -290,7 +290,21 @@ export default function EquiposDeLaOrden({
                 alTerminar?.();
                 caja.current?.focus();
             },
-            onError: (errores) => toast.error(errorDe(errores)),
+            onError: (errores) =>
+                errores.corregir_conteo && !datos.corregir_conteo
+                    ? // No coincide con lo que contó campo: planta confirma lo que ve.
+                      toast.warning(errores.corregir_conteo, {
+                          duration: 20000,
+                          action: {
+                              label: 'Sí, corregir',
+                              onClick: () =>
+                                  enviar(
+                                      { ...datos, corregir_conteo: true },
+                                      alTerminar,
+                                  ),
+                          },
+                      })
+                    : toast.error(errorDe(errores)),
             onFinish: () => setEnviando(false),
         });
     };

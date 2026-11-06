@@ -29,7 +29,13 @@
                 <table>
                     <tr><td class="k">Cliente</td><td class="sep">:</td><td class="v-strong">{{ $client->razon_social }}</td></tr>
                     <tr><td class="k">{{ $etiquetaDocumento }}</td><td class="sep">:</td><td class="v">{{ $client->numero_documento }}</td></tr>
-                    <tr><td class="k">Dirección</td><td class="sep">:</td><td class="v">{{ $client->direccionImprimible() ?: '—' }}</td></tr>
+                    {{-- La dirección es la del local donde se recogió; si no, la fiscal. --}}
+                    <tr><td class="k">Dirección</td><td class="sep">:</td><td class="v">{{ ($local?->direccion ? trim($local->direccion) : null) ?: ($client->direccionImprimible() ?: '—') }}</td></tr>
+                    @if($local)
+                        <tr><td class="k">Local</td><td class="sep">:</td><td class="v">{{ $local->nombre }}</td></tr>
+                    @elseif($order->referencia)
+                        <tr><td class="k">Lugar</td><td class="sep">:</td><td class="v">{{ $order->referencia }}</td></tr>
+                    @endif
                 </table>
             </td>
             <td style="width: 42%;">
@@ -53,6 +59,30 @@
         </table>
     @endif
 
+    @if($order->equipments->isEmpty() && $conteo !== [])
+    {{-- Campo solo cuenta; planta identifica cada extintor al recibirlo. --}}
+    <table class="items">
+        <thead>
+            <tr>
+                <th style="width: 22px;">#</th>
+                <th>Tipo</th>
+                <th>Capacidad</th>
+                <th style="width: 80px;">Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($conteo as $grupo)
+                <tr class="{{ $loop->last ? 'last' : '' }}">
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $grupo['tipo_agente'] }}</td>
+                    <td>{{ $grupo['capacidad'] }}</td>
+                    <td>{{ $grupo['cantidad'] }}</td>
+                </tr>
+            @endforeach
+            <tr class="last"><td></td><td colspan="2"><b>Total</b></td><td><b>{{ array_sum(array_column($conteo, 'cantidad')) }}</b></td></tr>
+        </tbody>
+    </table>
+    @else
     <table class="items">
         <thead>
             <tr>
@@ -79,6 +109,7 @@
             @endforeach
         </tbody>
     </table>
+    @endif
 
     @include('pdf.hoja._firmas', ['firmas' => [
         ['nombre' => 'Entregó', 'detalle' => 'Nombre y DNI de quien deja los equipos', 'imagen' => $firmaRecojo ?? null],

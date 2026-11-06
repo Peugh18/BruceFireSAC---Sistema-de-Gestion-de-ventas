@@ -1,162 +1,72 @@
-import { pageTitleClass } from '@/components/page-header';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
-import {
-    ArrowLeft,
-    CheckCircle2,
-    FileText,
-    Flame,
-    MapPin,
-    PackageCheck,
-    Phone,
-    Send,
-    ShieldCheck,
-    Truck,
-    UserCheck,
-    MessageSquare,
-} from 'lucide-react';
-import React from 'react';
+import { FileText, Lock, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import AlertError from '@/components/alert-error';
 import BarraOrdenCampo from '@/components/barra-orden-campo';
 import type { ConversacionProps } from '@/components/conversacion-orden';
 import FirmaCanvas from '@/components/firma-canvas';
-import { Pasos, pasosEntrega } from '@/components/progreso';
-import { etiquetaEstadoOrden } from '@/lib/estados-orden';
+import {
+    botonPrincipal,
+    botonSecundario,
+    CabeceraPaso,
+    Contador,
+    enlaceWhatsApp,
+    PiePaso,
+    tarjeta,
+    TrabajoListo,
+} from '@/components/paso-campo';
 import SubirEvidencia, {
     type EvidenciaListada,
 } from '@/components/subir-evidencia';
-import equiposRoutes from '@/routes/equipos';
-import entregas from '@/routes/tecnico-campo/entregas';
-import { toast } from 'sonner';
-
+import TomarOrden, { type AsignacionOrden } from '@/components/tomar-orden';
 import TecnicoCampoLayout from '@/layouts/tecnico-campo-layout';
+import { etiquetaEstadoOrden } from '@/lib/estados-orden';
+import entregas from '@/routes/tecnico-campo/entregas';
 import type { Team } from '@/types';
 
-type Client = {
-    id: number;
-    razon_social: string;
-    numero_documento?: string;
-    telefono?: string;
-    direccion_fiscal?: string;
-};
-
-type Sede = {
-    id: number;
-    nombre: string;
-    direccion?: string;
-};
-
-type Equipment = {
-    id: number;
-    numero_serie: string;
-    serie_fabricante?: string | null;
-    tipo_agente?: string | null;
-    capacidad?: string | null;
-    marca?: string | null;
-    ubicacion_actual?: string | null;
-    checklists?: { resultado_general: string }[];
-};
-
-type CustodyEvent = {
-    id: number;
-    eslabon: string;
-    responsable: string;
-    fecha?: string;
-    payload?: Record<string, unknown>;
-};
-
-type ServiceOrder = {
+type Order = {
     id: number;
     codigo: string;
     estado: string;
-    tipo_servicio?: string;
-    fecha?: string;
-    observaciones?: string | null;
-    events?: Array<{
+    referencia?: string | null;
+    events?: { id: number; payload: Record<string, unknown> | null }[];
+    client: {
+        razon_social: string;
+        nombre_comercial?: string | null;
+        telefono?: string | null;
+    };
+    equipments: {
         id: number;
-        tipo: string;
-        payload: Record<
-            string,
-            string | number | boolean | null | undefined
-        > | null;
-        created_at: string;
-    }>;
-    client: Client;
-    sede?: Sede;
-    equipments: Equipment[];
-    certificates: Array<{
-        id: number;
-        numero: string;
-        certificate_type?: { nombre: string };
-    }>;
+        numero_serie: string;
+        tipo_agente?: string | null;
+        capacidad?: string | null;
+    }[];
+    certificates: { id: number; numero: string }[];
 };
 
 type Props = {
     asignacion: AsignacionOrden;
-    currentTeam?: Team | null;
-    order: ServiceOrder;
-    custodyEvents: CustodyEvent[];
+    order: Order;
     conversacion: ConversacionProps;
     evidencias: EvidenciaListada[];
+    cobro: { cobrada: boolean; credito: boolean };
+    lista: boolean;
 };
 
-const ESLABONES_MAP: Record<
-    string,
-    { label: string; icon: typeof Truck; color: string }
-> = {
-    recojo_campo: {
-        label: 'Recojo en Campo',
-        icon: Truck,
-        color: 'text-foreground  bg-muted',
-    },
-    recepcion_planta: {
-        label: 'Recepción en Planta',
-        icon: PackageCheck,
-        color: 'text-warning-strong bg-amber-500/10',
-    },
-    procesado_planta: {
-        label: 'Taller / Recarga',
-        icon: Flame,
-        color: 'text-warning-strong bg-amber-500/10',
-    },
-    instalacion_campo: {
-        label: 'Instalación en Sitio',
-        icon: ShieldCheck,
-        color: 'text-success-strong bg-emerald-500/10',
-    },
-    inspeccion_campo: {
-        label: 'Inspección en Sitio',
-        icon: CheckCircle2,
-        color: 'text-foreground  bg-muted',
-    },
-    entrega_campo: {
-        label: 'Entrega al Cliente',
-        icon: UserCheck,
-        color: 'text-success-strong bg-emerald-500/10',
-    },
-};
-
+/** Entrega: marcar cada extintor con foto de salida y firma de quien recibe. */
 export default function EntregaShow({
     asignacion,
-    currentTeam,
     order,
-    custodyEvents,
     conversacion,
     evidencias,
+    cobro,
+    lista,
 }: Props) {
-    const teamSlug = currentTeam?.slug ?? '';
-    const { flash } = usePage<{
-        auth?: { user?: { name?: string } };
-        flash?: { success?: string; error?: string };
-    }>().props;
-
-    const isCerrada = order.estado === 'cerrado';
-    const entregaRealizada =
-        order.events?.some(
-            (event) => event.payload?.accion === 'entrega_final_realizada',
-        ) ?? false;
-
-    const cierre = useForm({});
-
+    const { currentTeam } = usePage<{ currentTeam?: Team | null }>().props;
+    const equipo = currentTeam?.slug ?? '';
+    const [paso, setPaso] = useState<'marcar' | 'firma'>('marcar');
     const form = useForm({
         receptor_nombre: '',
         receptor_dni: '',
@@ -164,400 +74,232 @@ export default function EntregaShow({
         conformidad_aceptada: false,
         cerrar_orden: true,
         firma: null as string | null,
+        entregados: [] as number[],
     });
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const cliente = order.client.nombre_comercial || order.client.razon_social;
+    const lugar = (order.referencia ?? '').replace(/^SEDE:\s*/i, '') || '—';
+    const total = order.equipments.length;
+    const marcados = form.data.entregados.length;
+    const fotos = evidencias.filter((e) => e.tipo === 'foto').length;
+    const entrega = order.events?.find(
+        (e) => e.payload?.accion === 'entrega_final_realizada',
+    )?.payload as { receptor_nombre?: string } | undefined;
+    const volver = entregas.index.url(equipo);
+    const marcar = (id: number, marcado: boolean) =>
+        form.setData(
+            'entregados',
+            marcado
+                ? [...form.data.entregados, id]
+                : form.data.entregados.filter((otro) => otro !== id),
+        );
+    const confirmar = () =>
         form.post(
             entregas.confirm.url({
-                current_team: teamSlug,
+                current_team: equipo,
                 service_order: order.id,
             }),
             {
-                onError: (errors) =>
+                preserveScroll: true,
+                onError: (errores) =>
                     toast.error(
-                        Object.values(errors)[0] ??
-                            'No se pudo completar la acción.',
+                        Object.values(errores)[0] ??
+                            'No se pudo registrar la entrega.',
                     ),
             },
         );
-    };
+
+    if (entrega) {
+        const certificados = order.certificates.map((c) => c.numero).join(', ');
+
+        return (
+            <TecnicoCampoLayout>
+                <Head title={`Entrega ${order.codigo}`} />
+                <BarraOrdenCampo
+                    ordenId={order.id}
+                    codigo={order.codigo}
+                    conversacion={conversacion}
+                />
+                <TrabajoListo
+                    codigo={order.codigo}
+                    titulo="Entrega lista"
+                    filas={[
+                        ['Lugar', lugar],
+                        ['Entregados', `${total} de ${total}`],
+                        ['Recibió', entrega.receptor_nombre ?? '—'],
+                    ]}
+                />
+                <div className="space-y-2.5">
+                    <a
+                        href={enlaceWhatsApp(
+                            order.client.telefono,
+                            `Bruce Fire entregó ${total} extintores a ${cliente}. Orden ${order.codigo}.${certificados ? ` Certificado ${certificados}.` : ''}`,
+                        )}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={botonPrincipal}
+                    >
+                        <MessageCircle
+                            className="size-[18px]"
+                            aria-hidden="true"
+                        />
+                        Enviar certificado
+                    </a>
+                    <a
+                        href={entregas.pdf.url({
+                            current_team: equipo,
+                            service_order: order.id,
+                        })}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={botonSecundario}
+                    >
+                        <FileText className="size-[18px]" aria-hidden="true" />
+                        Ver acta de entrega
+                    </a>
+                    <Link href={volver} className={botonSecundario}>
+                        Siguiente entrega
+                    </Link>
+                </div>
+            </TecnicoCampoLayout>
+        );
+    }
+
+    if (!lista || !cobro.cobrada) {
+        return (
+            <TecnicoCampoLayout>
+                <Head title={`Entrega ${order.codigo}`} />
+                <BarraOrdenCampo
+                    ordenId={order.id}
+                    codigo={order.codigo}
+                    conversacion={conversacion}
+                />
+                <CabeceraPaso
+                    etiqueta={order.codigo}
+                    titulo={cliente}
+                    volver={volver}
+                />
+                <div className={`${tarjeta} mt-5 flex items-start gap-3 p-4`}>
+                    <Lock
+                        className="text-primary-strong mt-0.5 size-5 shrink-0"
+                        aria-hidden="true"
+                    />
+                    <div className="space-y-1 text-sm">
+                        <p className="font-bold">
+                            {!lista
+                                ? 'Planta todavía no la termina'
+                                : 'Falta cobrar'}
+                        </p>
+                        <p className="text-muted-foreground">
+                            {!lista
+                                ? `Estado: ${etiquetaEstadoOrden(order.estado).toLowerCase()}.`
+                                : 'El vendedor la cobra primero. Cuando esté cobrada o a crédito, aquí podrás entregarla.'}
+                        </p>
+                    </div>
+                </div>
+            </TecnicoCampoLayout>
+        );
+    }
 
     return (
-        <TecnicoCampoLayout title={`Entrega ${order.codigo}`}>
-            <Head title={`Entrega ${order.codigo} - Técnico de Campo`} />
-            <BarraOrdenCampo
-                ordenId={order.id}
-                codigo={order.codigo}
-                conversacion={conversacion}
-            />
-
-            {/* Back Bar */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <Link
-                    href={entregas.index.url({ current_team: teamSlug })}
-                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
-                >
-                    <ArrowLeft className="size-4" />
-                    <span>Volver a entregas</span>
-                </Link>
-                <span className="text-foreground font-mono text-xs font-black">
-                    {order.codigo}
-                </span>
-            </div>
-
-            {flash?.success && (
-                <div className="text-success-strong mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium">
-                    {flash.success}
-                </div>
-            )}
-
-            {/* Header Data Card (§22.3) */}
-            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
-                <div className="border-border mb-3 flex items-start justify-between gap-2 border-b pb-3">
-                    <div>
-                        <span className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
-                            Cliente Receptor
-                        </span>
-                        <h1 className={pageTitleClass}>
-                            {order.client.razon_social}
-                        </h1>
-                        {order.client.numero_documento && (
-                            <span className="text-muted-foreground font-mono text-xs">
-                                RUC / DNI: {order.client.numero_documento}
-                            </span>
-                        )}
-                    </div>
-                    <span
-                        className={`rounded-full border px-2.5 py-1 text-xs font-black ${
-                            isCerrada
-                                ? 'border-border bg-muted text-muted-foreground'
-                                : 'text-success-strong border-emerald-500/20 bg-emerald-500/10'
-                        }`}
-                    >
-                        {etiquetaEstadoOrden(order.estado).toUpperCase()}
-                    </span>
-                </div>
-
-                <Pasos
-                    label={`Avance de la entrega ${order.codigo}`}
-                    pasos={pasosEntrega(order.estado)}
-                    variante="cheuron"
-                    className="grid-cols-3 [&>li]:flex-col [&>li]:items-start [&>li]:gap-1 [&>li]:p-2 [&>li]:text-xs sm:[&>li]:flex-row sm:[&>li]:items-center"
-                />
-
-                <div className="space-y-2 text-xs">
-                    <div className="flex items-start gap-2">
-                        <MapPin className="text-foreground mt-0.5 size-4 shrink-0" />
-                        <div>
-                            <span className="text-foreground font-semibold">
-                                Lugar de Entrega:{' '}
-                            </span>
-                            <span className="text-muted-foreground">
-                                {order.sede?.direccion ||
-                                    order.client.direccion_fiscal ||
-                                    'Sede principal'}
-                            </span>
-                        </div>
-                    </div>
-
-                    {order.client.telefono && (
-                        <div className="flex items-center justify-between pt-1">
-                            <div className="flex items-center gap-2">
-                                <Phone className="text-success-strong size-4 shrink-0" />
-                                <span className="text-foreground font-mono">
-                                    {order.client.telefono}
-                                </span>
-                            </div>
-                            <a
-                                href={`tel:${order.client.telefono}`}
-                                className="text-success-strong inline-flex items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold transition hover:brightness-95 active:scale-95 dark:text-emerald-400"
-                            >
-                                <Phone className="size-3" />
-                                Llamar
-                            </a>
-                        </div>
-                    )}
-                </div>
-
-                {/* Acta de Conformidad PDF Action */}
-                <div className="border-border mt-4 border-t pt-3">
-                    {entregaRealizada ? (
-                        <a
-                            href={entregas.pdf.url({
-                                current_team: teamSlug,
-                                service_order: order.id,
-                            })}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="border-border bg-muted text-foreground hover:bg-muted flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border text-xs font-black shadow-2xs transition-all"
-                        >
-                            <FileText className="size-4" />
-                            <span>
-                                Descargar / Imprimir Acta de Conformidad (PDF)
-                            </span>
-                        </a>
-                    ) : (
-                        <p className="text-muted-foreground text-xs">
-                            El acta estará disponible después de confirmar la
-                            entrega.
+        <TecnicoCampoLayout ocultarMenu>
+            <Head title={`Entrega ${order.codigo}`} />
+            <div className="space-y-4">
+                {paso === 'marcar' ? (
+                    <>
+                        <CabeceraPaso
+                            etiqueta="Entrega"
+                            titulo="Marca cada uno"
+                            volver={volver}
+                            paso={1}
+                            total={2}
+                            extra={
+                                <Contador>{`${marcados}/${total}`}</Contador>
+                            }
+                        />
+                        {!asignacion.tecnico ? (
+                            <TomarOrden asignacion={asignacion} />
+                        ) : null}
+                        <p className="text-muted-foreground px-1 text-sm font-semibold">
+                            {cliente} · {lugar}
+                            {cobro.credito ? ' · Crédito' : ' · Cobrada'}
                         </p>
-                    )}
-                </div>
-            </div>
-
-            <TomarOrden asignacion={asignacion} />
-
-            {/* Indicaciones de Ventas / Notas de Coordinación */}
-            {(() => {
-                const notasVendedor = (order.events || [])
-                    .filter(
-                        (ev) =>
-                            ev.payload?.origen === 'vendedor' ||
-                            ev.tipo === 'notificacion_vendedor' ||
-                            (ev.tipo === 'otro' && ev.payload?.mensaje),
-                    )
-                    .filter((ev) => {
-                        const texto =
-                            ev.payload?.mensaje || ev.payload?.descripcion;
-                        return typeof texto === 'string' && texto.trim() !== '';
-                    });
-
-                if (!order.observaciones && notasVendedor.length === 0) {
-                    return null;
-                }
-
-                return (
-                    <div className="border-border bg-muted mb-5 rounded-3xl border p-4">
-                        <div className="text-foreground flex items-center gap-2 text-xs font-bold">
-                            <MessageSquare className="text-foreground size-4" />
-                            <span>Indicaciones de Ventas y Coordinación</span>
-                        </div>
-
-                        {order.observaciones && (
-                            <p className="text-foreground mt-2 text-xs">
-                                <span className="text-foreground font-semibold">
-                                    Observación inicial:{' '}
-                                </span>
-                                {order.observaciones}
-                            </p>
-                        )}
-
-                        {notasVendedor.length > 0 && (
-                            <div className="mt-3 space-y-2">
-                                <span className="text-foreground text-xs font-bold uppercase">
-                                    Notas de Ventas:
-                                </span>
-                                {notasVendedor.map((n) => (
-                                    <div
-                                        key={n.id}
-                                        className="border-border rounded-xl border bg-white/80 p-2.5 text-xs text-neutral-800 shadow-2xs dark:bg-neutral-900/80 dark:text-neutral-200"
-                                    >
-                                        <p className="font-medium">
-                                            {n.payload?.mensaje ||
-                                                n.payload?.descripcion ||
-                                                ''}
-                                        </p>
-                                        <span className="text-muted-foreground mt-1 block text-xs">
-                                            {n.created_at
-                                                ? new Date(
-                                                      n.created_at,
-                                                  ).toLocaleString('es-PE')
-                                                : ''}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                );
-            })()}
-
-            {/* Custody Chain Trail (§22.4, §85.6.3) */}
-            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
-                <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                    <Truck className="text-foreground size-4" />
-                    Cadena de Custodia del Servicio
-                </h2>
-
-                {custodyEvents.length === 0 ? (
-                    <p className="text-muted-foreground text-xs">
-                        No hay eventos de custodia registrados aún.
-                    </p>
-                ) : (
-                    <div className="before:bg-muted/40 relative space-y-4 pl-6 before:absolute before:top-2 before:bottom-2 before:left-2.5 before:w-0.5">
-                        {custodyEvents.map((evt) => {
-                            const meta = ESLABONES_MAP[evt.eslabon] || {
-                                label: evt.eslabon,
-                                icon: CheckCircle2,
-                                color: 'text-muted-foreground bg-muted',
-                            };
-                            const Icon = meta.icon;
-
-                            return (
-                                <div key={evt.id} className="relative text-xs">
-                                    <div
-                                        className={`absolute top-0 -left-6 flex size-5 items-center justify-center rounded-full border border-white shadow-2xs ${meta.color}`}
-                                    >
-                                        <Icon className="size-3" />
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-foreground font-bold">
-                                            {meta.label}
-                                        </span>
-                                        {evt.fecha && (
-                                            <span className="text-muted-foreground font-mono text-xs">
-                                                {new Date(
-                                                    evt.fecha,
-                                                ).toLocaleDateString('es-PE', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-muted-foreground mt-0.5 text-xs">
-                                        Responsable:{' '}
-                                        <span className="text-foreground font-semibold">
-                                            {evt.responsable}
-                                        </span>
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
-
-            {/* Equipments Table/Cards (§23) */}
-            <div className="border-border bg-card mb-5 rounded-3xl border p-4 shadow-xs">
-                <h2 className="text-foreground mb-3 flex items-center gap-2 text-xs font-black tracking-wider uppercase">
-                    <Flame className="text-warning-strong size-4" />
-                    {entregaRealizada
-                        ? 'Equipos entregados'
-                        : 'Equipos para entregar'}{' '}
-                    ({order.equipments.length})
-                </h2>
-
-                <div className="space-y-2">
-                    {order.equipments.map((eq, _idx) => (
                         <div
-                            key={eq.id}
-                            className="border-border bg-muted/40 flex items-center justify-between rounded-lg border p-2.5 text-xs"
+                            className={`${tarjeta} divide-border divide-y overflow-hidden`}
                         >
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <Link
-                                        href={equiposRoutes.show.url({
-                                            current_team: teamSlug,
-                                            equipment: eq.id,
-                                        })}
-                                        className="text-foreground font-mono font-black underline"
+                            {order.equipments.map((eq) => {
+                                const marcado = form.data.entregados.includes(
+                                    eq.id,
+                                );
+
+                                return (
+                                    <label
+                                        key={eq.id}
+                                        className={`flex min-h-14 cursor-pointer items-center gap-3 px-4 ${marcado ? '' : 'bg-primary/5'}`}
                                     >
-                                        {eq.numero_serie}
-                                    </Link>
-                                    <span className="py-0.2 border-border bg-card rounded border px-1.5 text-xs font-bold">
-                                        {eq.tipo_agente} {eq.capacidad}
-                                    </span>
-                                </div>
-                                <p className="text-muted-foreground mt-0.5 text-xs">
-                                    {eq.marca || 'Bruce Fire'} •{' '}
-                                    {eq.ubicacion_actual || 'Sede cliente'}
-                                </p>
-                            </div>
-                            <span
-                                className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                                    eq.checklists?.[0]?.resultado_general ===
-                                    'conforme'
-                                        ? 'text-success-strong bg-emerald-500/10'
-                                        : eq.checklists?.[0]
-                                                ?.resultado_general ===
-                                            'observado'
-                                          ? 'text-warning-strong bg-amber-500/10'
-                                          : 'bg-muted text-muted-foreground'
-                                }`}
-                            >
-                                {eq.checklists?.[0]?.resultado_general ===
-                                'conforme'
-                                    ? 'Última revisión: Conforme'
-                                    : eq.checklists?.[0]?.resultado_general ===
-                                        'observado'
-                                      ? 'Última revisión: Con observaciones'
-                                      : 'Sin revisión registrada'}
-                            </span>
+                                        <input
+                                            type="checkbox"
+                                            checked={marcado}
+                                            onChange={(e) =>
+                                                marcar(eq.id, e.target.checked)
+                                            }
+                                            className="accent-primary size-[22px]"
+                                        />
+                                        <span className="flex-1 font-mono text-sm font-bold">
+                                            {eq.numero_serie}
+                                        </span>
+                                        <span className="text-muted-foreground text-xs">
+                                            {[eq.tipo_agente, eq.capacidad]
+                                                .filter(Boolean)
+                                                .join(' ')}
+                                        </span>
+                                    </label>
+                                );
+                            })}
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            {order.estado === 'entregado' && entregaRealizada && (
-                <section
-                    className="bg-card border-border mb-4 space-y-3 rounded-xl border p-4"
-                    aria-labelledby="cierre-pendiente"
-                >
-                    <h2 id="cierre-pendiente" className="text-sm font-semibold">
-                        Entrega registrada · cierre pendiente
-                    </h2>
-                    <p className="text-muted-foreground text-xs">
-                        El cliente ya recibió los equipos. Cierra la orden para
-                        terminar este recorrido; el acta, los certificados y los
-                        pagos se conservan.
-                    </p>
-                    <form
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            cierre.post(
-                                entregas.cerrar.url({
-                                    current_team: teamSlug,
-                                    service_order: order.id,
-                                }),
-                                {
-                                    preserveScroll: true,
-                                    onError: (errors) =>
-                                        toast.error(
-                                            Object.values(errors)[0] ??
-                                                'No se pudo cerrar la orden.',
-                                        ),
-                                },
-                            );
-                        }}
-                    >
-                        <button
-                            type="submit"
-                            disabled={cierre.processing}
-                            className="bg-primary min-h-11 rounded-lg px-4 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
-                        >
-                            Cerrar orden
-                        </button>
-                    </form>
-                </section>
-            )}
-
-            {/* Delivery Confirmation Form (§22.3, §85.6.2) */}
-            {!isCerrada && !entregaRealizada && (
-                <div className="bg-card border-border rounded-3xl border p-4 shadow-sm">
-                    <h2 className="text-foreground mb-1 flex items-center gap-2 text-sm font-black">
-                        <UserCheck className="text-foreground size-4" />
-                        Confirmar Entrega y Acta de Conformidad
-                    </h2>
-                    <p className="text-muted-foreground mb-4 text-xs">
-                        Cierre final del servicio en sitio con firma/conformidad
-                        del receptor.
-                    </p>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            <div>
-                                <label className="text-foreground mb-1 block text-xs font-bold">
-                                    Nombre del Receptor / Encargado en Sede{' '}
-                                    <span className="text-red-500">*</span>
+                        <section className={`${tarjeta} p-4`}>
+                            <SubirEvidencia
+                                ordenId={order.id}
+                                etapa="entrega"
+                                titulo="Foto de salida"
+                                evidencias={evidencias}
+                            />
+                        </section>
+                        <PiePaso>
+                            <button
+                                type="button"
+                                disabled={marcados < total || fotos === 0}
+                                onClick={() => setPaso('firma')}
+                                className={botonPrincipal}
+                            >
+                                {marcados < total
+                                    ? `Faltan ${total - marcados} por marcar`
+                                    : fotos === 0
+                                      ? 'Falta la foto de salida'
+                                      : 'Continuar'}
+                            </button>
+                        </PiePaso>
+                    </>
+                ) : (
+                    <>
+                        <CabeceraPaso
+                            etiqueta="Entrega"
+                            titulo="¿Quién recibe?"
+                            volver={() => setPaso('marcar')}
+                            paso={2}
+                            total={2}
+                        />
+                        <AlertError errors={Object.values(form.errors)} />
+                        <section className={`${tarjeta} space-y-4 p-4`}>
+                            <div className="space-y-1.5">
+                                <label
+                                    htmlFor="receptor"
+                                    className="text-sm font-semibold"
+                                >
+                                    Nombre
                                 </label>
                                 <input
-                                    aria-label="Receptor nombre"
-                                    type="text"
-                                    required
+                                    id="receptor"
+                                    autoComplete="name"
                                     value={form.data.receptor_nombre}
                                     onChange={(e) =>
                                         form.setData(
@@ -565,150 +307,49 @@ export default function EntregaShow({
                                             e.target.value,
                                         )
                                     }
-                                    placeholder="Nombre de quien recibe los extintores"
-                                    className="border-border bg-card w-full rounded-lg border p-2 text-xs"
+                                    className="border-border bg-card w-full rounded-xl border px-3.5"
                                 />
-                                {form.errors.receptor_nombre && (
-                                    <p className="mt-0.5 text-xs text-red-500">
-                                        {form.errors.receptor_nombre}
-                                    </p>
-                                )}
                             </div>
-
-                            <div>
-                                <label className="text-foreground mb-1 block text-xs font-bold">
-                                    DNI del receptor (opcional)
-                                </label>
-                                <input
-                                    aria-label="DNI del receptor (opcional)"
-                                    type="text"
-                                    inputMode="numeric"
-                                    maxLength={8}
-                                    pattern="[0-9]{8}"
-                                    value={form.data.receptor_dni}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'receptor_dni',
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="8 números, por ejemplo 45892147"
-                                    className="border-border bg-card w-full rounded-lg border p-2 text-xs"
-                                />
-                                {form.errors.receptor_dni && (
-                                    <p
-                                        role="alert"
-                                        className="text-destructive-strong mt-1 text-xs"
-                                    >
-                                        {form.errors.receptor_dni}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-foreground mb-1 block text-xs font-bold">
-                                Observaciones de Entrega
-                            </label>
-                            <textarea
-                                aria-label="Observaciones de Entrega"
-                                rows={2}
-                                value={form.data.observaciones_entrega}
-                                onChange={(e) =>
-                                    form.setData(
-                                        'observaciones_entrega',
-                                        e.target.value,
-                                    )
-                                }
-                                placeholder="Notas de colocación, tarjetas selladas entregadas..."
-                                className="border-border bg-card w-full rounded-lg border p-2 text-xs"
+                            <FirmaCanvas
+                                etiqueta="Firma"
+                                onChange={(f) => form.setData('firma', f)}
                             />
-                        </div>
-
-                        {/* Checkbox de Conformidad en Sitio (§85.6.2) */}
-                        <div className="border-border bg-muted rounded-lg border p-3">
-                            <label className="flex cursor-pointer items-start gap-2.5">
-                                <input
-                                    type="checkbox"
-                                    required
-                                    checked={form.data.conformidad_aceptada}
-                                    onChange={(e) =>
-                                        form.setData(
-                                            'conformidad_aceptada',
-                                            e.target.checked,
-                                        )
-                                    }
-                                    className="border-border text-foreground mt-0.5 size-4 rounded"
-                                />
-                                <span className="text-foreground text-xs leading-tight font-semibold">
-                                    Conformidad en sitio: El receptor declara
-                                    recibir los extintores detallados
-                                    debidamente inspeccionados, cargados y
-                                    operativos según NTP 350.043.
-                                </span>
-                            </label>
-                            {form.errors.conformidad_aceptada && (
-                                <p className="mt-1 text-xs text-red-500">
-                                    {form.errors.conformidad_aceptada}
-                                </p>
-                            )}
-                        </div>
-
-                        <SubirEvidencia
-                            ordenId={order.id}
-                            etapa="entrega"
-                            titulo="Fotos de la entrega"
-                            evidencias={evidencias}
-                            equipos={conversacion.equipos}
-                        />
-
-                        <FirmaCanvas
-                            etiqueta="Firma de quien recibe"
-                            onChange={(f) => form.setData('firma', f)}
-                        />
-
-                        <label className="text-foreground flex cursor-pointer items-center gap-2 text-xs font-bold">
+                        </section>
+                        <label
+                            className={`${tarjeta} flex min-h-14 items-center gap-3 px-4 text-sm font-semibold`}
+                        >
                             <input
                                 type="checkbox"
-                                checked={form.data.cerrar_orden}
+                                checked={form.data.conformidad_aceptada}
                                 onChange={(e) =>
                                     form.setData(
-                                        'cerrar_orden',
+                                        'conformidad_aceptada',
                                         e.target.checked,
                                     )
                                 }
-                                className="border-border text-foreground size-4 rounded"
+                                className="accent-primary size-[22px]"
                             />
-                            <span>
-                                Cerrar la Orden de Servicio definitivamente
-                                (estado: cerrado)
-                            </span>
+                            Recibo {total}{' '}
+                            {total === 1 ? 'extintor' : 'extintores'} conforme
                         </label>
-
-                        <button
-                            type="submit"
-                            disabled={form.processing || !form.data.firma}
-                            className="bg-primary hover:bg-primary/90 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg text-xs font-bold text-white shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <Send className="size-4" />
-                            <span>
-                                {form.data.cerrar_orden
-                                    ? 'Confirmar Entrega y Cerrar Orden de Servicio'
-                                    : 'Confirmar entrega'}
-                            </span>
-                        </button>
-                        {!form.data.conformidad_aceptada ? (
-                            <p
-                                className="text-center text-xs font-semibold text-red-500"
-                                role="alert"
+                        <PiePaso>
+                            <button
+                                type="button"
+                                disabled={
+                                    form.processing ||
+                                    !form.data.firma ||
+                                    !form.data.conformidad_aceptada ||
+                                    form.data.receptor_nombre.trim().length < 3
+                                }
+                                onClick={confirmar}
+                                className={botonPrincipal}
                             >
-                                Marca la conformidad del receptor antes de
-                                confirmar la entrega.
-                            </p>
-                        ) : null}
-                    </form>
-                </div>
-            )}
+                                Confirmar entrega
+                            </button>
+                        </PiePaso>
+                    </>
+                )}
+            </div>
         </TecnicoCampoLayout>
     );
 }
