@@ -657,7 +657,9 @@ export default function InstalacionShow({
                             ) : null}
                             <button
                                 type="button"
-                                disabled={form.processing || faltaCierre !== null}
+                                disabled={
+                                    form.processing || faltaCierre !== null
+                                }
                                 onClick={confirmar}
                                 className={botonPrincipal}
                             >
